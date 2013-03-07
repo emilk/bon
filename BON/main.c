@@ -138,6 +138,7 @@ void create()
 	bon_w_key(doc, "sint64", BON_ZERO_ENDED);
 	bon_w_sint64(doc, (int64_t)-0x8000000000000000LL);
 	
+#if defined(__clang__)
 	bon_w_key(doc, "nan", BON_ZERO_ENDED);
 	bon_w_float(doc, __nan());
 	
@@ -146,7 +147,7 @@ void create()
 	
 	bon_w_key(doc, "neg_inf", BON_ZERO_ENDED);
 	bon_w_float(doc, -INFINITY);
-	
+#endif
 	
 	bon_w_key(doc, "list", BON_ZERO_ENDED);
 	bon_w_begin_list(doc);
