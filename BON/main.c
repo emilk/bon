@@ -138,10 +138,12 @@ void create()
 	bon_w_key(doc, "sint64", BON_ZERO_ENDED);
 	bon_w_sint64(doc, (int64_t)-0x8000000000000000LL);
 	
-#if defined(__clang__)
+#ifdef NAN
 	bon_w_key(doc, "nan", BON_ZERO_ENDED);
-	bon_w_float(doc, __nan());
+	bon_w_float(doc, NAN);
+#endif
 	
+#ifdef INFINITY
 	bon_w_key(doc, "pos_inf", BON_ZERO_ENDED);
 	bon_w_float(doc, +INFINITY);
 	
@@ -373,7 +375,7 @@ int main(int argc, const char * argv[])
 	 bon foo.bon
 	 ls         - list keys and what they map to (unless too long)
 	 cd         - open a child object
-	 print file - output a value/list/object as json 
+	 print key  - output a value/list/object as json 
 	 exit
 	 
 	 or:
