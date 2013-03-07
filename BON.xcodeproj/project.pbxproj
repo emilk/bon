@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		80073EFB16E94EEA007518B0 /* json2bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 80073EFA16E94EEA007518B0 /* json2bon.c */; };
 		8067429F16BB36970029D4E1 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 8067429E16BB36970029D4E1 /* main.c */; };
 		806742A116BB36970029D4E1 /* BON.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 806742A016BB36970029D4E1 /* BON.1 */; };
 		806742A916BB7C8A0029D4E1 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
@@ -31,7 +32,6 @@
 		809FA69116BFE5B800A465A0 /* utf.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67D16BFE5B800A465A0 /* utf.c */; };
 		809FA69216BFE5B800A465A0 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67F16BFE5B800A465A0 /* value.c */; };
 		809FA69316BFE5B800A465A0 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67F16BFE5B800A465A0 /* value.c */; };
-		809FA69416BFE5E200A465A0 /* json2bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA66A16BFE35A00A465A0 /* json2bon.c */; };
 		809FA69516BFEB4F00A465A0 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
 		809FA69D16BFED7A00A465A0 /* bon2json.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA69C16BFED7A00A465A0 /* bon2json.c */; };
 		809FA69F16BFED7A00A465A0 /* bon2json.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 809FA69E16BFED7A00A465A0 /* bon2json.1 */; };
@@ -82,14 +82,14 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		8067429B16BB36970029D4E1 /* BON */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = BON; sourceTree = BUILT_PRODUCTS_DIR; };
+		80073EFA16E94EEA007518B0 /* json2bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = json2bon.c; path = ../../bon/json2bon/json2bon.c; sourceTree = "<group>"; };
+		8067429B16BB36970029D4E1 /* BON */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = BON; path = bon; sourceTree = BUILT_PRODUCTS_DIR; };
 		8067429E16BB36970029D4E1 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		806742A016BB36970029D4E1 /* BON.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = BON.1; sourceTree = "<group>"; };
 		806742A716BB36A70029D4E1 /* bon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = bon.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		806742A816BB7C8A0029D4E1 /* bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = bon.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		809FA66116BFE33D00A465A0 /* json2bon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = json2bon; sourceTree = BUILT_PRODUCTS_DIR; };
 		809FA66516BFE33D00A465A0 /* json2bon.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = json2bon.1; sourceTree = "<group>"; };
-		809FA66A16BFE35A00A465A0 /* json2bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = json2bon.c; path = ../BON/json2bon.c; sourceTree = "<group>"; };
 		809FA67016BFE5B800A465A0 /* dump.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dump.c; sourceTree = "<group>"; };
 		809FA67116BFE5B800A465A0 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = error.c; sourceTree = "<group>"; };
 		809FA67216BFE5B800A465A0 /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hashtable.c; sourceTree = "<group>"; };
@@ -171,7 +171,7 @@
 		809FA66216BFE33D00A465A0 /* json2bon */ = {
 			isa = PBXGroup;
 			children = (
-				809FA66A16BFE35A00A465A0 /* json2bon.c */,
+				80073EFA16E94EEA007518B0 /* json2bon.c */,
 				809FA66516BFE33D00A465A0 /* json2bon.1 */,
 			);
 			path = json2bon;
@@ -325,8 +325,8 @@
 				809FA68F16BFE5B800A465A0 /* strconv.c in Sources */,
 				809FA69116BFE5B800A465A0 /* utf.c in Sources */,
 				809FA69316BFE5B800A465A0 /* value.c in Sources */,
-				809FA69416BFE5E200A465A0 /* json2bon.c in Sources */,
 				809FA69516BFEB4F00A465A0 /* bon.c in Sources */,
+				80073EFB16E94EEA007518B0 /* json2bon.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -501,6 +501,7 @@
 				809FA66916BFE33D00A465A0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		809FA6A016BFED7A00A465A0 /* Build configuration list for PBXNativeTarget "bon2json" */ = {
 			isa = XCConfigurationList;
@@ -509,6 +510,7 @@
 				809FA6A216BFED7A00A465A0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
