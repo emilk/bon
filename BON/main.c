@@ -105,8 +105,8 @@ void create()
 	bon_w_begin_obj(doc);
 	
 #if 1
-	bon_w_key(doc, "null", BON_ZERO_ENDED);
-	bon_w_null(doc);
+	bon_w_key(doc, "nil", BON_ZERO_ENDED);
+	bon_w_nil(doc);
 	
 	bon_w_key(doc, "false", BON_ZERO_ENDED);
 	bon_w_bool(doc, BON_FALSE);

@@ -9,10 +9,6 @@
 #ifndef BON_bon_w_h
 #define BON_bon_w_h
 
-#if __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
 #include <stdint.h>
 #include <stdio.h>
 
@@ -45,7 +41,6 @@ typedef enum {
 	// Read errors
 	BON_ERR_TOO_SHORT,   // Premature end of file
 	BON_ERR_BAD_HEADER,
-	BON_ERR_BAD_FIRST_BLOCK, // First block wasn't root block
 	BON_ERR_BAD_VLQ,
 	BON_ERR_MISSING_LIST_END,
 	BON_ERR_MISSING_OBJ_END,
@@ -55,6 +50,8 @@ typedef enum {
 	BON_ERR_BAD_TYPE,
 	BON_ERR_STRING_NOT_ZERO_ENDED,
 	BON_ERR_MISSING_TOKEN,
+	
+	BON_ERR_TRAILING_DATA,  // Data trailing the document
 	
 	// bw_read_aggregate etc:
 	BON_ERR_NARROWING,
@@ -66,17 +63,18 @@ typedef enum {
 /* The control codes are all in [0x08, 0x10)
  */
 typedef enum {
-	BON_CTRL_BLOCK_REF   = '@',    BON_CTRL_STRING_VLQ  = '\'',
+	BON_CTRL_BLOCK_REF   = '@',    BON_CTRL_STRING_VLQ  = '\'',  // 0x40  0x60
 	BON_CTRL_ARRAY_VLQ   = 'A',
 	BON_CTRL_HEADER      = 'B',
 	BON_CTRL_TUPLE_VLQ   = 'C',    BON_CTRL_STRUCT_VLQ  = 'c',
 	BON_CTRL_BLOCK_BEGIN = 'D',    BON_CTRL_BLOCK_END   = 'd',
 	BON_CTRL_TRUE        = 'E',    BON_CTRL_FALSE       = 'e',
-	BON_CTRL_FOOTER      = 'F',
-	BON_CTRL_BLOCK_INDEX = 'I',
+	//BON_CTRL_FOOTER      = 'F',
+	//BON_CTRL_BLOCK_INDEX = 'I',
 	//BON_CTRL_LIST_VLQ    = 'L',
-	BON_CTRL_NULL        = 'N',
+	BON_CTRL_NIL        = 'N',
 	//BON_CTRL_OBJECT_VLQ  = 'O',
+	
 	BON_CTRL_SINT8       = 'P',
 	BON_CTRL_UINT8       = 'Q',
 	BON_CTRL_SINT16_LE   = 'R',    BON_CTRL_SINT16_BE   = 'r',
@@ -320,7 +318,7 @@ void         bon_w_key              (bon_w_doc* doc, const char* utf8, bon_size 
 void         bon_w_begin_list       (bon_w_doc* doc);
 void         bon_w_end_list         (bon_w_doc* doc);
 
-void         bon_w_null       (bon_w_doc* doc);
+void         bon_w_nil        (bon_w_doc* doc);
 void         bon_w_bool       (bon_w_doc* doc, bon_bool val);
 void         bon_w_string     (bon_w_doc* doc, const char* utf8, bon_size nbytes);
 void         bon_w_uint64     (bon_w_doc* doc, uint64_t val);
@@ -342,7 +340,7 @@ void                     bon_w_free_type(bon_w_aggr_type_t** type);             
 
 
 typedef enum {
-	BON_VALUE_NULL,
+	BON_VALUE_NIL,
 	BON_VALUE_BOOL,
 	BON_VALUE_UINT64,
 	BON_VALUE_SINT64,
@@ -434,13 +432,24 @@ typedef struct {
 	bon_size bytes_aggr_wet;     // Number of bytes taken up by strings (including header).
 } bon_stats;
 
+typedef struct {
+	bon_size   id;              // Id of block
+	//bon_size   payload_offset;  // Byte offset in document to payload start
+	bon_size   payload_size;    // Byte size of payload. 0 means unknown.
+	bon_bool   parsed;          // if false, 'value' is not yet valid.
+	bon_value  value;
+} bon_r_block;
 
 typedef struct {
-	bon_error      error;  // If any
-	bon_size       numBlocks;
-	bon_size*      blockIndex; // maps block id:s to byte offsets.
-	bon_value*     blocks;
-	bon_stats      stats;  // Info about the read file
+	bon_size      size;
+	bon_size      cap;
+	bon_r_block*  data;
+} bon_r_blocks;
+
+typedef struct {
+	bon_error      error;       // If any
+	bon_r_blocks   blocks;
+	bon_stats      stats;       // Info about the read file
 } bon_r_doc;
 
 
@@ -511,14 +520,6 @@ uint64_t br_read_uint64(bon_reader* br, bon_ctrl t);
 
 /* Read a simple value denoted by 't', and interpret is as a double. */
 double br_read_double(bon_reader* br, bon_ctrl t);
-
-//////////////////////////////////////////////////////////
-
-
-
-#if __cplusplus
-}
-#endif /* __cplusplus */
 
 
 #endif

@@ -151,7 +151,7 @@ bon_bool write_json(json_t* json, bon_w_doc* bon)
 			
 			
 		case JSON_NULL:
-			bon_w_null(bon);
+			bon_w_nil(bon);
 			break;
 			
 			

@@ -529,7 +529,6 @@ const char* bon_err_str(bon_error err)
 		
 		"BON_ERR_TOO_SHORT",
 		"BON_ERR_BAD_HEADER",
-		"BON_ERR_BAD_FIRST_BLOCK",
 		"BON_ERR_BAD_VLQ",
 		"BON_ERR_MISSING_LIST_END",
 		"BON_ERR_MISSING_OBJ_END",
@@ -539,6 +538,8 @@ const char* bon_err_str(bon_error err)
 		"BON_ERR_BAD_TYPE",
 		"BON_ERR_STRING_NOT_ZERO_ENDED",
 		"BON_ERR_MISSING_TOKEN",
+		
+		"BON_ERR_TRAILING_DATA",
 		
 		"BON_ERR_NARROWING",
 		"BON_ERR_NULL_OBJ",
@@ -811,7 +812,7 @@ uint32_t bon_w_vlq_to(uint8_t* out, bon_size x)
 	uint32_t size = bon_w_vlq_size(x);
 	
 	for (uint32_t i = 0; i < size; ++i) {
-		out[i] = ((x >> ((size - 1 - i) * 7)) & 127) | 128;
+		out[i] = ((x >> ((size - 1 - i) * 7)) & 0x7f) | 0x80;
 	}
 	
 	out[size-1] &= 0x7f; // Remove last flag
@@ -827,7 +828,7 @@ uint32_t bon_w_vlq(bon_w_doc* doc, bon_size x)
 	return size;
 }
 
-uint64_t read_vlq(bon_reader* br)
+uint64_t br_read_vlq(bon_reader* br)
 {
 	uint64_t r = 0;
 	uint32_t size = 0; // Sanity check
@@ -835,9 +836,9 @@ uint64_t read_vlq(bon_reader* br)
 	for (;;) {
 		uint8_t in = next(br);
 		++size;
-		r = (r << 7) | (uint64_t)(in & 127);
+		r = (r << 7) | (uint64_t)(in & 0x7f);
 		
-		if ((in & 128) == 0)
+		if ((in & 0x80) == 0)
 			break;
 		
 		if (size == BON_VARINT_MAX_LEN) {
@@ -908,8 +909,8 @@ void bon_w_end_list(bon_w_doc* doc) {
 	bon_w_raw_uint8(doc, BON_CTRL_LIST_END);
 }
 
-void bon_w_null(bon_w_doc* doc) {
-	bon_w_raw_uint8(doc, BON_CTRL_NULL);
+void bon_w_nil(bon_w_doc* doc) {
+	bon_w_raw_uint8(doc, BON_CTRL_NIL);
 }
 
 void bon_w_bool(bon_w_doc* doc, bon_bool val) {
@@ -1205,14 +1206,14 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 		type->id = BON_TYPE_ARRAY;
 		bon_type_array* array = ALLOC_TYPE(1, bon_type_array);
 		type->u.array = array;
-		array->size = read_vlq(br);
+		array->size = br_read_vlq(br);
 		array->type = (bon_type*)calloc(1, sizeof(bon_type));
 		parse_aggr_type(br, array->type);
 	} else if (ctrl == BON_CTRL_STRUCT_VLQ) {
 		type->id = BON_TYPE_STRUCT;
 		bon_type_struct* strct = ALLOC_TYPE(1, bon_type_struct);
 		type->u.strct = strct;
-		strct->size   = read_vlq(br);
+		strct->size   = br_read_vlq(br);
 		strct->keys   = ALLOC_TYPE(strct->size, const char*);
 		strct->types  = ALLOC_TYPE(strct->size, bon_type*);
 		
@@ -1246,8 +1247,8 @@ void bon_r_value(bon_reader* br, bon_value* val)
 	
 	switch (ctrl)
 	{
-		case BON_CTRL_NULL:
-			val->type = BON_VALUE_NULL;
+		case BON_CTRL_NIL:
+			val->type = BON_VALUE_NIL;
 			break;
 			
 			
@@ -1298,7 +1299,7 @@ void bon_r_value(bon_reader* br, bon_value* val)
 			
 		case BON_CTRL_STRING_VLQ:
 			val->type       = BON_VALUE_STRING;
-			val->u.str.size = read_vlq(br);
+			val->u.str.size = br_read_vlq(br);
 			val->u.str.ptr  = br->data;
 			br_skip(br, val->u.str.size);
 			int zero = next(br);
@@ -1405,42 +1406,46 @@ void bon_r_header(bon_r_doc* doc, bon_reader* br)
 	}
 }
 
-void bon_r_blocks(bon_r_doc* doc, bon_reader* br)
+void bon_r_read_content(bon_r_doc* doc, bon_reader* br)
 {
-	if (peek(br) == BON_CTRL_BLOCK_INDEX)
+	bon_r_blocks* blocks = &doc->blocks;
+		
+	if (peek(br) == BON_CTRL_BLOCK_BEGIN)
 	{
 		// Blocked document
-		
-		br_skip(br, 1);
-		size_t nBlocks  = br_read_uint64(br, BON_CTRL_UINT64_LE);
-		doc->numBlocks  = nBlocks;
-		doc->blockIndex = (bon_size*) calloc( nBlocks, sizeof(bon_size)  );
-		doc->blocks     = (bon_value*)calloc( nBlocks, sizeof(bon_value) );
-		
-		// Read block indices
-		for (size_t ix=0; ix<nBlocks; ++ix) {
-			doc->blockIndex[ix] = br_read_uint64(br, BON_CTRL_UINT64_LE);
-		}
-		
-		// Read blocks:
-		for (size_t ix=0; ix<nBlocks; ++ix) {
-			if (br->error) break;
+				
+		while (!br->error && peek(br)==BON_CTRL_BLOCK_BEGIN) {
+			VECTOR_EXPAND(*blocks, bon_r_block, 1);
+			bon_r_block* block = &blocks->data[blocks->size-1];
+			
+			block->parsed          = BON_TRUE;  // TODO: postpone
+			//block->payload_offset  = -1;        // TODO
+			
 			br_swallow(br, BON_CTRL_BLOCK_BEGIN);
-			bon_r_value(br, &doc->blocks[ix]);
+			block->id            = br_read_vlq(br);
+			block->payload_size  = br_read_vlq(br);
+			bon_r_value(br, &block->value);
 			br_swallow(br, BON_CTRL_BLOCK_END);
 		}
 	}
 	else
 	{
 		// Block-less document
-		doc->numBlocks = 1;
-		doc->blocks = (bon_value*)calloc(1, sizeof(bon_value));
-		bon_r_value(br, doc->blocks);
+		blocks->size  = 1;
+		blocks->cap   = 1;
+		blocks->data  = ALLOC_TYPE(1, bon_r_block);
+		bon_r_block* root = blocks->data;
+		root->id              = 0;
+		//root->payload_offset  = -1; // TODO
+		root->payload_size    = 0;
+		root->parsed          = BON_TRUE;
+		bon_r_value(br, &root->value);
 	}
 }
 
 void bon_r_footer(bon_r_doc* doc, bon_reader* br)
 {
+	br_assert(br, br->nbytes==0, BON_ERR_TRAILING_DATA);
 }
 
 void bon_r_read_doc(bon_r_doc* doc, bon_reader* br)
@@ -1448,7 +1453,7 @@ void bon_r_read_doc(bon_r_doc* doc, bon_reader* br)
 	doc->stats.bytes_file = br->nbytes;
 	bon_r_header(doc, br);
 	if (br->error) return;
-	bon_r_blocks(doc, br);
+	bon_r_read_content(doc, br);
 	if (br->error) return;
 	bon_r_footer(doc, br);
 }
@@ -1481,19 +1486,23 @@ void bon_r_close(bon_r_doc* doc)
 }
 
 // Returns NULL on fail
-const bon_value* bon_r_get_block(const bon_r_doc* doc, uint64_t block_id)
+const bon_value* bon_r_get_block(const bon_r_doc* doc, uint64_t id)
 {
-	if (doc->numBlocks > block_id) {
-		return &doc->blocks[ block_id ];
-	} else {
-		return NULL;
+	for (bon_size bi=0; bi<doc->blocks.size; ++bi) {
+		bon_r_block* block = &doc->blocks.data[bi];
+		if (block->id == id) {
+			// TODO: parse when needed
+			assert(block->parsed);
+			return &block->value;
+		}
 	}
+	
+	return NULL;
 }
 
 const bon_value* bon_r_root(const bon_r_doc* doc)
 {
-	assert(doc->numBlocks > 0);
-	return &doc->blocks[0];
+	return bon_r_get_block(doc, 0);
 }
 
 const bon_value* bon_r_get_key(const bon_value* val, const char* key)
@@ -1720,8 +1729,8 @@ bon_bool bw_read_aggregate(const bon_r_doc* doc, const bon_value* srcVal, const 
 {
 	switch (srcVal->type)
 	{
-		case BON_VALUE_NULL:
-			fprintf(stderr, "bon_r_read_aggregate: null\n");
+		case BON_VALUE_NIL:
+			fprintf(stderr, "bon_r_read_aggregate: nil\n");
 			return BON_FALSE; // There is no null-able type
 			
 		case BON_VALUE_BOOL:
@@ -1948,8 +1957,8 @@ void bon_print(FILE* out, const bon_value* v, size_t indent)
 #define PRINT_NEWLINE_INDENT fprintf(out, "\n"); for (size_t iix=0; iix<indent; ++iix) fprintf(out, INDENT);
 	
 	switch (v->type) {
-		case BON_VALUE_NULL:
-			fprintf(out, "null");
+		case BON_VALUE_NIL:
+			fprintf(out, "nil");
 			break;
 			
 			

@@ -8,7 +8,7 @@ A general purpose binary, serialization format
 This is an early draft ,and should be read as such. Many things are missing or left unspecified.
 
 # What is this?
-BON is a binary format for serializing data for storage or communication. It is in many ways a binary analog to JSON, and attempts to remedy the shortcomings of other formats, such as BSON and MessagePack, while still being simple, unlike more advanced formats such as HDF5.
+BON is a binary format for serializing data for storage or communication. It is in many ways a binary analog to JSON, and attempts to remedy the shortcomings of other formats, such as BSON and MessagePack, while still being simple, unlike more advanced formats such as HDF5. It is also designed to be dynamic, as messages can be composed on the fly. This is in contrast with e.g. Google's Protocol Buffers, where you statically generate code for encoding/decoding a predefined set of messages.
 
 
 ## MessagePack
@@ -17,7 +17,8 @@ BON is highly influenced by MessagePack, and it might be worth to read the [Mess
 * No self-identifying header
 	* A four byte magic header identifies BON - no such luck for MessagePack.
 * Bad unicode support
-	* In MessagePack there is not string type, only a byte data type, for which one cannot assume an encoding (UTF8, UTF16 etc).
+	* In MessagePack there is not string type, only a byte data type, for which one cannot assume an encoding (UTF8, UTF16 etc)
+	* Further discussion [here](https://github.com/msgpack/msgpack/issues/121#).
 * Slow on big endian machines
 	* One has to convert to little endian in MessagePack - BON handles big and little endian natively.
 * No support for large data blocks
@@ -52,11 +53,15 @@ BON is highly influenced by MessagePack, and it might be worth to read the [Mess
 	* More compact than BSON for JSON-like data
 	* Allow encoder to optimize for size when encoding homogenous data (e.g. arrays of integers)
 * Self-identifying (four byte magic header)
+* Self-describing
+	* Like JSON, a BON message can be self-explanatory by having good key names.
 * Heterogeneous arrays
 	* Allows large blobs of data to be copied right into a native holder
 	* Less overhead than MessagePack
 * Streaming serialization and deserialization
 * Frequent sanity checks
+* Dynamic
+	* Messages can be created on the fly
 
 
 ## Non-goals
@@ -69,7 +74,7 @@ BON is highly influenced by MessagePack, and it might be worth to read the [Mess
 	
 	
 ## Use examples
-* Server-client communication
+* Messages (e.g. server-client communication)
 * Storage of user records
 * Storage of uncompressed data, like:
 	* Sound, 3D models, images, vector graphics
@@ -78,10 +83,10 @@ BON is highly influenced by MessagePack, and it might be worth to read the [Mess
 	
 # Format	
 ## Values / Types:
-### Fixed size:
-* False
+### Atomic:
+* Nil
 * True
-* Null
+* False
 * Integers, all combinations of:
 	* signed/unsigned
 	* 8,16,32,64 bit
@@ -93,9 +98,9 @@ BON is highly influenced by MessagePack, and it might be worth to read the [Mess
 
 ### Flexible:
 * String
-	* VarInt size in bytes
-	* UTF8-bytes
-	* zero ended
+	* Prefixed with size
+	* UTF8-encoded
+	* Zero ended
 * Object (aka “map”)
 	* Maps string keys to values of any type
 	* Ended by an END_OBJECT control byte
@@ -108,11 +113,11 @@ BON is highly influenced by MessagePack, and it might be worth to read the [Mess
 These are optimized for storing chunks of binary data. They store the elements without individual type-prefixes.
 
 * Array (homogenous)
-	* VarInt size (number of elements)
-	* Element type (no string, objects or lists)
+	* Prefixed with size (number of elements)
+	* Element type (integers, floats, arrays and structs only)
 * Struct - for interleaved data in Arrays
-	* VarInt: Number of fields
-	* list of name-type pairs (no string, objects or lists allowed as type)
+	* Prefixed with the number of fields
+	* A series of name-type pairs (integers, floats, arrays and structs)
 
 
 Note: sizes and nested types are part of the parent type.
@@ -122,16 +127,16 @@ Note: sizes and nested types are part of the parent type.
 
 	BON0
 	OBJ_BEGIN
-		“name”   “BON”
-		“version”   FIXINT_1
-		“two bytes”   ARRAY_2 UINT8
+		STRING_4 “name” 0        STRING_3 “BON” 0x00
+		STRING_7 “version” 0     FIXINT_1
+		STRING_9 “two bytes” 0   BYTE_ARRAY_2
 			0x12 0x13
-		“ages”
+		STRING_4 “ages” 0
 			OBJ_BEGIN
-        	    “Emil”  FIXINT_27
-        	    “Mattias”  FIXINT_29
+        	    STRING_4 “Emil” 0   FIXINT_27
+        	    STRING_4 “John” 0   FIXINT_29
         	OBJ_END
-		“identity matrices”
+		STRING_17 “identity matrices” 0
 			LIST_BEGIN
 				ARRAY_1 ARRAY_1 FLOAT32 1
 				ARRAY_2 ARRAY_2 FLOAT32 1 0 1 0
@@ -140,9 +145,29 @@ Note: sizes and nested types are part of the parent type.
 	OBJ_END
 	FOOTER
 
+This is equivalent to the JSON:
+
+	{
+		"name" : "BON",
+		"version" : 1,
+		"two bytes" : [18, 19],
+		"ages" : {
+			"Emil" : 27,
+			"John" : 29
+		},
+		"identity matrices" : [
+			[1],
+			[[1,0], [0,1]],
+			[[1,0,0], [0,1,0], [0,0,1]]
+		]
+	}
+
+
 Words in ALL_CAPS are single byte control codes. Strings are prefixed by a control byte which include their size, and are followed by a zero byte.
 
-Things to note: the 3x3 float matrix need only a 3 byte header, then all nine floats follows in memory, meaning one can copy it directly from/to a float[3][3] in C.
+Things to note: the 3x3 float matrix need only a 3 byte header, then all nine floats follows in memory, meaning one can copy it directly from/to a float[3][3] in e.g. C.
+
+Examples from now on will ommit the leading string size and following zero byte.
 
 
 ## Example of using arrays and structs
@@ -154,7 +179,7 @@ Let say you want to store the vertices of a 3D model in a BON file. Each vertex 
 	};
 	Vertex vecs[1024];
 
-The straightforward way to encode this i to store each Vertex as a separate object, like such:
+The straightforward way to encode this is to store each Vertex as a separate object, like such:
 
 	“vecs” : LIST_BEGIN
 		OBJ_BEGIN
@@ -170,20 +195,20 @@ The straightforward way to encode this i to store each Vertex as a separate obje
 
 ...and so on. Obviously we are doing a lot of work encoding this, as well as making the BON file unnecessarily large. Another way would be to encode the entire ‘vecs’ structure as raw bytes and let the user figure it all out:
 
-	“vec” : ARRAY_VLQ [sizeof(vecs)] UINT8 [raw byte data]
+	“vecs” : ARRAY_VLQ [sizeof(vecs)] UINT8 [raw byte data]
 
 But now we loose all that information about what is encoded. What if a later version changes ‘pos’ to be encoded as double instead of float? What if another field is added to the Vertex struct?
 
-Here is where Array:s of Struct:s come to the rescue:
+This is where Array:s of Struct:s come to the rescue:
 
 	“vecs” : ARRAY_VLQ 1024 STRUCT_VLQ 2
-		“pos” ARRAY_VLQ 3 FLOAT32_LE
-		“color” ARRAY_VLQ 4 UINT8
+		“pos” ARRAY_3 FLOAT32_LE
+		“color” BYTE_ARRAY_4
 		[raw byte data]
 
 This is logically equivalent to the first version, but stored much much more efficiently. The user can write the entire structure in one fell swoop. The reader can check if the structure is as expected before reading and, if it is, just copy the data right into place.
 
-Note that the struct declaration has the same basic layout as an object, but with the actual values omitted.
+Note that the struct declaration has the same basic layout as an object, but with the actual values postponed.
 
 Arrays of structs is a very efficient way to encode homogenous elements of data (data in which each element are of the same type). Note that the array and struct elements must be of a fixed size, so they cannot contain strings, lists or objects - nor FixInt:s or true/false/nil.
 
@@ -191,7 +216,7 @@ Arrays of structs is a very efficient way to encode homogenous elements of data 
 ## Blocks (optional feature - not quite finished)
 When reading a huge BON file, it may be inconvenient to have to parse the whole file just to access a part of it. To help with this issue, a BON file can optionally be structured into blocks.
 
-A blocked BON document starts with a block index with byte offsets (from start of the file) for each block. Then follow the same number of blocks. The first block is the root block, with the document root value. Each block consists of a start marker, a bon value, and an end marker.
+Each block is encoded with a unique id (an unsigned integer, up to 64 bits) and a size in bytes.
 
 A reference to a block is considered a value. So the root object can for instance map some keys to blocks, and the parser can selectively parse only those block requested by the user.
 
@@ -199,11 +224,9 @@ Note that block declarations cannot be nested - they are top level structures.
 
 Here’s an example of a blocked BON file for storing user names and images:
 
-	HEADER
-	BLOCK_INDEX 3				// Number of blocks in index and file
-		20 80 1000128			// Byte offsets to blocks
+	BON0
 
-	BLOCK_BEGIN 0 20			// id #0 (root) and byte size of block
+	BLOCK_BEGIN 0 25			// id #0 (root) and byte size of block
 		OBJ_BEGIN
 		“users”
 			OBJ_BEGIN
@@ -228,36 +251,35 @@ Here’s an example of a blocked BON file for storing user names and images:
 			“image.jpg” ARRAY_VLQ 2000000 UINT8 [data]
 		OBJ_END
 	BLOCK_END
-	FOOTER
+
 
 
 When the user now wants to access an image of Paul, the parser can completely skip over parsing the block for John.
 
 Blocks can refer to other blocks, but the references may not form cycles (so the structure is a DAG). Even when several block refers to the same block, the logical structure is still that of a tree. For instance, when transforming BON to JSON, a block referenced from several other blocks will be represented multiple times in the JSON document. Therefore, blocks can also be used as a form of compression.
 
+Block sizes are excluding the BLOCK_BEGIN and BLOCK_END, and also excluding the VLQ:s encoding the id and block size. The size, in other words, is of the payload - the contained value. A block-size of 0 is reserved to mean "undefined size - parse to BLOCK_END".
+
+BLOCK_END is only there as a sanity check.
+
+Block ID:s can be any unsigned integer (less than 2^64), but 0 is reserved for the root block.
 
 
 ## More about blocks
-One nice feature is to be able to append data to a .BON file without rewriting it from scratch. A way to implement that would be to have the root block last. When appending, one would read and remove the root block, append the data block, amend the root block with reference to the new block, and then write the root block again.
+One nice feature is to be able to append data to a .BON file without rewriting it from scratch. The way to implement that is to have the root block last in the BON file.
 
 	HEADER
-	BLOCK_INDEX_OFFSET   // Byte offset to where the block index is
-	ROOT_BLOCK_OFFSET  // Same, but for root block
 	BLOCK #1
 	BLOCK #2
 	...
 	BLOCK #0
-	BLOCK_INDEX  /* byte offsets of all blocks */
 
 To append a block of data:
 
-1. remove BLOCK #0 and BLOCK_INDEX
-2. append the block
-3. change ROOT_BLOCK_OFFSET, append BLOCK #0
-4. change BLOCK_INDEX_OFFSET, append BLOCK_INDEX
-
-Should blocks have serial ID:s, or user defined ID:s (still uint64)? dunno
-
+1. read and remove the root block (BLOCK #0)
+2. append the new data block
+3. ammend the root object with a reference to the new data block
+4. append BLOCK #0
 
 
 
@@ -269,14 +291,14 @@ Roundtripping correctly with JSON is important for inspecing and editing smaller
 * All forward slashes will be escaped in output
 
 ### BON -> JSON -> BON
-* Problem: NaN/Inf floats
+* Problem: NaN/Inf floats are supported by BON, but not by JSON
 	* Damn JSON for not supporting these. Discussion [here](http://lavag.org/topic/16217-cr-json-labview/?p=99058).
-	* Write JSON:
-		* +Inf as 1e99999  (will overflow naturally)
-		* -Inf as -1e99999 (will underflow naturally)
-		* NaN as 0e666
-	* Read JSON:
-		* Helpfully detect the above notations, as well as other common notations (.inf, .nan, ...)
+	* BON->JSON, encode:
+		* +Inf as  1e99999  (will overflow naturally to infinity)
+		* -Inf as -1e99999  (will underflow naturally to negative infinity)
+		* NaN  as  0e666    (will be decoded as zero by standard JSON parser)
+	* JSON->BON:
+		* Helpfully detect the above notations
 
 
 # Codes
@@ -287,16 +309,16 @@ The positions of the control blocks have been chosen to coincide with the ASCII 
 
 We also optimize for small arrays, structs, strings and block refs. Block refs in particular is nice for to enable aggressive compression of common keys and values. For instance, if you have lot of object on the form
 `{ “state”: “open”, “id” : 0 }, { “state”: “closed”, “id” : 1}, { “state”: “unknown”, “id” : 2}`
-then naively these will take up about 20-25 bytes each. But if the encoder assign blocks 1-5 to the above strings, we can make each object just six bytes:
+then naively these will take up about 20-25 bytes each. But if the encoder assign blocks 1-5 to the above strings (`"state", "open", "id", "closed", "unknown"`), we can make each object just six bytes:
  `OBJ_BEGIN REF_1 REF_2 REF_3 num OBJ_END` 
 
 ### Control byte ranges and meanings:
 
-| Mask		| Type			| Range 
+| Mask		| Type			| Range (inclusive)
 | --------	| ------------ 	| ----- 
 | 000xxxxx	| PosFixInt	 	| [0, 31]
 | 001xxxxx	| FixString		| [0, 31]
-| 01xxxxxx	| Control codes	| 64 unique control bytes
+| 01xxxxxx	| Control codes	| 64 codes (some reserved)
 | 10xxxxxx	| FixBlockRef	| [1, 64]
 | 1100xxxx	| FixArray		| [0, 15]
 | 1101xxxx	| FixByteArray	| [0, 15]
@@ -305,16 +327,14 @@ then naively these will take up about 20-25 bytes each. But if the encoder assig
 
 ### Control codes (expressed in ASCII):
 
-	BLOCK_REF   = '@',    STRING_VLQ  = '\'',
+	BLOCK_REF   = '@',    STRING_VLQ  = '\'',  // 0x40  0x60
 	ARRAY_VLQ   = 'A',
 	HEADER      = 'B',
 	STRUCT_VLQ  = 'C',
 	BLOCK_BEGIN = 'D',    BLOCK_END   = 'd',
 	TRUE        = 'E',    FALSE       = 'e',
-	FOOTER      = 'F',
-	BLOCK_INDEX = 'I',
-	LIST_VLQ    = 'L',
-	NULL        = 'N',
+	NIL         = 'N',
+	
 	SINT8       = 'P',
 	UINT8       = 'Q',
 	SINT16_LE   = 'R',    SINT16_BE   = 'r',
@@ -351,6 +371,7 @@ All other values in [64, 127] are reserved for future use. Any decoder encounter
 	* Though big-int support would be nice, it would make encoders/decoders more complex
 
 
+
 # Appendix: Why binary?
 
 ### Faster:
@@ -377,10 +398,12 @@ All other values in [64, 127] are reserved for future use. Any decoder encounter
 	* So much more important for all binary formats to conform to a standard key-value-pair system - hence BON.
 
 
+
 # Appendix: Why a property tree (nested key-value pairs)?
 
 * Makes the format and its use self-documenting
 * Makes it easy to extend the format with new key:s which can safely be ignored by older (or uninterested) readers
+
 
 
 # FORMAT TODO
@@ -390,19 +413,18 @@ All other values in [64, 127] are reserved for future use. Any decoder encounter
 * Blocks - powerful enough for most usages?
 
 
+
 # Implementation TODO
 * Blocks
 * Compressed integers/strings/arrays/structs/block-refs
 * Memory management
 	* A lot of mallocs, no free:s
-	
-	
-	
+		
 	
 
 # BNF-ish (with regex syntax) - INCOMPLETE
 
-Words in capitals are control byte values (atoms). Explanations within bracketed, e.g. VarInt[size]
+Words in capitals are control byte values (atoms). Explanations within bracketed, e.g. VLQ[size]
 
 
 	document		::= header? doc_contents footer?
@@ -410,20 +432,24 @@ Words in capitals are control byte values (atoms). Explanations within bracketed
 	footer	  		::= ***TODO***
 	doc_contents	::= value
 					  | block_doc
-	block_doc		::= block_index block_decl+
-	block_index		::= BLOCK_INDEX uint64_le[nblocks]  uint64_le[block_offset]*
-	block_decl		::= BLOCK_BEGIN VarInt[byteSize] value BLOCK_END
+	block_doc		::= block_decl+
+	block_decl		::= BLOCK_BEGIN VLQ[id] VLQ[byteSize] value BLOCK_END
+	block_ref		::= FixBlockRef
+					  | BLOCK_REF VLQ[id]
 	value	   		::= object
 					  | list
 					  | string
 					  | TRUE
 					  | FALSE
-					  | NULL
+					  | NIL
 					  | fixed
+					  | block_ref
 	object	  		::= OBJ_BEGIN  (key value)*  OBJ_END
-	list			::= LIST_BEGIN	 value*	LIST_END
+	list			::= LIST_BEGIN  value*  LIST_END
 	key		 		::= string
-	sized_string	::= STRING_VLQ VarInt[nbytes]
+					  | block_ref
+	sized_string	::= FixString
+					  | STRING_VLQ VLQ[nbytes]
 	string	  		::= sized_string byte* 0x00
 
 	fixed			::= int
@@ -431,7 +457,8 @@ Words in capitals are control byte values (atoms). Explanations within bracketed
 					  | struct
 					  | array
 
-	int				::= short_int
+	int				::= PosFixInt
+					  | NegFixInt
 					  | int_type int_value
 
 	int_value		::= byte+
@@ -453,7 +480,7 @@ Words in capitals are control byte values (atoms). Explanations within bracketed
 
 	float			::= float_type float_value
 
-	float_value	  	::= byt+
+	float_value	  	::= byte+
 
 	float_type		::= FLOAT32_LE 
 					  | FLOAT32_BE 
@@ -471,17 +498,36 @@ Words in capitals are control byte values (atoms). Explanations within bracketed
 					  | array_value
 
 	struct			::= struct_type struct_value
-	struct_type		::= STRUCT_VLQ VarInt (key fixed_type)*
+	sized_struct	::= FixStruct
+					  | STRUCT_VLQ VLQ
+	struct_type		::= sized_struct (key fixed_type)*
 	struct_value	::= fixed_value*
 
 	array			::= array_type array_value
-	sized_array		::= ARRAY_VLQ VarInt
+	sized_array		::= FixArray
+					  | ARRAY_VLQ VLQ
 	array_type		::= sized_array fixed_type
+					  | FixByteArray
 	array_value		::= fixed_value*
 
 
-# VarInt / VLQ
 
-VarInt:s are used for string and array sizes, as well as block ID:s. They are unsigned integers that are generally small, but may be up to 64 bit.
+# VLQ
+There are a few places in the BON file format when we want to encode sizes. The size of a string or and array can be huge and would in some cases require up to 64 bits to encode. However, most are much smaller than this and so always using 64 bits is a waste of space.
 
-We use standard Variable-length quantities, or VLQ:s, for this. VLQ naturally solves endian issues, and implementations abound:
+BON solves this by using encoding these values using [Variable Length Quantity](http://en.wikipedia.org/wiki/Variable-length_quantity), or VLQ for short. VLQ:s are used for string and array sizes, as well as block ID:s. They are unsigned integers that are generally small, and must be strictly smaller than 2^64 (requiring at most 10 bytes to encode).
+
+The VLQ format naturally solves endian issues, and [implementations abound](http://rosettacode.org/wiki/Variable-length_quantity).
+
+Though one can encode small numbers with a small number of bytes using VLQ, nothing forbids an encoder to waste many bytes to encode small numbers, while still adhering to the VLQ format. For instance, the value 42 could be encoded as any of:
+
+	0x2A
+	0x80 0x2A
+	0x80 0x80 0x2A
+	…etc
+
+This can be helpful when an encoder doesn't want to fill in the size of something right away. In particular, when encoding a block the encoder could initially fill in the block size as:
+
+	0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x00
+	
+The block can then be written and once done, and we know how large the block ended up becoming, the encoder could go back and change that VLQ size to any value (less than 2^64)

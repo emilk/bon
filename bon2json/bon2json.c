@@ -121,7 +121,7 @@ json_t* bon2json(const bon_r_doc* bon, const bon_value* v)
 {
 	switch (v->type)
 	{
-		case BON_VALUE_NULL:
+		case BON_VALUE_NIL:
 			return json_null();
 			
 		case BON_VALUE_BOOL:

@@ -34,38 +34,12 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "BON/bon.c"
-         timestampString = "383781071.256517"
+         timestampString = "386687544.498875"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "700"
-         endingLineNumber = "700"
+         startingLineNumber = "701"
+         endingLineNumber = "701"
          landmarkName = "bw_write_uint_as_uint8()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "Yes"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "BON/bon.c"
-         timestampString = "384121297.63276"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "1620"
-         endingLineNumber = "1620"
-         landmarkName = "br_read_aggregate()"
-         landmarkType = "7">
-      </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "Yes"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "BON/bon.c"
-         timestampString = "384121297.63276"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "1626"
-         endingLineNumber = "1626"
-         landmarkName = "br_read_aggregate()"
          landmarkType = "7">
       </FileBreakpoint>
    </FileBreakpoints>
