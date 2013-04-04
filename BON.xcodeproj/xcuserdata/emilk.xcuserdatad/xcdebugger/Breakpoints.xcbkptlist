@@ -34,11 +34,11 @@
          ignoreCount = "0"
          continueAfterRunningActions = "No"
          filePath = "BON/bon.c"
-         timestampString = "386687544.498875"
+         timestampString = "386722819.450095"
          startingColumnNumber = "9223372036854775807"
          endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "701"
-         endingLineNumber = "701"
+         startingLineNumber = "702"
+         endingLineNumber = "702"
          landmarkName = "bw_write_uint_as_uint8()"
          landmarkType = "7">
       </FileBreakpoint>

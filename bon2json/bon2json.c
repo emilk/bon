@@ -117,7 +117,7 @@ json_t* agg2json(const bon_type* aggType, bon_reader* br)
 }
 
 
-json_t* bon2json(const bon_r_doc* bon, const bon_value* v)
+json_t* bon2json(bon_r_doc* bon, const bon_value* v)
 {
 	switch (v->type)
 	{

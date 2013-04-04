@@ -54,7 +54,7 @@ void writeStruct(bon_w_doc* doc)
 	bon_free_type( type_vertex_list );
 }
 
-void readStruct(const bon_r_doc* doc, const bon_value* val)
+void readStruct(bon_r_doc* doc, const bon_value* val)
 {
 	/*
 	 Ideally, one would simply spec up the receiving struct and
@@ -90,14 +90,7 @@ void readStruct(const bon_r_doc* doc, const bon_value* val)
 }
 
 void create()
-{
-#if 0
-	bon_w_aggr_type_t*  type_vec3    =  bon_w_new_type_simple_array(3, BON_CTRL_FLOAT32);
-	bon_w_aggr_type_t*  type_mat3x3  =  bon_w_new_type_array(3, type_vec3);
-	
-	float identity[3][3] = {{1,0,0}, {0,1,0}, {0,0,1}};
-#endif
-	
+{	
 	FILE* fp = fopen(FILE_NAME, "wb");
 	
 	bon_w_doc* doc = bon_w_new_doc(&bon_file_writer, fp);
@@ -179,10 +172,15 @@ void create()
 	bon_w_end_obj(doc);
 #endif
 	
-#if 0
+#if 1	
 	bon_w_key(doc, "array", BON_ZERO_ENDED);
 	double doubles[3] = {1.0f, 0.5f, 0.33333333333333333f};
-	bon_w_array(doc, 3, BON_CTRL_FLOAT64, doubles, sizeof(doubles));
+	bon_w_array(doc, 3, BON_TYPE_FLOAT64, doubles, sizeof(doubles));
+	
+	bon_type*  type_vec3    =  bon_new_type_simple_array(3, BON_TYPE_FLOAT32);
+	bon_type*  type_mat3x3  =  bon_new_type_array(3, type_vec3);
+	
+	float identity[3][3] = {{1,0,0}, {0,1,0}, {0,0,1}};
 	
 	bon_w_key(doc, "mat", BON_ZERO_ENDED);
 	bon_w_aggregate(doc, type_mat3x3, identity, 3*3*sizeof(float));

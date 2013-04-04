@@ -52,6 +52,7 @@ typedef enum {
 	BON_ERR_MISSING_TOKEN,
 	
 	BON_ERR_TRAILING_DATA,  // Data trailing the document
+	BON_ERR_BAD_BLOCK,
 	
 	// bw_read_aggregate etc:
 	BON_ERR_NARROWING,
@@ -287,16 +288,9 @@ typedef struct {
 	
 	// For buffered writing
 	uint8_t*  buff;
-	unsigned  buff_ix;
-	unsigned  buff_size;
+	bon_size  buff_ix;
+	bon_size  buff_size;
 } bon_w_doc;
-
-
-typedef struct {
-	uint64_t payloadSize; // in bytes
-	uint64_t descSize;    // Size of following BON-desc
-	uint8_t desc[];
-} bon_w_aggr_type_t;
 
 
 bon_error      on_get_error(bon_w_doc* doc);
@@ -327,12 +321,6 @@ void         bon_w_float      (bon_w_doc* doc, float val);
 void         bon_w_double     (bon_w_doc* doc, double val);
 void         bon_w_aggregate  (bon_w_doc* doc, bon_type* type, const void* data, bon_size nbytes);             // Number of bytes implied by 'type', but required for extra safety
 void         bon_w_array      (bon_w_doc* doc, bon_size n_elem, bon_type_id type, const void* data, bon_size nbytes);      // Helper
-
-bon_w_aggr_type_t*  bon_w_begin_type_simple(bon_ctrl t);
-bon_w_aggr_type_t*  bon_w_new_type_simple_array(bon_size n, bon_ctrl t);
-bon_w_aggr_type_t*  bon_w_new_type_array(bon_size n, bon_w_aggr_type_t* c);          // "An array of several of these"
-bon_w_aggr_type_t*  bon_w_new_type_tuple(bon_size n, const bon_w_aggr_type_t** c);   // c is an array of n types
-void                     bon_w_free_type(bon_w_aggr_type_t** type);                       // Will NOT free nested types
 
 
 //////////////////////////////////////////////////////////
@@ -433,11 +421,11 @@ typedef struct {
 } bon_stats;
 
 typedef struct {
-	bon_size   id;              // Id of block
-	//bon_size   payload_offset;  // Byte offset in document to payload start
-	bon_size   payload_size;    // Byte size of payload. 0 means unknown.
-	bon_bool   parsed;          // if false, 'value' is not yet valid.
-	bon_value  value;
+	bon_size        id;              // Id of block
+	const uint8_t*  payload;         // Pointer into document to payload start
+	bon_size        payload_size;    // Byte size of payload. 0 means unknown.
+	bon_value       value;           // value, if 'parsed' is true.
+	bon_bool        parsed;          // if false, 'value' is not yet valid.
 } bon_r_block;
 
 typedef struct {
@@ -458,10 +446,10 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes);
 void       bon_r_close(bon_r_doc* doc);
 
 // Returns NULL on fail
-const bon_value* bon_r_get_block(const bon_r_doc* doc, uint64_t block_id);
+const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t block_id);
 
 
-const bon_value* bon_r_root(const bon_r_doc* doc);
+const bon_value* bon_r_root(bon_r_doc* doc);
 
 
 const bon_value* bon_r_get_key(const bon_value* obj, const char* key);
@@ -489,10 +477,10 @@ const bon_value*  bon_r_list_elem(const bon_value* list, bon_size ix);
  
  False on fail
  */
-bon_bool bon_r_read_aggregate(const bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, void* dst, bon_size nbytes);
+bon_bool bon_r_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, void* dst, bon_size nbytes);
 
 // Convenience:
-bon_bool bon_r_read_aggregate_fmt(const bon_r_doc* doc, const bon_value* srcVal,
+bon_bool bon_r_read_aggregate_fmt(bon_r_doc* doc, const bon_value* srcVal,
 											 void* dst, bon_size nbytes, const char* fmt);
 
 //////////////////////////////////////////////////////////

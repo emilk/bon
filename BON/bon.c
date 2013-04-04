@@ -540,6 +540,7 @@ const char* bon_err_str(bon_error err)
 		"BON_ERR_MISSING_TOKEN",
 		
 		"BON_ERR_TRAILING_DATA",
+		"BON_ERR_BAD_BLOCK",
 		
 		"BON_ERR_NARROWING",
 		"BON_ERR_NULL_OBJ",
@@ -1418,13 +1419,27 @@ void bon_r_read_content(bon_r_doc* doc, bon_reader* br)
 			VECTOR_EXPAND(*blocks, bon_r_block, 1);
 			bon_r_block* block = &blocks->data[blocks->size-1];
 			
-			block->parsed          = BON_TRUE;  // TODO: postpone
-			//block->payload_offset  = -1;        // TODO
-			
 			br_swallow(br, BON_CTRL_BLOCK_BEGIN);
 			block->id            = br_read_vlq(br);
 			block->payload_size  = br_read_vlq(br);
-			bon_r_value(br, &block->value);
+			
+			if (block->payload_size >= br->nbytes) {
+				br_set_err(br, BON_ERR_BAD_BLOCK);
+				return;
+			}
+						
+			block->payload         = br->data;
+			
+			if (block->payload_size == 0) {
+				// Unknown - forced parse:
+				bon_r_value(br, &block->value);
+				block->parsed = BON_TRUE;
+			} else {
+				// postpone parsing block
+				br_skip(br, block->payload_size);
+				block->parsed = BON_FALSE;
+			}
+			
 			br_swallow(br, BON_CTRL_BLOCK_END);
 		}
 	}
@@ -1486,13 +1501,27 @@ void bon_r_close(bon_r_doc* doc)
 }
 
 // Returns NULL on fail
-const bon_value* bon_r_get_block(const bon_r_doc* doc, uint64_t id)
+const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t id)
 {
 	for (bon_size bi=0; bi<doc->blocks.size; ++bi) {
 		bon_r_block* block = &doc->blocks.data[bi];
 		if (block->id == id) {
-			// TODO: parse when needed
-			assert(block->parsed);
+			if (!block->parsed) {
+				// Lazy parsing:
+				bon_reader br = { block->payload, block->payload_size, 0, doc };
+				if (br.nbytes != 0) {
+					br_set_err(&br, BON_ERR_TRAILING_DATA);
+				}
+				if (br.error) {
+					if (!doc->error) {
+						doc->error = br.error;
+					}
+					return NULL;
+				}
+				
+				block->parsed = BON_TRUE;
+			}
+			
 			return &block->value;
 		}
 	}
@@ -1500,7 +1529,7 @@ const bon_value* bon_r_get_block(const bon_r_doc* doc, uint64_t id)
 	return NULL;
 }
 
-const bon_value* bon_r_root(const bon_r_doc* doc)
+const bon_value* bon_r_root(bon_r_doc* doc)
 {
 	return bon_r_get_block(doc, 0);
 }
@@ -1598,7 +1627,7 @@ const bon_value* bon_r_list_elem(const bon_value* val, bon_size ix)
 /*
  from and to aggregate (i.e. structs and array)
  */
-bon_bool br_read_aggregate(const bon_r_doc* doc, const bon_type* srcType, bon_reader* br,
+bon_bool br_read_aggregate(bon_r_doc* doc, const bon_type* srcType, bon_reader* br,
 									const bon_type* dstType, bon_writer* bw)
 {
 	if (dstType->id == BON_TYPE_ARRAY &&
@@ -1725,7 +1754,7 @@ bon_bool br_read_aggregate(const bon_r_doc* doc, const bon_type* srcType, bon_re
 }
 
 
-bon_bool bw_read_aggregate(const bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, bon_writer* bw)
+bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, bon_writer* bw)
 {
 	switch (srcVal->type)
 	{
@@ -1844,7 +1873,7 @@ bon_bool bw_read_aggregate(const bon_r_doc* doc, const bon_value* srcVal, const 
 	}
 }
 
-bon_bool bon_r_read_aggregate(const bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, void* dst, bon_size nbytes)
+bon_bool bon_r_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, void* dst, bon_size nbytes)
 {
 	bon_size expected = bon_aggregate_payload_size(dstType);
 	if (expected != nbytes) {
@@ -1858,7 +1887,7 @@ bon_bool bon_r_read_aggregate(const bon_r_doc* doc, const bon_value* srcVal, con
 }
 	
 // Convenience:
-bon_bool bon_r_read_aggregate_fmt(const bon_r_doc* doc, const bon_value* srcVal,
+bon_bool bon_r_read_aggregate_fmt(bon_r_doc* doc, const bon_value* srcVal,
 											 void* dst, bon_size nbytes, const char* fmt)
 {
 	// TODO: var args ...
@@ -1909,7 +1938,6 @@ void bon_print_aggr(FILE* out, const bon_type* aggType, bon_reader* br)
 			}
 			fprintf(out, "}");
 		} break;
-
 			
 		case BON_CTRL_SINT8:
 		case BON_CTRL_SINT16_LE:
