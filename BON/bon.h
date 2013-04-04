@@ -391,7 +391,7 @@ typedef union {
 	bon_value_list  list;
 	bon_value_obj   obj;
 	bon_value_agg   agg;
-	uint64_t        block_id;
+	uint64_t        blockRefId;
 } bon_value_union;
 
 
@@ -413,11 +413,11 @@ typedef struct {
 	
 	bon_size count_string;
 	bon_size bytes_string_dry;   // Number of bytes taken up by strings (excluding fluff).
-	bon_size bytes_string_wet;   // Number of bytes taken up by strings (including header and zero byte).
+	//bon_size bytes_string_wet;   // Number of bytes taken up by strings (including header and zero byte).
 	
 	bon_size count_aggr;
 	bon_size bytes_aggr_dry;     // Number of bytes taken up by strings (excluding header).
-	bon_size bytes_aggr_wet;     // Number of bytes taken up by strings (including header).
+	//bon_size bytes_aggr_wet;     // Number of bytes taken up by strings (including header).
 } bon_stats;
 
 typedef struct {
@@ -501,13 +501,13 @@ typedef struct {
 
 
 /* Read a simple value denoted by 't', and interpret is as a signed int. */
-int64_t br_read_sint64(bon_reader* br, bon_ctrl t);
+int64_t br_read_sint64(bon_reader* br, bon_type_id t);
 
 /* Read a simple value denoted by 't', and interpret is as an unsigned int. */
-uint64_t br_read_uint64(bon_reader* br, bon_ctrl t);
+uint64_t br_read_uint64(bon_reader* br, bon_type_id t);
 
 /* Read a simple value denoted by 't', and interpret is as a double. */
-double br_read_double(bon_reader* br, bon_ctrl t);
+double br_read_double(bon_reader* br, bon_type_id t);
 
 
 #endif

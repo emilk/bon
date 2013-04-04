@@ -351,9 +351,9 @@ bon_bool open_file(const char* path) {
 			bon_stats* stats = &doc->stats;
 			printf("-----------------\n");
 			printf("%8d bytes in total\n",                  (int)stats->bytes_file);
-			printf("%8d bytes in %d strings (incl header)\n",  (int)stats->bytes_string_wet, (int)stats->count_string);
+			//printf("%8d bytes in %d strings (incl header)\n",  (int)stats->bytes_string_wet, (int)stats->count_string);
 			printf("%8d bytes in %d strings (excl header)\n",  (int)stats->bytes_string_dry, (int)stats->count_string);
-			printf("%8d bytes in %d aggrs (incl header)\n",    (int)stats->bytes_aggr_wet, (int)stats->count_aggr);
+			//printf("%8d bytes in %d aggrs (incl header)\n",    (int)stats->bytes_aggr_wet, (int)stats->count_aggr);
 			printf("%8d bytes in %d aggrs (excl header)\n",    (int)stats->bytes_aggr_dry, (int)stats->count_aggr);
 			printf("-----------------\n");
 		} else {

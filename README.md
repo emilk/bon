@@ -319,7 +319,7 @@ then naively these will take up about 20-25 bytes each. But if the encoder assig
 | 000xxxxx	| PosFixInt	 	| [0, 31]
 | 001xxxxx	| FixString		| [0, 31]
 | 01xxxxxx	| Control codes	| 64 codes (some reserved)
-| 10xxxxxx	| FixBlockRef	| [1, 64]
+| 10xxxxxx	| FixBlockRef	| [0, 63]
 | 1100xxxx	| FixArray		| [0, 15]
 | 1101xxxx	| FixByteArray	| [0, 15]
 | 1110xxxx	| FixStruct		| [0, 15]
