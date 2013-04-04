@@ -33,8 +33,22 @@
 /**/  }
 
 
+/////////////////////////////////////
+
+// Start values for ranges
+const uint8_t FIXED_STRING_START      = 32;
+const uint8_t FIXED_CODES_START       = 64;
+const uint8_t FIXED_BLOCK_START       = 128;
+const uint8_t FIXED_ARRAY_START       = FIXED_BLOCK_START  + 64;
+const uint8_t FIXED_BYTE_ARRAY_START  = FIXED_ARRAY_START       + 16;
+const uint8_t FIXED_STRUCT_START      = FIXED_BYTE_ARRAY_START  + 16;
+const uint8_t FIXED_NEG_INT_START     = FIXED_STRUCT_START      + 16;
+
+const uint8_t FIXED_AGGREGATES_START  = FIXED_ARRAY_START;
+
 
 /////////////////////////////////////
+
 
 uint64_t bon_w_type_size(bon_type_id t)
 {
@@ -592,7 +606,7 @@ uint8_t next(bon_reader* br) {
 	}
 }
 
-void pop(bon_reader* br) {
+void br_putback(bon_reader* br) {
 	if (!br->error) {
 		br->data--;
 		br->nbytes++;
@@ -982,17 +996,28 @@ void bon_w_double(bon_w_doc* doc, double val)
 	}
 }
 
+void bon_w_aggregate_type(bon_w_doc* doc, bon_type* type);
+
+void bon_w_array_type(bon_w_doc* doc, bon_size length, bon_type* element_type)
+{
+	// TODO: compressed array
+	
+	bon_w_raw_uint8(doc, BON_CTRL_ARRAY_VLQ);
+	bon_w_vlq(doc, length);
+	bon_w_aggregate_type(doc, element_type);
+}
+
 void bon_w_aggregate_type(bon_w_doc* doc, bon_type* type)
 {
 	switch (type->id) {
 		case BON_TYPE_ARRAY:
-			bon_w_raw_uint8(doc, BON_CTRL_ARRAY_VLQ);
-			bon_w_vlq(doc, type->u.array->size);
-			bon_w_aggregate_type(doc, type->u.array->type);
+			bon_w_array_type(doc, type->u.array->size, type->u.array->type);
 			break;
 			
 			
 		case BON_TYPE_STRUCT: {
+			// TODO: compressed struct
+			
 			bon_w_raw_uint8(doc, BON_CTRL_STRUCT_VLQ);
 			bon_type_struct* strct = type->u.strct;
 			bon_size n = strct->size;
@@ -1002,6 +1027,7 @@ void bon_w_aggregate_type(bon_w_doc* doc, bon_type* type)
 				bon_w_aggregate_type(doc, strct->types[i]);
 			}
 		} break;
+			
 			
 		default:
 			// Simple type - write ctrl code:
@@ -1024,15 +1050,20 @@ void bon_w_aggregate(bon_w_doc* doc, bon_type* type, const void* data, bon_size 
 	bon_w_raw(doc, data, nbytes);
 }
 
-void bon_w_array(bon_w_doc* doc, bon_size n, bon_type_id t, const void* data, bon_size nbytes)
+void bon_w_array(bon_w_doc* doc, bon_size len, bon_type_id element_t,
+					  const void* data, bon_size nbytes)
 {
-	// TODO: short array
+	bon_w_assert(doc, len * bon_w_type_size(element_t) == nbytes,
+					 BON_ERR_BAD_AGGREGATE_SIZE);
+	if (doc->error) {
+		return;
+	}
 	
-	bon_w_assert(doc, n * bon_w_type_size(t) == nbytes, BON_ERR_BAD_AGGREGATE_SIZE);
+	// TODO: compressed arrays
 	
 	bon_w_raw_uint8(doc, BON_CTRL_ARRAY_VLQ);
-	bon_w_vlq(doc, n);
-	bon_w_raw_uint8(doc, t);
+	bon_w_vlq(doc, len);
+	bon_w_raw_uint8(doc, element_t);
 	
 	bon_w_raw(doc, data, nbytes);
 }
@@ -1233,7 +1264,34 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 	
 	uint8_t ctrl = next(br);
 	
-	if (ctrl == BON_CTRL_ARRAY_VLQ) {
+	if (FIXED_AGGREGATES_START <= ctrl   &&  ctrl < FIXED_NEG_INT_START)
+	{
+		// Compressed array or struct:
+		if (ctrl  >=  FIXED_STRUCT_START)
+		{
+			bon_size structSize = ctrl - FIXED_STRUCT_START;
+			parse_struct_type(br, type, structSize);
+		}
+		else if (ctrl  >=  FIXED_BYTE_ARRAY_START)
+		{
+			bon_size arraySize     = ctrl - FIXED_BYTE_ARRAY_START;
+			
+			bon_type_array* array  = ALLOC_TYPE(1, bon_type_array);
+			array->size            = arraySize;
+			array->type            = (bon_type*)calloc(1, sizeof(bon_type));
+			array->type->id        = BON_TYPE_UINT8;
+			
+			type->id               = BON_TYPE_ARRAY;
+			type->u.array          = array;
+		}
+		else
+		{
+			assert(ctrl >= FIXED_ARRAY_START);
+			bon_size arraySize = ctrl - FIXED_ARRAY_START;
+			parse_array_type(br, type, arraySize);
+		}
+	}
+	else if (ctrl == BON_CTRL_ARRAY_VLQ) {
 		parse_array_type(br, type, br_read_vlq(br));
 	} else if (ctrl == BON_CTRL_STRUCT_VLQ) {
 		parse_struct_type(br, type, br_read_vlq(br));
@@ -1243,6 +1301,22 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 	} else {
 		// not array, not tuple, not atomic type? Error!
 		br_set_err(br, BON_ERR_BAD_AGGREGATE_TYPE);
+	}
+}
+
+void bon_r_aggr_value(bon_reader* br, bon_value* val)
+{
+	val->type = BON_VALUE_AGGREGATE;
+	bon_type* type = &val->u.agg.type;
+	parse_aggr_type(br, type);
+	val->u.agg.data = br->data;
+	bon_size nBytesPayload = bon_aggregate_payload_size(type);
+	br_skip(br, nBytesPayload);
+	
+	if (br->doc) {
+		br->doc->stats.count_aggr      +=  1;
+		br->doc->stats.bytes_aggr_dry  +=  nBytesPayload;
+		//br->doc->stats.bytes_aggr_wet  += (bytes_left_start - br->nbytes);
 	}
 }
 
@@ -1349,18 +1423,8 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 		case BON_CTRL_ARRAY_VLQ:
 		case BON_CTRL_TUPLE_VLQ:
 		case BON_CTRL_STRUCT_VLQ: {
-			pop(br);
-			val->type = BON_VALUE_AGGREGATE;
-			bon_type* type = &val->u.agg.type;
-			parse_aggr_type(br, type);
-			val->u.agg.data = br->data;
-			bon_size nBytesPayload = bon_aggregate_payload_size(type);
-			br_skip(br, nBytesPayload);
-			if (br->doc) {
-				br->doc->stats.count_aggr      += 1;
-				br->doc->stats.bytes_aggr_dry  += nBytesPayload;
-				//br->doc->stats.bytes_aggr_wet  += (bytes_left_start - br->nbytes);
-			}
+			br_putback(br);
+			bon_r_aggr_value(br, val);
 		} break;
 			
 			
@@ -1375,77 +1439,30 @@ void bon_r_value(bon_reader* br, bon_value* val)
 {
 	uint8_t ctrl = next(br);
 	
-	// Start values for ranges
-	//static const uint8_t Start_PosInt     = 0;
-	static const uint8_t Start_String     = 32;
-	static const uint8_t Start_Codes      = 64;
-	static const uint8_t Start_Block      = 128;
-	static const uint8_t Start_Array      = Start_Block  + 64;
-	static const uint8_t Start_Aggregates = Start_Array;
-	static const uint8_t Start_ByteArray  = Start_Array      + 16;
-	static const uint8_t Start_Struct     = Start_ByteArray  + 16;
-	static const uint8_t Start_NegInt     = Start_Struct     + 16;
 	
-	assert((int)Start_NegInt + 16 == 256);
-	
-	
-	if      (ctrl  >=  Start_NegInt)
+	if     (ctrl  >=  FIXED_NEG_INT_START)
 	{
 		val->type   = BON_VALUE_SINT64;
 		val->u.s64  = (int8_t)ctrl;
 	}
-	else if (ctrl >= Start_Aggregates)
+	else if (ctrl >= FIXED_AGGREGATES_START)
 	{
-		val->type             = BON_VALUE_AGGREGATE;
-		bon_value_agg*  agg   = &val->u.agg;
-		bon_type*       type  = &agg->type;
-		
-		if (ctrl  >=  Start_Struct)
-		{
-			bon_size structSize = ctrl - Start_Struct;
-			parse_struct_type(br, type, structSize);
-		}
-		else if (ctrl  >=  Start_ByteArray)
-		{
-			bon_size arraySize     = ctrl - Start_ByteArray;
-			
-			bon_type_array* array  = ALLOC_TYPE(1, bon_type_array);
-			array->size            = arraySize;
-			array->type            = (bon_type*)calloc(1, sizeof(bon_type));
-			array->type->id        = BON_TYPE_UINT8;
-			
-			type->id               = BON_TYPE_ARRAY;
-			type->u.array          = array;
-		}
-		else
-		{
-			bon_size arraySize = ctrl - Start_Array;
-			parse_array_type(br, type, arraySize);
-		}
-		
-		agg->data = br->data;
-		bon_size nBytesPayload = bon_aggregate_payload_size(type);
-		br_skip(br, nBytesPayload);
-		
-		if (br->doc) {
-			br->doc->stats.count_aggr      += 1;
-			br->doc->stats.bytes_aggr_dry  += nBytesPayload;
-			//br->doc->stats.bytes_aggr_wet  += (bytes_left_start - br->nbytes);
-		}
+		br_putback(br);
+		bon_r_aggr_value(br, val);
 	}
-	else if (ctrl  >=  Start_Block)
+	else if (ctrl  >=  FIXED_BLOCK_START)
 	{
 		val->type          = BON_VALUE_BLOCK_REF;
-		val->u.blockRefId  = ctrl - Start_Block;
+		val->u.blockRefId  = ctrl - FIXED_BLOCK_START;
 	}
-	else if (ctrl  >=  Start_Codes)
+	else if (ctrl  >=  FIXED_CODES_START)
 	{
 		bon_r_value_from_ctrl(br, val, ctrl);
 	}
-	else if (ctrl  >=  Start_String)
+	else if (ctrl  >=  FIXED_STRING_START)
 	{
 		// FixString
-		bon_r_string_sized(br, val, ctrl - Start_String);
+		bon_r_string_sized(br, val, ctrl - FIXED_STRING_START);
 	}
 	else
 	{
@@ -1534,7 +1551,7 @@ void bon_r_read_content(bon_r_doc* doc, bon_reader* br)
 			block->payload         = br->data;
 			
 			if (block->payload_size == 0) {
-				// Unknown - forced parse:
+				// Unspecified size - forced parse:
 				bon_r_value(br, &block->value);
 				block->parsed = BON_TRUE;
 			} else {
@@ -1554,7 +1571,7 @@ void bon_r_read_content(bon_r_doc* doc, bon_reader* br)
 		blocks->data  = ALLOC_TYPE(1, bon_r_block);
 		bon_r_block* root = blocks->data;
 		root->id              = 0;
-		//root->payload_offset  = -1; // TODO
+		root->payload         = br->data;
 		root->payload_size    = 0;
 		root->parsed          = BON_TRUE;
 		bon_r_value(br, &root->value);

@@ -59,7 +59,7 @@ json_t* uint64_2_json(uint64_t u64)
 
 json_t* agg2json(const bon_type* aggType, bon_reader* br)
 {
-	uint8_t id = aggType->id;
+	bon_type_id id = aggType->id;
 	
 	switch (id) {
 		case BON_TYPE_ARRAY: {
@@ -72,7 +72,7 @@ json_t* agg2json(const bon_type* aggType, bon_reader* br)
 			return jarray;
 		}
 			
-		case BON_CTRL_STRUCT_VLQ: {
+		case BON_TYPE_STRUCT: {
 			bon_type_struct* strct = aggType->u.strct;
 			json_t* jobj = json_object();
 			for (uint64_t ti=0; ti<strct->size; ++ti) {
@@ -84,25 +84,25 @@ json_t* agg2json(const bon_type* aggType, bon_reader* br)
 		}
 			
 			
-		case BON_CTRL_SINT8:
-		case BON_CTRL_SINT16_LE:  case BON_CTRL_SINT16_BE:
-		case BON_CTRL_SINT32_LE:  case BON_CTRL_SINT32_BE:
-		case BON_CTRL_SINT64_LE:  case BON_CTRL_SINT64_BE: {
+		case BON_TYPE_SINT8:
+		case BON_TYPE_SINT16_LE:  case BON_TYPE_SINT16_BE:
+		case BON_TYPE_SINT32_LE:  case BON_TYPE_SINT32_BE:
+		case BON_TYPE_SINT64_LE:  case BON_TYPE_SINT64_BE: {
 			int64_t s64 = br_read_sint64(br, id);
 			return json_integer( s64 );
 		}
 			
 			
-		case BON_CTRL_UINT8:
-		case BON_CTRL_UINT16_LE:  case BON_CTRL_UINT16_BE:
-		case BON_CTRL_UINT32_LE:  case BON_CTRL_UINT32_BE:
-		case BON_CTRL_UINT64_LE:  case BON_CTRL_UINT64_BE: {
+		case BON_TYPE_UINT8:
+		case BON_TYPE_UINT16_LE:  case BON_TYPE_UINT16_BE:
+		case BON_TYPE_UINT32_LE:  case BON_TYPE_UINT32_BE:
+		case BON_TYPE_UINT64_LE:  case BON_TYPE_UINT64_BE: {
 			return uint64_2_json( br_read_uint64(br, id) );
 		}
 			
 			
-		case BON_CTRL_FLOAT32_LE:  case BON_CTRL_FLOAT32_BE:
-		case BON_CTRL_FLOAT64_LE:  case BON_CTRL_FLOAT64_BE: {
+		case BON_TYPE_FLOAT32_LE:  case BON_TYPE_FLOAT32_BE:
+		case BON_TYPE_FLOAT64_LE:  case BON_TYPE_FLOAT64_BE: {
 			double dbl = br_read_double(br, id);
 			return json_real(dbl);
 		}
@@ -191,11 +191,11 @@ json_t* bon2json(bon_r_doc* bon, const bon_value* v)
 			
 			
 		case BON_VALUE_BLOCK_REF: {
-			const bon_value* val = bon_r_get_block( bon, v->u.block_id );
+			const bon_value* val = bon_r_get_block( bon, v->u.blockRefId );
 			if (val) {
 				return bon2json(bon, val);
 			} else {
-				fprintf(stderr, "Missing block, id %"PRIu64, v->u.block_id );
+				fprintf(stderr, "Missing block, id %"PRIu64, v->u.blockRefId );
 				return NULL;
 			}
 		}
