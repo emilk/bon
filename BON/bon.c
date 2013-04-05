@@ -20,7 +20,22 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
-/////////////////////////////////////
+
+//-----------------------------------------------
+
+void onError(const char* msg)
+{
+	// breakpoint here
+	fprintf(stderr, "BON error: %s\n", msg);
+	
+#ifdef DEBUG
+	__asm__("int $3\n" : : );  // break debugger
+#endif
+}
+
+
+//-----------------------------------------------
+
 
 #define ALLOC_TYPE(n, type) (type*)calloc(n, sizeof(type))
 
@@ -33,7 +48,8 @@
 /**/  }
 
 
-/////////////////////////////////////
+
+//-----------------------------------------------
 
 // Start values for ranges
 const uint8_t FIXED_STRING_START      = 32;
@@ -47,8 +63,7 @@ const uint8_t FIXED_NEG_INT_START     = FIXED_STRUCT_START      + 16;
 const uint8_t FIXED_AGGREGATES_START  = FIXED_ARRAY_START;
 
 
-/////////////////////////////////////
-
+//-----------------------------------------------
 
 uint64_t bon_w_type_size(bon_type_id t)
 {
@@ -566,7 +581,8 @@ const char* bon_err_str(bon_error err)
 
 void br_set_err(bon_reader* br, bon_error err)
 {
-	fprintf(stderr, "Setting error %s\n", bon_err_str(err));
+	onError(bon_err_str(err));
+	
 	if (br->error == BON_SUCCESS) {
 		br->error = err;
 	}
@@ -653,7 +669,8 @@ typedef struct {
 
 void bw_set_err(bon_writer* bw, bon_error err)
 {
-	fprintf(stderr, "Setting error %s\n", bon_err_str(err));
+	onError(bon_err_str(err));
+	
 	if (bw->error == BON_SUCCESS) {
 		bw->error = err;
 	}
@@ -725,7 +742,8 @@ bon_error bon_w_get_error(bon_w_doc* doc) {
 
 void bon_w_set_error(bon_w_doc* doc, bon_error err)
 {
-	fprintf(stderr, "Setting error %s\n", bon_err_str(err));
+	onError(bon_err_str(err));
+	
 	if (doc->error == BON_SUCCESS) {
 		doc->error = err;
 	}
@@ -1595,7 +1613,8 @@ void bon_r_read_doc(bon_r_doc* doc, bon_reader* br)
 	
 void bon_r_set_error(bon_r_doc* doc, bon_error err)
 {
-	fprintf(stderr, "Setting error %s\n", bon_err_str(err));
+	onError(bon_err_str(err));
+	
 	if (doc->error == BON_SUCCESS) {
 		doc->error = err;
 	}
