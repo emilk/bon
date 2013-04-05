@@ -264,7 +264,7 @@ int main(int argc, const char * argv[])
 	}
 	
 	if (!didParseFile) {
-		// TODO
+		// TODO: read from stdin
 		/*
 		json_error_t err;
 		json_t* json = json_loadf(stdin, flags, &err);

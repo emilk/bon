@@ -51,20 +51,6 @@ void onError(const char* msg)
 
 //-----------------------------------------------
 
-// Start values for ranges
-const uint8_t FIXED_STRING_START      = 32;
-const uint8_t FIXED_CODES_START       = 64;
-const uint8_t FIXED_BLOCK_START       = 128;
-const uint8_t FIXED_ARRAY_START       = FIXED_BLOCK_START  + 64;
-const uint8_t FIXED_BYTE_ARRAY_START  = FIXED_ARRAY_START       + 16;
-const uint8_t FIXED_STRUCT_START      = FIXED_BYTE_ARRAY_START  + 16;
-const uint8_t FIXED_NEG_INT_START     = FIXED_STRUCT_START      + 16;
-
-const uint8_t FIXED_AGGREGATES_START  = FIXED_ARRAY_START;
-
-
-//-----------------------------------------------
-
 uint64_t bon_w_type_size(bon_type_id t)
 {
 	switch (t)
@@ -882,13 +868,14 @@ uint64_t br_read_vlq(bon_reader* br)
 /////////////////////////////////////
 
 
-bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData)
+bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_flags flags)
 {
 	bon_w_doc* doc = (bon_w_doc*)malloc(sizeof(bon_w_doc));
 	memset(doc, 0, sizeof(bon_w_doc));
 	doc->writer    = writer;
 	doc->userData  = userData;
 	doc->error     = BON_SUCCESS;
+	doc->flags     = flags;
 	
 	const unsigned BUFF_SIZE = 64*1024;
 	doc->buff      = malloc(BUFF_SIZE);
@@ -951,21 +938,26 @@ void bon_w_bool(bon_w_doc* doc, bon_bool val) {
 }
 
 void bon_w_string(bon_w_doc* doc, const char* utf8, bon_size nbytes) {
-	if (nbytes==BON_ZERO_ENDED) {
+	if (nbytes == BON_ZERO_ENDED) {
 		nbytes = strlen(utf8);
 	}
 	
-	// TODO: small string optimization
+	if (doc->flags & BON_FLAG_NO_COMPRESS || nbytes >= BON_SHORT_STRING_COUNT) {
+		bon_w_raw_uint8(doc, BON_CTRL_STRING_VLQ);
+		bon_w_vlq(doc, nbytes);
+	} else {
+		bon_w_raw_uint8(doc, BON_SHORT_STRING(nbytes));
+	}
 	
-	bon_w_raw_uint8(doc, BON_CTRL_STRING_VLQ);
-	bon_w_vlq(doc, nbytes);
 	bon_w_raw(doc, utf8, nbytes);
 	bon_w_raw_uint8(doc, 0); // Zero-ended
 }
 
 void bon_w_uint64(bon_w_doc* doc, uint64_t val)
 {
-	if (val == (val&0xff)) {
+	if (val < BON_SHORT_POS_INT_COUNT && !(doc->flags & BON_FLAG_NO_COMPRESS)) {
+		bon_w_raw_uint8(doc, (uint8_t)val);
+	} else if (val == (val&0xff)) {
 		bon_w_raw_uint8(doc, BON_CTRL_UINT8);
 		bon_w_raw_uint8(doc, (uint8_t)val);
 	} else if (val == (val&0xffff)) {
@@ -983,6 +975,8 @@ void bon_w_uint64(bon_w_doc* doc, uint64_t val)
 void bon_w_sint64(bon_w_doc* doc, int64_t val) {
 	if (val >= 0) {
 		bon_w_uint64(doc, (uint64_t)val);
+	} else if (-16 <= val && !(doc->flags & BON_FLAG_NO_COMPRESS)) {
+		bon_w_raw_uint8(doc, (uint8_t)val);
 	} else if (-0x80 <= val && val < 0x80) {
 		bon_w_raw_uint8(doc, BON_CTRL_SINT8);
 		bon_w_raw_uint8(doc, (uint8_t)val);
@@ -1282,17 +1276,17 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 	
 	uint8_t ctrl = next(br);
 	
-	if (FIXED_AGGREGATES_START <= ctrl   &&  ctrl < FIXED_NEG_INT_START)
+	if (BON_SHORT_AGGREGATES_START <= ctrl   &&  ctrl < BON_SHORT_NEG_INT_START)
 	{
 		// Compressed array or struct:
-		if (ctrl  >=  FIXED_STRUCT_START)
+		if (ctrl  >=  BON_SHORT_STRUCT_START)
 		{
-			bon_size structSize = ctrl - FIXED_STRUCT_START;
+			bon_size structSize = ctrl - BON_SHORT_STRUCT_START;
 			parse_struct_type(br, type, structSize);
 		}
-		else if (ctrl  >=  FIXED_BYTE_ARRAY_START)
+		else if (ctrl  >=  BON_SHORT_BYTE_ARRAY_START)
 		{
-			bon_size arraySize     = ctrl - FIXED_BYTE_ARRAY_START;
+			bon_size arraySize     = ctrl - BON_SHORT_BYTE_ARRAY_START;
 			
 			bon_type_array* array  = ALLOC_TYPE(1, bon_type_array);
 			array->size            = arraySize;
@@ -1304,8 +1298,8 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 		}
 		else
 		{
-			assert(ctrl >= FIXED_ARRAY_START);
-			bon_size arraySize = ctrl - FIXED_ARRAY_START;
+			assert(ctrl >= BON_SHORT_ARRAY_START);
+			bon_size arraySize = ctrl - BON_SHORT_ARRAY_START;
 			parse_array_type(br, type, arraySize);
 		}
 	}
@@ -1458,29 +1452,29 @@ void bon_r_value(bon_reader* br, bon_value* val)
 	uint8_t ctrl = next(br);
 	
 	
-	if     (ctrl  >=  FIXED_NEG_INT_START)
+	if     (ctrl  >=  BON_SHORT_NEG_INT_START)
 	{
 		val->type   = BON_VALUE_SINT64;
 		val->u.s64  = (int8_t)ctrl;
 	}
-	else if (ctrl >= FIXED_AGGREGATES_START)
+	else if (ctrl >= BON_SHORT_AGGREGATES_START)
 	{
 		br_putback(br);
 		bon_r_aggr_value(br, val);
 	}
-	else if (ctrl  >=  FIXED_BLOCK_START)
+	else if (ctrl  >=  BON_SHORT_BLOCK_START)
 	{
 		val->type          = BON_VALUE_BLOCK_REF;
-		val->u.blockRefId  = ctrl - FIXED_BLOCK_START;
+		val->u.blockRefId  = ctrl - BON_SHORT_BLOCK_START;
 	}
-	else if (ctrl  >=  FIXED_CODES_START)
+	else if (ctrl  >=  BON_SHORT_CODES_START)
 	{
 		bon_r_value_from_ctrl(br, val, ctrl);
 	}
-	else if (ctrl  >=  FIXED_STRING_START)
+	else if (ctrl  >=  BON_SHORT_STRING_START)
 	{
 		// FixString
-		bon_r_string_sized(br, val, ctrl - FIXED_STRING_START);
+		bon_r_string_sized(br, val, ctrl - BON_SHORT_STRING_START);
 	}
 	else
 	{

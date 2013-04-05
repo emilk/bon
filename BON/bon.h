@@ -20,7 +20,7 @@
 #endif
 
 
-//////////////////////////////////////////////////////////
+//-------------------------------------------------------------------
 // BON common
 
 typedef char bon_bool;
@@ -30,6 +30,10 @@ typedef char bon_bool;
 
 typedef uint64_t bon_size;
 #define BON_ZERO_ENDED (bon_size)(-1)  // Valid as argument of string size
+
+
+//-------------------------------------------------------------------
+
 
 typedef enum {
 	BON_SUCCESS = 0,
@@ -60,6 +64,52 @@ typedef enum {
 	
 	BON_NUM_ERR
 } bon_error;
+
+
+
+//-------------------------------------------------------------------
+
+
+/* A code byte is divided into several ranges of values.
+ This enum specifies those ranges.
+ */
+typedef enum {
+	BON_SHORT_POS_INT_START     = 0,
+	BON_SHORT_POS_INT_COUNT     = 32,
+	
+	BON_SHORT_STRING_START      = 32,
+	BON_SHORT_STRING_COUNT      = 32,
+	
+	BON_SHORT_CODES_START       = 64,  // Control codes - see bon_ctrl
+	BON_SHORT_CODES_COUNT       = 64,
+	
+	BON_SHORT_BLOCK_START       = 128,
+	BON_SHORT_BLOCK_COUNT       = 64,
+	BON_SHORT_BLOCK_END         = BON_SHORT_BLOCK_START + BON_SHORT_BLOCK_COUNT,
+	
+	BON_SHORT_ARRAY_START       = BON_SHORT_BLOCK_END,
+	BON_SHORT_BYTE_ARRAY_START  = BON_SHORT_ARRAY_START       + 16,
+	BON_SHORT_STRUCT_START      = BON_SHORT_BYTE_ARRAY_START  + 16,
+	
+	BON_SHORT_NEG_INT_START     = BON_SHORT_STRUCT_START      + 16,
+	BON_SHORT_NEG_INT_COUNT     = 16,
+	
+	BON_SHORT_AGGREGATES_START  = BON_SHORT_ARRAY_START
+} bon_compressed_ranges;
+
+#ifdef DEBUG
+#  define BON_COMPRESS_(start, count, n)  (assert(n < count), (uint8_t)((start) + n))
+#else
+#  define BON_COMPRESS_(start, count, n)  (uint8_t)((start) + n)
+#endif
+
+#define BON_COMPRESS(prefix, n)  BON_COMPRESS_(prefix ## START, prefix ## COUNT, n)
+
+#define BON_SHORT_STRING(n)  BON_COMPRESS(BON_SHORT_STRING_, n)
+#define BON_SHORT_BLOCK(n)   BON_COMPRESS(BON_SHORT_BLOCK_, n)
+
+//-------------------------------------------------------------------
+
 
 /* The control codes are all in [0x08, 0x10)
  */
@@ -114,7 +164,7 @@ typedef enum {
 } bon_ctrl;
 
 
-//////////////////////////////////////////////////////////
+//-------------------------------------------------------------------
 /*
  The general type system.
  This is used for reading and writing.
@@ -167,6 +217,19 @@ typedef enum {
 	BON_TYPE_FLOAT32  = BON_CTRL_FLOAT32,
 	BON_TYPE_FLOAT64  = BON_CTRL_FLOAT64
 } bon_type_id;
+
+
+// ------------------------------------------------------------
+
+
+typedef enum {
+	BON_FLAG_DEFAULT      =  0,
+	BON_FLAG_NO_COMPRESS  =  1 << 0  // Turn off compression of small integers, string, arrays etc
+} bon_flags;
+
+
+// ------------------------------------------------------------
+
 
 typedef struct bon_type bon_type;
 typedef struct bon_type_tuple bon_type_tuple;
@@ -234,7 +297,9 @@ bon_type* bon_new_type_fmt(const char* fmt, ...);
 
 bon_size bon_aggregate_payload_size(const bon_type* type);
 
-//////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------
+
 
 typedef struct {
 	bon_size   size;
@@ -264,7 +329,9 @@ bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes);
 */
 bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
 
-//////////////////////////////////////////////////////////
+
+
+//-------------------------------------------------------------------
 // BON writer API
 
 /*
@@ -284,6 +351,7 @@ typedef bon_bool (*bon_w_writer_t)(void* userData, const void* data, uint64_t nb
 typedef struct {
 	bon_w_writer_t  writer;
 	void*           userData;  // Sent to writer
+	bon_flags       flags;
 	bon_error       error;     // If any
 	
 	// For buffered writing
@@ -296,7 +364,7 @@ typedef struct {
 bon_error      on_get_error(bon_w_doc* doc);
 
 // Top level structure
-bon_w_doc*   bon_w_new_doc                     (bon_w_writer_t, void* userData);
+bon_w_doc*   bon_w_new_doc                     (bon_w_writer_t, void* userData, bon_flags flags);
 void         bon_w_flush                       (bon_w_doc* doc); 
 void         bon_w_close_doc                   (bon_w_doc* doc);
 void         bon_w_header                (bon_w_doc* doc);  // Should be the first thing written, if written at all.
@@ -323,7 +391,8 @@ void         bon_w_aggregate  (bon_w_doc* doc, bon_type* type, const void* data,
 void         bon_w_array      (bon_w_doc* doc, bon_size n_elem, bon_type_id type, const void* data, bon_size nbytes);      // Helper
 
 
-//////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------
 // BON bon_reader API
 
 
@@ -483,13 +552,16 @@ bon_bool bon_r_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon
 bon_bool bon_r_read_aggregate_fmt(bon_r_doc* doc, const bon_value* srcVal,
 											 void* dst, bon_size nbytes, const char* fmt);
 
-//////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------
+
 
 // Quick and dirty printout of a value, in json-like format, but NOT json conforming.
 void bon_print(FILE* out, const bon_value* value, size_t indent);
 
 
-//////////////////////////////////////////////////////////
+
+//-------------------------------------------------------------------
 // Helper for reading a binary stream without overflowing:
 
 typedef struct {
