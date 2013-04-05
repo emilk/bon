@@ -369,8 +369,12 @@ void         bon_w_flush                       (bon_w_doc* doc);
 void         bon_w_close_doc                   (bon_w_doc* doc);
 void         bon_w_header                (bon_w_doc* doc);  // Should be the first thing written, if written at all.
 void         bon_w_footer                (bon_w_doc* doc);  // Should be the last thing written, if written at all.
+
+void         bon_w_block_ref(bon_w_doc* doc, uint64_t block_id);
+void         bon_w_begin_block(bon_w_doc* doc, uint64_t block_id);  // open-ended
+void         bon_w_end_block(bon_w_doc* doc);
 void         bon_w_block                 (bon_w_doc* doc, uint64_t block_id, const void* data, bon_size nbytes);
-void         bon_w_declare_root_block_unsized  (bon_w_doc*);
+
 
 // The different types of values:
 void         bon_w_block_ref  (bon_w_doc* doc, uint64_t block_id);
@@ -414,13 +418,7 @@ typedef struct bon_value bon_value;
 typedef struct bon_kv bon_kv;
 typedef struct bon_r_block_t bon_r_block_t;
 
-
-typedef struct {
-	bon_size   size;
-	bon_size   cap;
-	bon_value* data;
-} bon_values;
-
+// TODO: make all these struct opaque (move to bon.c)
 
 typedef struct {
 	bon_size  size;
@@ -436,7 +434,9 @@ typedef struct {
 
 
 typedef struct {
-	bon_values          values;
+	bon_size   size;
+	bon_size   cap;
+	bon_value* data;
 } bon_value_list;
 
 
@@ -521,7 +521,11 @@ const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t block_id);
 const bon_value* bon_r_root(bon_r_doc* doc);
 
 
-const bon_value* bon_r_get_key(const bon_value* obj, const char* key);
+// TODO: move away from public API!
+const bon_value* bon_r_follow_refs(bon_r_doc* doc, const bon_value* val);
+
+
+const bon_value* bon_r_get_key(bon_r_doc* doc, const bon_value* obj, const char* key);
 	
 // Convenicence: returns NULL if wrong type
 const char* bon_r_cstr(const bon_value* obj);
@@ -551,6 +555,7 @@ bon_bool bon_r_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon
 // Convenience:
 bon_bool bon_r_read_aggregate_fmt(bon_r_doc* doc, const bon_value* srcVal,
 											 void* dst, bon_size nbytes, const char* fmt);
+
 
 
 //-------------------------------------------------------------------

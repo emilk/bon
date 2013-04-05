@@ -6,12 +6,14 @@
 //  Copyright (c) 2013 Emil Ernerfeldt. All rights reserved.
 //
 
-extern "C" {
-#include "bon.h"
-}
 
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
+
+
+extern "C" {
+#include "bon.h"
+}
 
 // File size (stat):
 #include <sys/stat.h>
@@ -243,15 +245,100 @@ void read_bon()
 	bon_r_doc* bon = bon_r_open(data, size);
 	
 	const bon_value* root = bon_r_root(bon);
-	const bon_value* vecs = bon_r_get_key(root, "vecs");
+	const bon_value* vecs = bon_r_get_key(bon, root, "vecs");
 	readStruct(bon, vecs);
 	
 	bon_r_close(bon);
 }
 
-typedef std::function<void(bon_w_doc*)> Writer;
-typedef std::function<void(const uint8_t*, bon_size)> Verifyer;
-typedef std::function<void(bon_r_doc*)> Reader;
+
+// Checks a binary byte stream against code supplied values
+class Parser
+{
+public:
+	Parser(const uint8_t* ptr, bon_size size) : m_ptr(ptr), m_size(size) { }
+	
+	bon_size size() const { return m_size; }
+	bool eof() const { return m_ix == m_size; }
+	
+	void parse_n(const uint8_t* data, bon_size n) {
+		REQUIRE( (m_ix+n) <= m_size );
+		
+		for (bon_size i=0; i<n; ++i) {
+			SCOPED_CAPTURE(" i: " << i);
+			REQUIRE( m_ptr[m_ix + i] == data[i] );
+		}
+		m_ix += n;
+	}
+	
+	void parse_n(const void* data, bon_size n) {
+		return parse_n((const uint8_t*)data, n);
+	}
+	
+	void parse(uint8_t v) {
+		REQUIRE(m_ix < m_size);
+		SCOPED_CAPTURE("m_ix: " << m_ix);
+		REQUIRE(m_ptr[m_ix] == v);
+		++m_ix;
+	}
+	
+	void parse(int8_t v)         { parse((uint8_t)v); }
+	void parse(char v)           { parse((uint8_t)v); }
+	void parse(bon_ctrl v)       { parse((uint8_t)v); }
+	void parse(const string& v)  { parse_n(v.c_str(), v.size()); }
+	
+	void parse(unsigned long v) {
+		assert(v < 256);
+		parse( (uint8_t)v );
+	}
+	
+	void parse(unsigned v) {
+		parse((unsigned long)v);
+	}
+	
+	void parse(long v) {
+		if (v < 0) {
+			assert(-128 <= v);
+			parse( (int8_t)v );
+		} else {
+			assert(0 <= v);
+			assert(v < 256);
+			parse( (uint8_t)v );
+		}
+	}
+	
+	void parse(int v) {
+		parse( (long)v );
+	}
+	
+	void parse(float v) {
+		parse_n(&v, sizeof(v));
+	}
+	
+	void parse(double v) {
+		parse_n(&v, sizeof(v));
+	}
+	
+	
+	void operator()() { }
+	
+	template<typename Head, typename... Tail>
+	void operator()(const Head& head, Tail... tail)
+	{
+		parse(head);
+		operator()(tail...);
+	}
+	
+private:
+	const uint8_t*  m_ptr;
+	bon_size        m_size;
+	bon_size        m_ix = 0;
+};
+
+
+typedef std::function<void(bon_w_doc*)>  Writer;
+typedef std::function<void(Parser&)>     Verifyer;
+typedef std::function<void(bon_r_doc*)>  Reader;
 
 
 void test(Writer w, Verifyer v, Reader r)
@@ -266,7 +353,9 @@ void test(Writer w, Verifyer v, Reader r)
 	
 	if (v)
 	{
-		v(vec.data, vec.size);
+		Parser p(vec.data, vec.size);
+		v(p);		
+		REQUIRE(p.eof());
 	}
 	
 	if (r)
@@ -325,97 +414,41 @@ TEST_CASE( "BON/control codes", "control codes" ) {
 	}
 }
 
-typedef std::vector<uint8_t> Bytes;
+const bon_value* read_key(bon_r_doc* bon, const bon_value* root, string key) {
+	CAPTURE( key );
+	auto val = bon_r_get_key(bon, root, key.c_str());
+	REQUIRE( val );
+	return val;
+};
 
-void append(Bytes& out, bon_ctrl v) {
-	out.push_back( v );
-}
 
-void append(Bytes& out, int8_t v) {
-	out.push_back( (uint8_t)v );
-}
-
-void append(Bytes& out, uint8_t v) {
-	out.push_back( v );
-}
-
-void append(Bytes& out, char v) {
-	out.push_back( (uint8_t)v );
-}
-
-void append(Bytes& out, unsigned long v) {
-	assert(v < 256);
-	out.push_back( (uint8_t)v );
-}
-
-void append(Bytes& out, unsigned v) {
-	append(out, (unsigned long)v);
-}
-
-void append(Bytes& out, long v) {
-	if (v < 0) {
-		assert(-128 <= v);
-		append(out, (int8_t)v);
-	} else {
-		assert(0 <= v);
-		assert(v < 256);
-		out.push_back( (uint8_t)v );
-	}
-}
-
-void append(Bytes& out, int v) {
-	append(out, (long)v);
-}
-
-void append(Bytes& out, const char* str) {
-	while (*str) {
-		append( out, *str );
-		++str;
-	}
-}
-
-void append(Bytes& out, const string& str) {
-	for (char c : str) {
-		append(out, c);
-	}
-}
-
-template<typename T>
-void appendOne(Bytes& out, const T& t) {
-	append(out, t);
-}
-
-void appendAll(Bytes&) {
-}
-
-template<typename Head, typename... Tail>
-void appendAll(Bytes& out, Head head, Tail... tail)
+void test_val_int(const bon_value* bv, int64_t iv)
 {
-	appendOne(out, head);
-	appendAll(out, tail...);
-}
-
-template<typename... Args>
-Bytes bytes(Args... args)
-{
-	Bytes b;
-	appendAll(b, args...);
-	return b;
-}
-
-
-void require_identical(const uint8_t* data, bon_size size, const Bytes& expected)
-{
-	REQUIRE(size == expected.size());
+	REQUIRE( bv );
 	
-	for (unsigned ix=0; ix<size; ++ix) {
-		CAPTURE( ix );
-		REQUIRE( data[ix] == expected[ix] );
+	if (iv >= 0) {
+		REQUIRE( bv->type == BON_VALUE_UINT64 );
+		REQUIRE( bv->u.u64 == (uint64_t)iv );
+	} else {
+		REQUIRE( bv->type == BON_VALUE_SINT64 );
+		REQUIRE( bv->u.s64 == iv );
 	}
 }
 
 
-TEST_CASE( "BON/types", "Writes, verifies and reads all the basic types of BON" ) {
+void test_key_int(bon_r_doc* bon, const bon_value* root, string key, int64_t iv) {
+	CAPTURE( key );
+	CAPTURE( iv );
+	
+	auto bv = read_key(bon, root, key);
+	bv = bon_r_follow_refs(bon, bv); // FIXME
+	test_val_int(bv, iv);
+};
+
+
+
+TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of BON" )
+{
 	
 #if !__LITTLE_ENDIAN__
 #  error "This test is designed for a little-endian machine. A big endian machine would output other control codes, and the integer bytes in reversed order."
@@ -434,16 +467,16 @@ TEST_CASE( "BON/types", "Writes, verifies and reads all the basic types of BON" 
 			  
 			  bon_w_begin_obj(bon);
 			  
-			  bon_w_key(bon, "nil", BON_ZERO_ENDED);     bon_w_nil(bon);
-			  bon_w_key(bon, "true", BON_ZERO_ENDED);    bon_w_bool(bon, BON_TRUE);
-			  bon_w_key(bon, "seven", BON_ZERO_ENDED);   bon_w_sint64(bon, 7);
-			  bon_w_key(bon, "neg_1", BON_ZERO_ENDED);   bon_w_sint64(bon, -1);
-			  bon_w_key(bon, "42", BON_ZERO_ENDED);      bon_w_sint64(bon, 42);
-			  bon_w_key(bon, "-0x80", BON_ZERO_ENDED);   bon_w_sint64(bon, -0x80);
-			  bon_w_key(bon, "0x7fff", BON_ZERO_ENDED);  bon_w_sint64(bon, 0x7fff);
+			  bon_w_key(bon, "nil",     BON_ZERO_ENDED);   bon_w_nil(bon);
+			  bon_w_key(bon, "true",    BON_ZERO_ENDED);   bon_w_bool(bon, BON_TRUE);
+			  bon_w_key(bon, "seven",   BON_ZERO_ENDED);   bon_w_sint64(bon, 7);
+			  bon_w_key(bon, "neg_1",   BON_ZERO_ENDED);   bon_w_sint64(bon, -1);
+			  bon_w_key(bon, "42",      BON_ZERO_ENDED);   bon_w_sint64(bon, 42);
+			  bon_w_key(bon, "-0x80",   BON_ZERO_ENDED);   bon_w_sint64(bon, -0x80);
+			  bon_w_key(bon, "0x7fff",  BON_ZERO_ENDED);   bon_w_sint64(bon, 0x7fff);
 			  
-			  //bon_w_key(bon, "f_pi", BON_ZERO_ENDED);  bon_w_float(bon, 3.14f);
-			  //bon_w_key(bon, "f_di", BON_ZERO_ENDED);  bon_w_double(bon, 3.14f);
+			  bon_w_key(bon, "f_pi", BON_ZERO_ENDED);  bon_w_float(bon, 3.14f);
+			  bon_w_key(bon, "d_pi", BON_ZERO_ENDED);  bon_w_double(bon, 3.14);
 			  		  
 			  
 			  bon_w_key(bon, "a", BON_ZERO_ENDED);
@@ -458,87 +491,198 @@ TEST_CASE( "BON/types", "Writes, verifies and reads all the basic types of BON" 
 		  },
 		  
 		  
-		  [=](const uint8_t* data, bon_size size) {
-			  auto expected = bytes("BON0",
-											BON_CTRL_OBJ_BEGIN,
-											
-											BON_SHORT_STRING(3), "nil", 0,     BON_CTRL_NIL,                                  
-											BON_SHORT_STRING(4), "true", 0,    BON_CTRL_TRUE,                                 
-											BON_SHORT_STRING(5), "seven", 0,   7,                                             
-											BON_SHORT_STRING(5), "neg_1", 0,   0xff,
-											BON_SHORT_STRING(2), "42", 0,      BON_CTRL_UINT8, 42,
-											BON_SHORT_STRING(5), "-0x80", 0,   BON_CTRL_SINT8, -0x80,
-											BON_SHORT_STRING(6), "0x7fff", 0,  BON_CTRL_UINT16, 0xff, 0x7f,
-											
-											
-											BON_SHORT_STRING(1), 'a', 0,
-											BON_CTRL_STRING_VLQ, STR_VLQ_1.size(), STR_VLQ_1, 0,
-											
-											BON_SHORT_STRING(1), 'b', 0,
-											BON_CTRL_STRING_VLQ,
-											0x80 | STR_VLQ_2.size()/128, STR_VLQ_2.size()-128,
-											STR_VLQ_2, 0,
-											
-											BON_CTRL_OBJ_END
-											);
+		  [=](Parser& p) {
+			  p( "BON0" );
+			  p( BON_CTRL_OBJ_BEGIN );
 			  
-			  require_identical(data, size, expected);
+			  p( BON_SHORT_STRING(3), "nil",     0,  BON_CTRL_NIL                 );
+			  p( BON_SHORT_STRING(4), "true",    0,  BON_CTRL_TRUE                );
+			  p( BON_SHORT_STRING(5), "seven",   0,  7                            );
+			  p( BON_SHORT_STRING(5), "neg_1",   0,  0xff                         );
+			  p( BON_SHORT_STRING(2), "42",      0,  BON_CTRL_UINT8, 42           );
+			  p( BON_SHORT_STRING(5), "-0x80",   0,  BON_CTRL_SINT8, -0x80        );
+			  p( BON_SHORT_STRING(6), "0x7fff",  0,  BON_CTRL_UINT16, 0xff, 0x7f  );
+			  
+			  p( BON_SHORT_STRING(4), "f_pi",  0,  BON_CTRL_FLOAT32, 3.14f  );
+			  p( BON_SHORT_STRING(4), "d_pi",  0,  BON_CTRL_FLOAT64, 3.14   );
+			  
+			  p( BON_SHORT_STRING(1), 'a', 0                          );
+			  p( BON_CTRL_STRING_VLQ, STR_VLQ_1.size(), STR_VLQ_1, 0  );
+			  
+			  p( BON_SHORT_STRING(1), 'b', 0                        );
+			  p( BON_CTRL_STRING_VLQ                                );
+			  p( 0x80 | STR_VLQ_2.size()/128, STR_VLQ_2.size() & 0x7f  );
+			  p( STR_VLQ_2, 0                                       );
+			  
+			  p( BON_CTRL_OBJ_END );
 		  },
 		  
 		  
 		  [=](bon_r_doc* bon) {
-			   REQUIRE( bon->error == BON_SUCCESS );
+			  REQUIRE( bon->error == BON_SUCCESS );
 			  
 			  auto root = bon_r_get_block(bon, 0);
 			  REQUIRE( root );
-			  
-			  auto read_key = [&](string key) {
-				  CAPTURE( key );
-				  auto val = bon_r_get_key(root, key.c_str());
-				  REQUIRE( val );
-				  return val;
-			  };
 			  
 			  auto test_key_val = [&](string key, string val_str) {
 				  CAPTURE( key );
 				  CAPTURE( val_str );
 
-				  auto val = read_key(key);
+				  auto val = read_key(bon, root, key);
 				  REQUIRE( val->type == BON_VALUE_STRING );
 				  REQUIRE( val->u.str.size == val_str.size() );
 				  REQUIRE( (const char*)val->u.str.ptr == val_str );
 			  };
 			  
-			  auto test_key_int = [&](string key, int64_t val) {
+			  auto test_key_float = [&](string key, double val) {
 				  CAPTURE( key );
 				  CAPTURE( val );
 				  
-				  auto v = read_key(key);
+				  auto v = read_key(bon, root, key);
 				  
-				  if (val >= 0) {
-					  REQUIRE( v->type == BON_VALUE_UINT64 );
-					  REQUIRE( v->u.u64 == (uint64_t)val );
-				  } else {
-					  REQUIRE( v->type == BON_VALUE_SINT64 );
-					  REQUIRE( v->u.s64 == val );
-				  }
+				  REQUIRE( v->type == BON_VALUE_DOUBLE );
+				  REQUIRE( v->u.dbl == val );
 			  };
 			  
 			  
-			  REQUIRE ( read_key("nil")->type == BON_VALUE_NIL );
+			  REQUIRE ( read_key(bon, root, "nil")->type == BON_VALUE_NIL );
 			  
-			  auto true_val = read_key("true");
+			  auto true_val = read_key(bon, root, "true");
 			  REQUIRE ( true_val->type == BON_VALUE_BOOL );
 			  REQUIRE ( true_val->u.boolean == BON_TRUE  );
 			  
-			  test_key_int("sevent",   7);
-			  test_key_int("neg_1",   -1);
-			  test_key_int("42",      42);
-			  test_key_int("-0x80",   -0x80);
-			  test_key_int("0x7fff",  0x7fff);
+			  test_key_int(bon, root, "sevent",   7);
+			  test_key_int(bon, root, "neg_1",   -1);
+			  test_key_int(bon, root, "42",      42);
+			  test_key_int(bon, root, "-0x80",   -0x80);
+			  test_key_int(bon, root, "0x7fff",  0x7fff);
+			  
+			  test_key_float("f_pi", 3.14f);
+			  test_key_float("d_pi", 3.14);
 			  
 			  test_key_val("a", STR_VLQ_1);
 			  test_key_val("b", STR_VLQ_2);
+		  }
+	);
+}
+
+TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
+{	
+	/*
+	 {"lists":[1,[2,3]]}	 
+	 */
+	
+	test(
+		  // Write
+		  [=](bon_w_doc* bon) {
+			  bon_w_begin_obj(bon);
+			  
+			  bon_w_key(bon, "lists", BON_ZERO_ENDED);
+			  bon_w_begin_list(bon);
+			  bon_w_uint64(bon, 1);
+			  bon_w_begin_list(bon);
+			  bon_w_uint64(bon, 2);
+			  bon_w_uint64(bon, 3);
+			  bon_w_end_list(bon);
+			  bon_w_end_list(bon);
+			  
+			  bon_w_end_obj(bon);
+			  
+			  REQUIRE( bon->error == BON_SUCCESS );
+		  },
+		  
+		  [=](Parser& p) {
+			  REQUIRE( p.size() == 16 );
+			  
+			  p( BON_CTRL_OBJ_BEGIN );
+			  
+			  p( BON_SHORT_STRING(5), "lists", 0 );
+			  
+			  p( BON_CTRL_LIST_BEGIN                           );
+			  p( 1                                             );
+			  p( BON_CTRL_LIST_BEGIN, 2, 3, BON_CTRL_LIST_END  );
+			  p( BON_CTRL_LIST_END                             );
+			  
+			  p( BON_CTRL_OBJ_END );
+		  },
+		  
+		  [=](bon_r_doc* bon) {
+			  REQUIRE( bon->error == BON_SUCCESS );
+			  
+			  auto root = bon_r_get_block(bon, 0);
+			  REQUIRE( root );
+			  
+			  auto lists = read_key(bon,  root, "lists" );
+			  REQUIRE( lists->type == BON_VALUE_LIST );
+			  REQUIRE( lists->u.list.size == 2 );
+			  test_val_int( &lists->u.list.data[0], 1 );
+			  
+			  auto inner = &lists->u.list.data[1];
+			  REQUIRE( inner->type == BON_VALUE_LIST );
+			  REQUIRE( inner->u.list.size == 2 );
+			  test_val_int( &inner->u.list.data[0], 2 );
+			  test_val_int( &inner->u.list.data[1], 3 );
+		  }
+		);
+}
+
+TEST_CASE( "BON/blocks", "Blocks and references" )
+{
+	/*
+	 create root object for placing in lagter
+	 */
+	bon_byte_vec block_1_vec = {0,0,0};
+	bon_w_doc* block_1 = bon_w_new_doc(bon_vec_writer, &block_1_vec, BON_FLAG_DEFAULT);
+	bon_w_begin_obj(block_1);
+	bon_w_key(block_1, "ref2", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 2);
+	bon_w_key(block_1, "ref1337", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 1337);
+	bon_w_end_obj(block_1);
+	REQUIRE( block_1->error == 0 );
+	bon_w_close_doc(block_1);
+	
+	
+	
+	test(
+		  // Write
+		  [=](bon_w_doc* bon) {
+			  bon_w_block(bon, 1, block_1_vec.data, block_1_vec.size);
+			  
+			  bon_w_begin_block(bon, 2);
+			  bon_w_uint64(bon, 12);
+			  bon_w_end_block(bon);
+			  
+			  bon_w_begin_block(bon, 1337);
+			  bon_w_uint64(bon, 13);
+			  bon_w_end_block(bon);
+			  
+			  bon_w_begin_block(bon, 0);
+			  bon_w_block_ref(bon, 1);
+			  bon_w_end_block(bon);
+			  
+			  REQUIRE( bon->error == BON_SUCCESS );
+		  },
+		  
+		  [=](Parser& p) {
+			  p( BON_CTRL_BLOCK_BEGIN, 1, (int)block_1_vec.size);
+			  p( BON_CTRL_OBJ_BEGIN );
+			  p( BON_SHORT_STRING(4), "ref2",    0,  BON_SHORT_BLOCK(2) );
+			  p( BON_SHORT_STRING(7), "ref1337", 0,  BON_CTRL_BLOCK_REF, 0x80 + 1337/128, 1337 & 0x7f );
+			  p( BON_CTRL_OBJ_END );
+			  p( BON_CTRL_BLOCK_END);
+			  
+			  p( BON_CTRL_BLOCK_BEGIN, 2, 0,                             12, BON_CTRL_BLOCK_END);
+			  p( BON_CTRL_BLOCK_BEGIN, 0x80 + 1337/128, 1337 & 0x7f, 0,  13, BON_CTRL_BLOCK_END);
+			  p( BON_CTRL_BLOCK_BEGIN, 0, 0,  BON_SHORT_BLOCK(1), BON_CTRL_BLOCK_END);
+		  },
+		  
+		  [=](bon_r_doc* bon) {
+			  REQUIRE( bon->error == BON_SUCCESS );
+			  
+			  auto root = bon_r_get_block(bon, 0);
+			  REQUIRE( root );
+			  
+			  test_key_int(bon, root, "ref2", 12);
+			  test_key_int(bon, root, "ref1337", 13);
 		  }
 	);
 }

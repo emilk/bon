@@ -147,7 +147,7 @@ json_t* bon2json(bon_r_doc* bon, const bon_value* v)
 			
 		case BON_VALUE_LIST: {
 			json_t* jarray = json_array();
-			const bon_values* vals = &v->u.list.values;
+			const bon_value_list* vals = &v->u.list;
 			bon_size size = vals->size;
 			for (bon_size i=0; i<size; ++i) {
 				json_t* elem = bon2json( bon, &vals->data[i] );

@@ -902,6 +902,41 @@ void bon_w_footer(bon_w_doc* doc)
 {
 }
 
+void bon_w_block_ref(bon_w_doc* doc, uint64_t block_id)
+{
+	if ((doc->flags & BON_FLAG_NO_COMPRESS) == 0 && block_id < BON_SHORT_BLOCK_COUNT) {
+		bon_w_raw_uint8(doc, BON_SHORT_BLOCK(block_id));
+	} else {
+		bon_w_raw_uint8(doc, BON_CTRL_BLOCK_REF);
+		bon_w_vlq(doc, block_id);
+	}
+}
+
+void bon_w_begin_block_sized(bon_w_doc* doc, uint64_t block_id, bon_size nbytes)
+{
+	bon_w_raw_uint8(doc, BON_CTRL_BLOCK_BEGIN);
+	bon_w_vlq(doc, block_id);
+	bon_w_vlq(doc, nbytes);
+}
+
+void bon_w_begin_block(bon_w_doc* doc, uint64_t block_id)
+{
+	bon_w_begin_block_sized(doc, block_id, 0);
+}
+
+void bon_w_end_block(bon_w_doc* doc)
+{
+	bon_w_raw_uint8(doc, BON_CTRL_BLOCK_END);
+}
+
+void bon_w_block(bon_w_doc* doc, uint64_t block_id, const void* data, bon_size nbytes)
+{
+	bon_w_begin_block_sized(doc, block_id, nbytes);
+	bon_w_raw(doc, data, nbytes);
+	bon_w_end_block(doc);
+}
+
+
 //////////////////////////////////////
 // Value writing
 
@@ -1087,7 +1122,7 @@ void bon_w_array(bon_w_doc* doc, bon_size len, bon_type_id element_t,
 
 ////////////////////////////////////////////////////////
 
-void bon_r_list_values(bon_reader* br, bon_values* vals);
+void bon_r_list_values(bon_reader* br, bon_value_list* vals);
 void bon_r_kvs(bon_reader* br, bon_kvs* kvs);
 
 uint16_t br_read_u16(bon_reader* br) {
@@ -1358,6 +1393,7 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 		case BON_CTRL_BLOCK_REF:
 			val->type = BON_VALUE_BLOCK_REF;
 			val->u.blockRefId = br_read_vlq(br);
+			break;
 			
 			
 		case BON_CTRL_STRING_VLQ: {
@@ -1418,7 +1454,7 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 			
 		case BON_CTRL_LIST_BEGIN:
 			val->type          = BON_VALUE_LIST;
-			bon_r_list_values(br, &val->u.list.values);
+			bon_r_list_values(br, &val->u.list);
 			br_swallow(br, BON_CTRL_LIST_END);
 			break;
 			
@@ -1486,9 +1522,9 @@ void bon_r_value(bon_reader* br, bon_value* val)
 }
 
 
-void bon_r_list_values(bon_reader* br, bon_values* vals)
+void bon_r_list_values(bon_reader* br, bon_value_list* vals)
 {
-	memset(vals, 0, sizeof(bon_values));
+	memset(vals, 0, sizeof(bon_value_list));
 	
 	while (!br->error)
 	{
@@ -1642,6 +1678,9 @@ const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t id)
 			if (!block->parsed) {
 				// Lazy parsing:
 				bon_reader br = { block->payload, block->payload_size, 0, doc };
+				
+				bon_r_value(&br, &block->value);
+				
 				if (br.nbytes != 0) {
 					br_set_err(&br, BON_ERR_TRAILING_DATA);
 				}
@@ -1667,9 +1706,25 @@ const bon_value* bon_r_root(bon_r_doc* doc)
 	return bon_r_get_block(doc, 0);
 }
 
-const bon_value* bon_r_get_key(const bon_value* val, const char* key)
+const bon_value* bon_r_follow_refs(bon_r_doc* doc, const bon_value* val)
 {
-	if (val->type != BON_VALUE_OBJ) {
+	// TODO: detect infinite recursion (loops)
+	while (val->type == BON_VALUE_BLOCK_REF)
+	{
+		val = bon_r_get_block(doc, val->u.blockRefId);
+		if (!val || doc->error) {
+			return NULL;
+		}
+	}
+	return val;
+}
+
+const bon_value* bon_r_get_key(bon_r_doc* doc, const bon_value* val, const char* key)
+{
+	val = bon_r_follow_refs(doc, val);
+	
+	if (!val || val->type != BON_VALUE_OBJ) {
+		// TODO: handle key lookup in struct
 		fprintf(stderr, "bon_r_get_key: not an object\n");
 		return NULL;
 	}
@@ -1725,7 +1780,7 @@ bon_size bon_r_list_size(const bon_value* val)
 {
 	switch (val->type) {
 		case BON_VALUE_LIST:
-			return val->u.list.values.size;
+			return val->u.list.size;
 			
 		case BON_VALUE_AGGREGATE: {
 			const bon_value_agg* agg = &val->u.agg;
@@ -1745,7 +1800,7 @@ const bon_value* bon_r_list_elem(const bon_value* val, bon_size ix)
 {
 	if (val->type == BON_VALUE_LIST)
 	{
-		const bon_values* vals = &val->u.list.values;
+		const bon_value_list* vals = &val->u.list;
 		if (ix < vals->size) {
 			return &vals->data[ ix ];
 		}
@@ -1973,7 +2028,7 @@ bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_ty
 			const bon_type_struct* strct = dstType->u.strct;
 			for (bon_size ki=0; ki<strct->size; ++ki) {
 				const char*       key = strct->keys[ki];
-				const bon_value*  val = bon_r_get_key(srcVal, key);
+				const bon_value*  val = bon_r_get_key(doc, srcVal, key);
 				
 				if (val == NULL) {
 					fprintf(stderr, "Failed to find key in src: \"%s\"\n", key);
@@ -2152,7 +2207,7 @@ void bon_print(FILE* out, const bon_value* v, size_t indent)
 			
 		case BON_VALUE_LIST: {
 			fprintf(out, "[ ");
-			const bon_values* vals = &v->u.list.values;
+			const bon_value_list* vals = &v->u.list;
 			bon_size size = vals->size;
 			for (bon_size i=0; i<size; ++i) {
 				bon_print(out, vals->data + i, indent);

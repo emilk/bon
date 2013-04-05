@@ -131,7 +131,7 @@ bon_bool open_file(const char* path) {
 			if (strcmp(key_name, ".\n")==0) {
 				bon_print(stdout, dir, 0);
 			} else {
-				const bon_value* val = bon_r_get_key(dir, key_name);
+				const bon_value* val = bon_r_get_key(doc, dir, key_name);
 				if (val) {
 					bon_print(stdout, val, 0);
 					printf("\n");
