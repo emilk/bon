@@ -64,7 +64,7 @@ typedef enum {
 /* The control codes are all in [0x08, 0x10)
  */
 typedef enum {
-	BON_CTRL_BLOCK_REF   = '@',    BON_CTRL_STRING_VLQ  = '\'',  // 0x40  0x60
+	BON_CTRL_BLOCK_REF   = 0x40,   BON_CTRL_STRING_VLQ  = 0x60,  // @  `
 	BON_CTRL_ARRAY_VLQ   = 'A',
 	BON_CTRL_HEADER      = 'B',
 	BON_CTRL_TUPLE_VLQ   = 'C',    BON_CTRL_STRUCT_VLQ  = 'c',
@@ -328,16 +328,16 @@ void         bon_w_array      (bon_w_doc* doc, bon_size n_elem, bon_type_id type
 
 
 typedef enum {
-	BON_VALUE_NIL,
-	BON_VALUE_BOOL,
-	BON_VALUE_UINT64,
-	BON_VALUE_SINT64,
-	BON_VALUE_DOUBLE,
-	BON_VALUE_STRING,
-	BON_VALUE_LIST,
-	BON_VALUE_OBJ,
+	BON_VALUE_NIL        = BON_CTRL_NIL,
+	BON_VALUE_BOOL       = BON_TYPE_BOOL,
+	BON_VALUE_UINT64     = BON_TYPE_UINT64,
+	BON_VALUE_SINT64     = BON_TYPE_SINT64,
+	BON_VALUE_DOUBLE     = BON_TYPE_FLOAT64,
+	BON_VALUE_STRING     = BON_TYPE_STRING,
+	BON_VALUE_LIST       = BON_CTRL_LIST_BEGIN,
+	BON_VALUE_OBJ        = BON_CTRL_OBJ_BEGIN,
+	BON_VALUE_BLOCK_REF  = BON_CTRL_BLOCK_REF,
 	BON_VALUE_AGGREGATE,
-	BON_VALUE_BLOCK_REF
 } bon_value_type;
 
 

@@ -327,7 +327,7 @@ then naively these will take up about 20-25 bytes each. But if the encoder assig
 
 ### Control codes (expressed in ASCII):
 
-	BLOCK_REF   = '@',    STRING_VLQ  = '\'',  // 0x40  0x60
+	BLOCK_REF   = 0x40,   STRING_VLQ  = 0x60,  //  @  `
 	ARRAY_VLQ   = 'A',
 	HEADER      = 'B',
 	STRUCT_VLQ  = 'C',
