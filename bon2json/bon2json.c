@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include "jansson.h"
 #include "bon.h"
+#include "bon_private.h"
 
 // File size (stat):
 #include <sys/stat.h>
@@ -118,7 +119,7 @@ json_t* agg2json(const bon_type* aggType, bon_reader* br)
 }
 
 
-json_t* bon2json(bon_r_doc* bon, const bon_value* v)
+json_t* bon2json(bon_r_doc* bon, bon_value* v)
 {
 	switch (v->type)
 	{
@@ -177,7 +178,7 @@ json_t* bon2json(bon_r_doc* bon, const bon_value* v)
 			bon_size size = kvs->size;
 			
 			for (bon_size i=0; i<size; ++i) {
-				const bon_kv* kv = &kvs->data[i];
+				bon_kv* kv = &kvs->data[i];
 				if (kv->key.type != BON_VALUE_STRING) {
 					fprintf(stderr, "BON object has non-string key\n");
 					continue;
@@ -192,7 +193,7 @@ json_t* bon2json(bon_r_doc* bon, const bon_value* v)
 			
 			
 		case BON_VALUE_BLOCK_REF: {
-			const bon_value* val = bon_r_get_block( bon, v->u.blockRefId );
+			bon_value* val = bon_r_get_block( bon, v->u.blockRefId );
 			if (val) {
 				return bon2json(bon, val);
 			} else {

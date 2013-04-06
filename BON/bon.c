@@ -8,6 +8,7 @@
 
 
 #include "bon.h"
+#include "bon_private.h"
 #include <string.h>  // memset
 #include <stdlib.h>  // malloc
 #include <stdio.h>   // fprintf(stderr, ...
@@ -208,12 +209,12 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type) {
 
 bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types) {
 	
-	bon_type* t = calloc(1, sizeof(bon_type));
-	t->id = BON_TYPE_STRUCT;
-	t->u.strct = calloc(1, sizeof(bon_type_struct));
-	t->u.strct->size = n;
-	t->u.strct->keys = names; // FIXME: copy?
-	t->u.strct->types = types; // FIXME: copy?
+	bon_type* t        = calloc(1, sizeof(bon_type));
+	t->id              = BON_TYPE_STRUCT;
+	t->u.strct         = calloc(1, sizeof(bon_type_struct));
+	t->u.strct->size   = n;
+	t->u.strct->keys   = names; // FIXME: copy?
+	t->u.strct->types  = types; // FIXME: copy?
 	return t;
 }
 
@@ -251,6 +252,7 @@ bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 				
 			default: {
 				if (strct->size == MAX_OBJ_SIZE) {
+					// TODO: expand
 					fprintf(stderr, "obj with too many keys\n");
 					bon_free_type(ret);
 					return NULL;
@@ -301,8 +303,13 @@ bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap)
 			++*fmt;
 			
 			bon_size n;
-			if (!bon_parse_size(fmt, &n)) {
-				return NULL;
+			if (**fmt == '#') {
+				++*fmt;
+				n = va_arg(*ap, bon_size);
+			} else {
+				if (!bon_parse_size(fmt, &n)) {
+					return NULL;
+				}
 			}
 			bon_type* t = bon_new_type_fmt_ap(fmt, ap);
 			if (!t) {
@@ -317,6 +324,11 @@ bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap)
 			return bon_new_type_array(n, t);
 		}
 			
+		case 'b': {
+			++*fmt;
+			return bon_new_type_simple(BON_TYPE_BOOL);
+		}
+			
 		case 'f': {
 			++*fmt;
 			return bon_new_type_simple(BON_TYPE_FLOAT32);
@@ -324,13 +336,18 @@ bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap)
 			
 		case 'd': {
 			++*fmt;
-			return bon_new_type_simple(BON_TYPE_FLOAT32);
+			return bon_new_type_simple(BON_TYPE_FLOAT64);
 		}
 			
-		case 's':
+		case 's': {
+			++*fmt;
+			return bon_new_type_simple(BON_TYPE_STRING);
+		}
+			
 		case 'u':
+		case 'i':
 		{
-			bon_bool sgnd = (**fmt == 's');
+			bon_bool sgnd = (**fmt == 'i');
 			++*fmt;
 			
 			bon_size n;
@@ -356,17 +373,11 @@ bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap)
 
 bon_type* bon_new_type_fmt(const char* fmt, ...)
 {
-	bon_type* ret;
-	
-	va_list ap;
-	
-	va_start(ap, fmt);
-	
-	ret = bon_new_type_fmt_ap(&fmt, &ap);
-	
+	va_list ap;	
+	va_start(ap, fmt);	
+	bon_type* type = bon_new_type_fmt_ap(&fmt, &ap);
 	va_end(ap);
-	
-	return ret;
+	return type;
 }
 
 /* the size of the payload. */
@@ -722,24 +733,24 @@ bon_bool bw_write_uint_as_uint8(bon_writer* bw, uint64_t val) {
 /////////////////////////////////////
 
 
-bon_error bon_w_get_error(bon_w_doc* doc) {
-	return doc->error;
+bon_error bon_w_get_error(bon_w_doc* B) {
+	return B->error;
 }
 
-void bon_w_set_error(bon_w_doc* doc, bon_error err)
+void bon_w_set_error(bon_w_doc* B, bon_error err)
 {
 	onError(bon_err_str(err));
 	
-	if (doc->error == BON_SUCCESS) {
-		doc->error = err;
+	if (B->error == BON_SUCCESS) {
+		B->error = err;
 	}
 }
 
 
-void bon_w_assert(bon_w_doc* doc, bon_bool statement, bon_error onFail)
+void bon_w_assert(bon_w_doc* B, bon_bool statement, bon_error onFail)
 {
 	if (!statement) {
-		bon_w_set_error(doc, onFail);
+		bon_w_set_error(B, onFail);
 	}
 }
 
@@ -747,55 +758,55 @@ void bon_w_assert(bon_w_doc* doc, bon_bool statement, bon_error onFail)
 /////////////////////////////////////
 // Writing
 	
-void bon_w_flush(bon_w_doc* doc) {
-	if (doc->buff_ix > 0) {
-		if (!doc->writer(doc->userData, doc->buff, doc->buff_ix)) {
-			doc->error = BON_ERR_WRITE_ERROR;
+void bon_w_flush(bon_w_doc* B) {
+	if (B->buff_ix > 0) {
+		if (!B->writer(B->userData, B->buff, B->buff_ix)) {
+			B->error = BON_ERR_WRITE_ERROR;
 		}
-		doc->buff_ix = 0;
+		B->buff_ix = 0;
 	}
 }
 
-void bon_w_raw(bon_w_doc* doc, const void* data, bon_size bs) {
-	if (doc->buff) {
-		if (doc->buff_ix + bs < doc->buff_size) {
-			memcpy(doc->buff + doc->buff_ix, data, bs);
-			doc->buff_ix += bs;
+void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs) {
+	if (B->buff) {
+		if (B->buff_ix + bs < B->buff_size) {
+			memcpy(B->buff + B->buff_ix, data, bs);
+			B->buff_ix += bs;
 		} else {
-			bon_w_flush(doc);
+			bon_w_flush(B);
 			
-			if (bs < doc->buff_size) {
-				memcpy(doc->buff, data, bs);
-				doc->buff_ix = bs;
+			if (bs < B->buff_size) {
+				memcpy(B->buff, data, bs);
+				B->buff_ix = bs;
 			} else {
 				// Too large for buffer - write directly:
-				if (!doc->writer(doc->userData, data, bs)) {
-					doc->error = BON_ERR_WRITE_ERROR;
+				if (!B->writer(B->userData, data, bs)) {
+					B->error = BON_ERR_WRITE_ERROR;
 				}
 			}
 		}
 	} else {
 		// Unbuffered
-		if (!doc->writer(doc->userData, data, bs)) {
-			doc->error = BON_ERR_WRITE_ERROR;
+		if (!B->writer(B->userData, data, bs)) {
+			B->error = BON_ERR_WRITE_ERROR;
 		}
 	}
 }
 
-void bon_w_raw_uint8(bon_w_doc* doc, uint8_t val) {
-	bon_w_raw(doc, &val, sizeof(val));
+void bon_w_raw_uint8(bon_w_doc* B, uint8_t val) {
+	bon_w_raw(B, &val, sizeof(val));
 }
 
-void bon_w_raw_uint16(bon_w_doc* doc, uint16_t val) {
-	bon_w_raw(doc, &val, sizeof(val));
+void bon_w_raw_uint16(bon_w_doc* B, uint16_t val) {
+	bon_w_raw(B, &val, sizeof(val));
 }
 
-void bon_w_raw_uint32(bon_w_doc* doc, uint32_t val) {
-	bon_w_raw(doc, &val, sizeof(val));
+void bon_w_raw_uint32(bon_w_doc* B, uint32_t val) {
+	bon_w_raw(B, &val, sizeof(val));
 }
 
-void bon_w_raw_uint64(bon_w_doc* doc, uint64_t val) {
-	bon_w_raw(doc, &val, sizeof(val));
+void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
+	bon_w_raw(B, &val, sizeof(val));
 }
 
 
@@ -835,11 +846,11 @@ uint32_t bon_w_vlq_to(uint8_t* out, bon_size x)
 	return size;
 }
 
-uint32_t bon_w_vlq(bon_w_doc* doc, bon_size x)
+uint32_t bon_w_vlq(bon_w_doc* B, bon_size x)
 {
 	uint8_t vals[BON_VARINT_MAX_LEN];
 	uint32_t size = bon_w_vlq_to(vals, x);
-	bon_w_raw(doc, vals, size);
+	bon_w_raw(B, vals, size);
 	return size;
 }
 
@@ -870,249 +881,300 @@ uint64_t br_read_vlq(bon_reader* br)
 
 bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_flags flags)
 {
-	bon_w_doc* doc = (bon_w_doc*)malloc(sizeof(bon_w_doc));
-	memset(doc, 0, sizeof(bon_w_doc));
-	doc->writer    = writer;
-	doc->userData  = userData;
-	doc->error     = BON_SUCCESS;
-	doc->flags     = flags;
+	bon_w_doc* B = (bon_w_doc*)malloc(sizeof(bon_w_doc));
+	memset(B, 0, sizeof(bon_w_doc));
+	B->writer    = writer;
+	B->userData  = userData;
+	B->error     = BON_SUCCESS;
+	B->flags     = flags;
 	
 	const unsigned BUFF_SIZE = 64*1024;
-	doc->buff      = malloc(BUFF_SIZE);
-	doc->buff_ix   = 0;
-	doc->buff_size = BUFF_SIZE;
+	B->buff      = malloc(BUFF_SIZE);
+	B->buff_ix   = 0;
+	B->buff_size = BUFF_SIZE;
 	
-	return doc;
+	return B;
 }
 
-void bon_w_close_doc(bon_w_doc* doc)
+void bon_w_close_doc(bon_w_doc* B)
 {
-	bon_w_flush(doc);
-	free(doc->buff);
-	free(doc);
+	bon_w_flush(B);
+	free(B->buff);
+	free(B);
 }
 
-void bon_w_header(bon_w_doc* doc)
+void bon_w_header(bon_w_doc* B)
 {
 	const uint8_t header[4] = {'B', 'O', 'N', '0'};
-	bon_w_raw(doc, header, 4);
+	bon_w_raw(B, header, 4);
 }
 
-void bon_w_footer(bon_w_doc* doc)
+void bon_w_footer(bon_w_doc* B)
 {
 }
 
-void bon_w_block_ref(bon_w_doc* doc, uint64_t block_id)
+void bon_w_block_ref(bon_w_doc* B, uint64_t block_id)
 {
-	if ((doc->flags & BON_FLAG_NO_COMPRESS) == 0 && block_id < BON_SHORT_BLOCK_COUNT) {
-		bon_w_raw_uint8(doc, BON_SHORT_BLOCK(block_id));
+	if ((B->flags & BON_FLAG_NO_COMPRESS) == 0 && block_id < BON_SHORT_BLOCK_COUNT) {
+		bon_w_raw_uint8(B, BON_SHORT_BLOCK(block_id));
 	} else {
-		bon_w_raw_uint8(doc, BON_CTRL_BLOCK_REF);
-		bon_w_vlq(doc, block_id);
+		bon_w_raw_uint8(B, BON_CTRL_BLOCK_REF);
+		bon_w_vlq(B, block_id);
 	}
 }
 
-void bon_w_begin_block_sized(bon_w_doc* doc, uint64_t block_id, bon_size nbytes)
+void bon_w_begin_block_sized(bon_w_doc* B, uint64_t block_id, bon_size nbytes)
 {
-	bon_w_raw_uint8(doc, BON_CTRL_BLOCK_BEGIN);
-	bon_w_vlq(doc, block_id);
-	bon_w_vlq(doc, nbytes);
+	bon_w_raw_uint8(B, BON_CTRL_BLOCK_BEGIN);
+	bon_w_vlq(B, block_id);
+	bon_w_vlq(B, nbytes);
 }
 
-void bon_w_begin_block(bon_w_doc* doc, uint64_t block_id)
+void bon_w_begin_block(bon_w_doc* B, uint64_t block_id)
 {
-	bon_w_begin_block_sized(doc, block_id, 0);
+	bon_w_begin_block_sized(B, block_id, 0);
 }
 
-void bon_w_end_block(bon_w_doc* doc)
+void bon_w_end_block(bon_w_doc* B)
 {
-	bon_w_raw_uint8(doc, BON_CTRL_BLOCK_END);
+	bon_w_raw_uint8(B, BON_CTRL_BLOCK_END);
 }
 
-void bon_w_block(bon_w_doc* doc, uint64_t block_id, const void* data, bon_size nbytes)
+void bon_w_block(bon_w_doc* B, uint64_t block_id, const void* data, bon_size nbytes)
 {
-	bon_w_begin_block_sized(doc, block_id, nbytes);
-	bon_w_raw(doc, data, nbytes);
-	bon_w_end_block(doc);
+	bon_w_begin_block_sized(B, block_id, nbytes);
+	bon_w_raw(B, data, nbytes);
+	bon_w_end_block(B);
 }
 
 
 //////////////////////////////////////
 // Value writing
 
-void bon_w_begin_obj(bon_w_doc* doc) {
-	bon_w_raw_uint8(doc, BON_CTRL_OBJ_BEGIN);
+void bon_w_begin_obj(bon_w_doc* B) {
+	bon_w_raw_uint8(B, BON_CTRL_OBJ_BEGIN);
 }
 
-void bon_w_end_obj(bon_w_doc* doc) {
-	bon_w_raw_uint8(doc, BON_CTRL_OBJ_END);
+void bon_w_end_obj(bon_w_doc* B) {
+	bon_w_raw_uint8(B, BON_CTRL_OBJ_END);
 }
 
-void bon_w_key(bon_w_doc* doc, const char* utf8, bon_size nbytes) {
-	bon_w_string(doc, utf8, nbytes);
+void bon_w_key(bon_w_doc* B, const char* utf8, bon_size nbytes) {
+	bon_w_string(B, utf8, nbytes);
 }
 
-void bon_w_begin_list(bon_w_doc* doc) {
-	bon_w_raw_uint8(doc, BON_CTRL_LIST_BEGIN);
+void bon_w_begin_list(bon_w_doc* B) {
+	bon_w_raw_uint8(B, BON_CTRL_LIST_BEGIN);
 }
 
-void bon_w_end_list(bon_w_doc* doc) {
-	bon_w_raw_uint8(doc, BON_CTRL_LIST_END);
+void bon_w_end_list(bon_w_doc* B) {
+	bon_w_raw_uint8(B, BON_CTRL_LIST_END);
 }
 
-void bon_w_nil(bon_w_doc* doc) {
-	bon_w_raw_uint8(doc, BON_CTRL_NIL);
+void bon_w_nil(bon_w_doc* B) {
+	bon_w_raw_uint8(B, BON_CTRL_NIL);
 }
 
-void bon_w_bool(bon_w_doc* doc, bon_bool val) {
+void bon_w_bool(bon_w_doc* B, bon_bool val) {
 	if (val) {
-		bon_w_raw_uint8(doc, BON_CTRL_TRUE);
+		bon_w_raw_uint8(B, BON_CTRL_TRUE);
 	} else {
-		bon_w_raw_uint8(doc, BON_CTRL_FALSE);
+		bon_w_raw_uint8(B, BON_CTRL_FALSE);
 	}
 }
 
-void bon_w_string(bon_w_doc* doc, const char* utf8, bon_size nbytes) {
+void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes) {
 	if (nbytes == BON_ZERO_ENDED) {
 		nbytes = strlen(utf8);
 	}
 	
-	if (doc->flags & BON_FLAG_NO_COMPRESS || nbytes >= BON_SHORT_STRING_COUNT) {
-		bon_w_raw_uint8(doc, BON_CTRL_STRING_VLQ);
-		bon_w_vlq(doc, nbytes);
+	if (B->flags & BON_FLAG_NO_COMPRESS || nbytes >= BON_SHORT_STRING_COUNT) {
+		bon_w_raw_uint8(B, BON_CTRL_STRING_VLQ);
+		bon_w_vlq(B, nbytes);
 	} else {
-		bon_w_raw_uint8(doc, BON_SHORT_STRING(nbytes));
+		bon_w_raw_uint8(B, BON_SHORT_STRING(nbytes));
 	}
 	
-	bon_w_raw(doc, utf8, nbytes);
-	bon_w_raw_uint8(doc, 0); // Zero-ended
+	bon_w_raw(B, utf8, nbytes);
+	bon_w_raw_uint8(B, 0); // Zero-ended
 }
 
-void bon_w_uint64(bon_w_doc* doc, uint64_t val)
+void bon_w_uint64(bon_w_doc* B, uint64_t val)
 {
-	if (val < BON_SHORT_POS_INT_COUNT && !(doc->flags & BON_FLAG_NO_COMPRESS)) {
-		bon_w_raw_uint8(doc, (uint8_t)val);
+	if (val < BON_SHORT_POS_INT_COUNT && !(B->flags & BON_FLAG_NO_COMPRESS)) {
+		bon_w_raw_uint8(B, (uint8_t)val);
 	} else if (val == (val&0xff)) {
-		bon_w_raw_uint8(doc, BON_CTRL_UINT8);
-		bon_w_raw_uint8(doc, (uint8_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_UINT8);
+		bon_w_raw_uint8(B, (uint8_t)val);
 	} else if (val == (val&0xffff)) {
-		bon_w_raw_uint8(doc, BON_CTRL_UINT16);
-		bon_w_raw_uint16(doc, (uint16_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_UINT16);
+		bon_w_raw_uint16(B, (uint16_t)val);
 	} else if (val == (val&0xffffffff)) {
-		bon_w_raw_uint8(doc, BON_CTRL_UINT32);
-		bon_w_raw_uint32(doc, (uint32_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_UINT32);
+		bon_w_raw_uint32(B, (uint32_t)val);
 	} else {
-		bon_w_raw_uint8(doc, BON_CTRL_UINT64);
-		bon_w_raw_uint64(doc, (uint64_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_UINT64);
+		bon_w_raw_uint64(B, (uint64_t)val);
 	}
 }
 
-void bon_w_sint64(bon_w_doc* doc, int64_t val) {
+void bon_w_sint64(bon_w_doc* B, int64_t val) {
 	if (val >= 0) {
-		bon_w_uint64(doc, (uint64_t)val);
-	} else if (-16 <= val && !(doc->flags & BON_FLAG_NO_COMPRESS)) {
-		bon_w_raw_uint8(doc, (uint8_t)val);
+		bon_w_uint64(B, (uint64_t)val);
+	} else if (-16 <= val && !(B->flags & BON_FLAG_NO_COMPRESS)) {
+		bon_w_raw_uint8(B, (uint8_t)val);
 	} else if (-0x80 <= val && val < 0x80) {
-		bon_w_raw_uint8(doc, BON_CTRL_SINT8);
-		bon_w_raw_uint8(doc, (uint8_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_SINT8);
+		bon_w_raw_uint8(B, (uint8_t)val);
 	} else if (-0x8000 <= val && val < 0x8000) {
-		bon_w_raw_uint8(doc, BON_CTRL_SINT16);
-		bon_w_raw_uint16(doc, (uint16_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_SINT16);
+		bon_w_raw_uint16(B, (uint16_t)val);
 	} else if (-0x80000000LL <= val && val < 0x80000000LL) {
-		bon_w_raw_uint8(doc, BON_CTRL_SINT32);
-		bon_w_raw_uint32(doc, (uint32_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_SINT32);
+		bon_w_raw_uint32(B, (uint32_t)val);
 	} else {
-		bon_w_raw_uint8(doc, BON_CTRL_SINT64);
-		bon_w_raw_uint64(doc, (uint64_t)val);
+		bon_w_raw_uint8(B, BON_CTRL_SINT64);
+		bon_w_raw_uint64(B, (uint64_t)val);
 	}
 }
 
-void bon_w_float(bon_w_doc* doc, float val)
+void bon_w_float(bon_w_doc* B, float val)
 {
-	bon_w_raw_uint8(doc, BON_CTRL_FLOAT32);
-	bon_w_raw(doc, &val, 4);
+	bon_w_raw_uint8(B, BON_CTRL_FLOAT32);
+	bon_w_raw(B, &val, 4);
 }
 
-void bon_w_double(bon_w_doc* doc, double val)
+void bon_w_double(bon_w_doc* B, double val)
 {
 	if (!isfinite(val) || (double)(float)val == val) {
-		bon_w_float(doc, (float)val);
+		bon_w_float(B, (float)val);
 	} else {
-		bon_w_raw_uint8(doc, BON_CTRL_FLOAT64);
-		bon_w_raw(doc, &val, 8);
+		bon_w_raw_uint8(B, BON_CTRL_FLOAT64);
+		bon_w_raw(B, &val, 8);
 	}
 }
 
-void bon_w_aggregate_type(bon_w_doc* doc, bon_type* type);
+void bon_w_aggregate_type(bon_w_doc* B, bon_type* type);
 
-void bon_w_array_type(bon_w_doc* doc, bon_size length, bon_type* element_type)
+void bon_w_array_type(bon_w_doc* B, bon_size length, bon_type* element_type)
 {
-	// TODO: compressed array
+	if ((B->flags & BON_FLAG_NO_COMPRESS) == 0)
+	{
+		if (element_type->id == BON_TYPE_UINT8 && length < BON_SHORT_BYTE_ARRAY_COUNT)
+		{
+			bon_w_raw_uint8(B, BON_SHORT_BYTE_ARRAY(length));
+			return;
+		}
+		
+		if (length < BON_SHORT_ARRAY_COUNT)
+		{
+			bon_w_raw_uint8(B, BON_SHORT_ARRAY(length));
+			bon_w_aggregate_type(B, element_type);
+			return;
+		}
+	}
 	
-	bon_w_raw_uint8(doc, BON_CTRL_ARRAY_VLQ);
-	bon_w_vlq(doc, length);
-	bon_w_aggregate_type(doc, element_type);
+	bon_w_raw_uint8(B, BON_CTRL_ARRAY_VLQ);
+	bon_w_vlq(B, length);
+	bon_w_aggregate_type(B, element_type);
 }
 
-void bon_w_aggregate_type(bon_w_doc* doc, bon_type* type)
+void bon_w_aggregate_type(bon_w_doc* B, bon_type* type)
 {
 	switch (type->id) {
 		case BON_TYPE_ARRAY:
-			bon_w_array_type(doc, type->u.array->size, type->u.array->type);
+			bon_w_array_type(B, type->u.array->size, type->u.array->type);
 			break;
 			
 			
 		case BON_TYPE_STRUCT: {
-			// TODO: compressed struct
-			
-			bon_w_raw_uint8(doc, BON_CTRL_STRUCT_VLQ);
 			bon_type_struct* strct = type->u.strct;
 			bon_size n = strct->size;
-			bon_w_vlq(doc, n);
+			
+			if ((B->flags & BON_FLAG_NO_COMPRESS) == 0 &&
+				 n < BON_SHORT_STRUCT_COUNT)
+			{
+				bon_w_raw_uint8(B, BON_SHORT_STRUCT(n));
+			}
+			else {
+				bon_w_raw_uint8(B, BON_CTRL_STRUCT_VLQ);
+				bon_w_vlq(B, n);
+			}
+			
 			for (bon_size i=0; i<n; ++i) {
-				bon_w_string(doc, strct->keys[i], BON_ZERO_ENDED);
-				bon_w_aggregate_type(doc, strct->types[i]);
+				bon_w_string(B, strct->keys[i], BON_ZERO_ENDED);
+				bon_w_aggregate_type(B, strct->types[i]);
 			}
 		} break;
 			
 			
 		default:
 			// Simple type - write ctrl code:
-			bon_w_raw_uint8(doc, type->id);
+			bon_w_raw_uint8(B, type->id);
 			break;
 	}
 }
 
-void bon_w_aggregate(bon_w_doc* doc, bon_type* type, const void* data, bon_size nbytes)
+void bon_w_aggr(bon_w_doc* B, const void* data, bon_size nbytes, bon_type* type)
 {
 	// Sanity check:
 	bon_size expected_size = bon_aggregate_payload_size(type);
 	if (nbytes != expected_size) {
-		fprintf(stderr, "bon_w_aggregate: wrong size. Expected %d, got %d\n", (int)expected_size, (int)nbytes);
-		bon_w_set_error(doc, BON_ERR_BAD_AGGREGATE_SIZE);
+		fprintf(stderr, "bon_w_aggr: wrong size. Expected %d, got %d\n", (int)expected_size, (int)nbytes);
+		bon_w_set_error(B, BON_ERR_BAD_AGGREGATE_SIZE);
 		return;
 	}
 	
-	bon_w_aggregate_type(doc, type);
-	bon_w_raw(doc, data, nbytes);
+	bon_w_aggregate_type(B, type);
+	bon_w_raw(B, data, nbytes);
 }
 
-void bon_w_array(bon_w_doc* doc, bon_size len, bon_type_id element_t,
+void bon_w_aggr_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
+						  const char* fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	bon_type* type = bon_new_type_fmt_ap(&fmt, &ap);
+	va_end(ap);
+	
+	if (type) {
+		bon_w_aggr(B, data, nbytes, type);
+		bon_free_type(type);
+	}	
+}
+
+void bon_w_array(bon_w_doc* B, bon_size len, bon_type_id element_t,
 					  const void* data, bon_size nbytes)
 {
-	bon_w_assert(doc, len * bon_w_type_size(element_t) == nbytes,
+	bon_w_assert(B, len * bon_w_type_size(element_t) == nbytes,
 					 BON_ERR_BAD_AGGREGATE_SIZE);
-	if (doc->error) {
+	if (B->error) {
 		return;
 	}
 	
-	// TODO: compressed arrays
+	if ((B->flags & BON_FLAG_NO_COMPRESS) == 0)
+	{
+		if (element_t == BON_TYPE_UINT8 && len < BON_SHORT_BYTE_ARRAY_COUNT)
+		{
+			bon_w_raw_uint8(B, BON_SHORT_BYTE_ARRAY(len));
+			bon_w_raw(B, data, nbytes);
+			return;
+		}
+		
+		if (len < BON_SHORT_ARRAY_COUNT)
+		{
+			bon_w_raw_uint8(B, BON_SHORT_ARRAY(len));
+			bon_w_raw_uint8(B, element_t);			
+			bon_w_raw(B, data, nbytes);
+			return;
+		}
+	}
 	
-	bon_w_raw_uint8(doc, BON_CTRL_ARRAY_VLQ);
-	bon_w_vlq(doc, len);
-	bon_w_raw_uint8(doc, element_t);
+	bon_w_raw_uint8(B, BON_CTRL_ARRAY_VLQ);
+	bon_w_vlq(B, len);
+	bon_w_raw_uint8(B, element_t);
 	
-	bon_w_raw(doc, data, nbytes);
+	bon_w_raw(B, data, nbytes);
 }
 
 
@@ -1360,10 +1422,10 @@ void bon_r_aggr_value(bon_reader* br, bon_value* val)
 	bon_size nBytesPayload = bon_aggregate_payload_size(type);
 	br_skip(br, nBytesPayload);
 	
-	if (br->doc) {
-		br->doc->stats.count_aggr      +=  1;
-		br->doc->stats.bytes_aggr_dry  +=  nBytesPayload;
-		//br->doc->stats.bytes_aggr_wet  += (bytes_left_start - br->nbytes);
+	if (br->B) {
+		br->B->stats.count_aggr      +=  1;
+		br->B->stats.bytes_aggr_dry  +=  nBytesPayload;
+		//br->B->stats.bytes_aggr_wet  += (bytes_left_start - br->nbytes);
 	}
 }
 
@@ -1371,7 +1433,7 @@ void bon_r_string_sized(bon_reader* br, bon_value* val, size_t strLen)
 {
 	val->type       = BON_VALUE_STRING;
 	val->u.str.size = strLen;
-	val->u.str.ptr  = br->data;
+	val->u.str.ptr  = (const char*)br->data;
 	br_skip(br, strLen);
 	int zero = next(br);
 	
@@ -1379,9 +1441,9 @@ void bon_r_string_sized(bon_reader* br, bon_value* val, size_t strLen)
 		br_set_err(br, BON_ERR_STRING_NOT_ZERO_ENDED);
 	}
 	
-	if (br->doc) {
-		br->doc->stats.count_string      += 1;
-		br->doc->stats.bytes_string_dry  += val->u.str.size;
+	if (br->B) {
+		br->B->stats.count_string      += 1;
+		br->B->stats.bytes_string_dry  += val->u.str.size;
 	}
 }
 
@@ -1558,7 +1620,7 @@ void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 	}
 }
 
-void bon_r_header(bon_r_doc* doc, bon_reader* br)
+void bon_r_header(bon_r_doc* B, bon_reader* br)
 {
 	if (peek(br) == BON_CTRL_HEADER)
 	{
@@ -1575,9 +1637,9 @@ void bon_r_header(bon_r_doc* doc, bon_reader* br)
 	}
 }
 
-void bon_r_read_content(bon_r_doc* doc, bon_reader* br)
+void bon_r_read_content(bon_r_doc* B, bon_reader* br)
 {
-	bon_r_blocks* blocks = &doc->blocks;
+	bon_r_blocks* blocks = &B->blocks;
 		
 	if (peek(br) == BON_CTRL_BLOCK_BEGIN)
 	{
@@ -1626,58 +1688,60 @@ void bon_r_read_content(bon_r_doc* doc, bon_reader* br)
 	}
 }
 
-void bon_r_footer(bon_r_doc* doc, bon_reader* br)
+void bon_r_footer(bon_r_doc* B, bon_reader* br)
 {
 	br_assert(br, br->nbytes==0, BON_ERR_TRAILING_DATA);
 }
 
-void bon_r_read_doc(bon_r_doc* doc, bon_reader* br)
+void bon_r_read_doc(bon_r_doc* B, bon_reader* br)
 {
-	doc->stats.bytes_file = br->nbytes;
-	bon_r_header(doc, br);
+	B->stats.bytes_file = br->nbytes;
+	bon_r_header(B, br);
 	if (br->error) return;
-	bon_r_read_content(doc, br);
+	bon_r_read_content(B, br);
 	if (br->error) return;
-	bon_r_footer(doc, br);
+	bon_r_footer(B, br);
 }
 	
-void bon_r_set_error(bon_r_doc* doc, bon_error err)
+void bon_r_set_error(bon_r_doc* B, bon_error err)
 {
 	onError(bon_err_str(err));
 	
-	if (doc->error == BON_SUCCESS) {
-		doc->error = err;
+	if (B->error == BON_SUCCESS) {
+		B->error = err;
 	}
 }
 
 bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes)
 {
-	bon_r_doc* doc = ALLOC_TYPE(1, bon_r_doc);
+	assert(data);
 	
-	bon_reader br_v = { data, nbytes, BON_FALSE, doc };
+	bon_r_doc* B = ALLOC_TYPE(1, bon_r_doc);
+	
+	bon_reader br_v = { data, nbytes, BON_FALSE, B };
 	bon_reader* br = &br_v;
 	
-	bon_r_read_doc(doc, br);
+	bon_r_read_doc(B, br);
 	
-	doc->error = br->error;
-	return doc;
+	B->error = br->error;
+	return B;
 }
 
-void bon_r_close(bon_r_doc* doc)
+void bon_r_close(bon_r_doc* B)
 {
 	// TODO: right
-	free(doc);
+	free(B);
 }
 
 // Returns NULL on fail
-const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t id)
+bon_value* bon_r_get_block(bon_r_doc* B, uint64_t id)
 {
-	for (bon_size bi=0; bi<doc->blocks.size; ++bi) {
-		bon_r_block* block = &doc->blocks.data[bi];
+	for (bon_size bi=0; bi<B->blocks.size; ++bi) {
+		bon_r_block* block = &B->blocks.data[bi];
 		if (block->id == id) {
 			if (!block->parsed) {
 				// Lazy parsing:
-				bon_reader br = { block->payload, block->payload_size, 0, doc };
+				bon_reader br = { block->payload, block->payload_size, 0, B };
 				
 				bon_r_value(&br, &block->value);
 				
@@ -1685,8 +1749,8 @@ const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t id)
 					br_set_err(&br, BON_ERR_TRAILING_DATA);
 				}
 				if (br.error) {
-					if (!doc->error) {
-						doc->error = br.error;
+					if (!B->error) {
+						B->error = br.error;
 					}
 					return NULL;
 				}
@@ -1701,83 +1765,195 @@ const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t id)
 	return NULL;
 }
 
-const bon_value* bon_r_root(bon_r_doc* doc)
+bon_value* bon_r_root(bon_r_doc* B)
 {
-	return bon_r_get_block(doc, 0);
+	return bon_r_get_block(B, 0);
 }
 
-const bon_value* bon_r_follow_refs(bon_r_doc* doc, const bon_value* val)
+bon_error bon_r_error(bon_r_doc* B)
+{
+	return B->error;
+}
+
+bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
 {
 	// TODO: detect infinite recursion (loops)
-	while (val->type == BON_VALUE_BLOCK_REF)
+	while (B->error==0 &&
+			 val && val->type == BON_VALUE_BLOCK_REF)
 	{
-		val = bon_r_get_block(doc, val->u.blockRefId);
-		if (!val || doc->error) {
-			return NULL;
-		}
+		val = bon_r_get_block(B, val->u.blockRefId);
 	}
 	return val;
 }
 
-const bon_value* bon_r_get_key(bon_r_doc* doc, const bon_value* val, const char* key)
+// -----------------------------------------------------------------
+
+bon_bool bon_r_is_nil(bon_r_doc* B, bon_value* val)
 {
-	val = bon_r_follow_refs(doc, val);
-	
-	if (!val || val->type != BON_VALUE_OBJ) {
-		// TODO: handle key lookup in struct
-		fprintf(stderr, "bon_r_get_key: not an object\n");
-		return NULL;
-	}
-	
-	const bon_value_obj*  obj  = &val->u.obj;
-	const bon_kvs*        kvs  = &obj->kvs;
-	
-	for (bon_size i=0; i<kvs->size; ++i) {
-		const bon_kv* kv = &kvs->data[i];
-		
-		// The key should always be a string:
-		if (kv->key.type == BON_VALUE_STRING) {
-			if (memcmp(key, kv->key.u.str.ptr, kv->key.u.str.size) == 0) {
-				return &kv->val;
-			}
-		}
-	}
-	
-	return NULL;
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	return val->type == BON_VALUE_NIL;
 }
-	
-const char* bon_r_cstr(const bon_value* obj)
+
+bon_bool bon_r_is_bool(bon_r_doc* B, bon_value* val)
 {
-	if (!obj) {
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	return val->type == BON_VALUE_BOOL;
+}
+
+bon_bool bon_r_is_int(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	
+	return val->type == BON_VALUE_SINT64
+	||     val->type == BON_VALUE_UINT64;
+}
+
+bon_bool bon_r_is_number(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	
+	return val->type == BON_VALUE_SINT64
+	||     val->type == BON_VALUE_UINT64
+	||     val->type == BON_VALUE_DOUBLE;
+}
+
+bon_bool bon_r_is_double(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	return val->type == BON_VALUE_DOUBLE;
+}
+
+bon_bool bon_r_is_string(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	return val->type == BON_VALUE_STRING;
+}
+
+bon_bool bon_r_is_list(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	if (val->type == BON_VALUE_LIST) { return BON_TRUE; }
+	if (val->type == BON_VALUE_AGGREGATE) {
+		const bon_value_agg* agg = &val->u.agg;
+		return agg->type.id == BON_TYPE_ARRAY;
+	}
+	return BON_FALSE;
+}
+
+bon_bool bon_r_is_object(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_FALSE; }
+	
+	if (val->type == BON_VALUE_OBJ) { return BON_TRUE; }
+	if (val->type == BON_VALUE_AGGREGATE) {
+		const bon_value_agg* agg = &val->u.agg;
+		return agg->type.id == BON_TYPE_STRUCT;
+	}
+	return BON_FALSE;
+}
+
+// -----------------------------------------------------------------
+
+bon_bool bon_r_bool(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	
+	if (val && val->type == BON_VALUE_BOOL) {
+		return val->u.boolean;
+	} else {
+		return BON_FALSE;
+	}
+}
+
+int64_t bon_r_int(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	
+	if (!val) {
+		return 0;
+	} else if (val->type == BON_VALUE_UINT64) {
+		return (int64_t)val->u.u64;
+	} else if (val->type == BON_VALUE_SINT64) {
+		return val->u.s64;
+	} else if (val->type == BON_VALUE_DOUBLE) {
+		return (int64_t)val->u.dbl;
+	} else {
+		return 0;
+	}	
+}
+
+uint64_t bon_r_uint(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	
+	if (val && val->type == BON_VALUE_UINT64) {
+		return val->u.u64;
+	} else {
+		return (uint64_t)bon_r_int(B, val);
+	}
+}
+
+double bon_r_double(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	
+	if (!val) {
+		return 0;
+	} else if (val->type == BON_VALUE_DOUBLE) {
+		return val->u.dbl;
+	} else if (val->type == BON_VALUE_UINT64) {
+		return val->u.u64;
+	} else if (val->type == BON_VALUE_SINT64) {
+		return val->u.s64;
+	} else {
+		return 0;
+	}
+}
+
+float bon_r_float(bon_r_doc* B, bon_value* obj)
+{
+	return (float)bon_r_double(B, obj);
+}
+
+bon_size bon_r_strlen(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	
+	if (!val) {
+		return 0;
+	} else if (val->type == BON_VALUE_STRING) {
+		return val->u.str.size;
+	} else {
+		return 0;
+	}
+}
+
+const char* bon_r_cstr(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	
+	if (!val) {
 		return NULL;
-	} else if (obj->type == BON_VALUE_STRING) {
-		return (const char*)obj->u.str.ptr;
+	} else if (val->type == BON_VALUE_STRING) {
+		return (const char*)val->u.str.ptr;
 	} else {
 		return NULL;
 	}
 }
 	
-uint64_t bon_r_uint(bon_r_doc* doc, const bon_value* obj)
+bon_size bon_r_list_size(bon_r_doc* B, bon_value* val)
 {
-	if (!obj) {
-		bon_r_set_error(doc, BON_ERR_NULL_OBJ);
-	} else if (obj->type == BON_VALUE_UINT64) {
-		return obj->u.u64;
-	} else if (obj->type == BON_VALUE_SINT64) {
-		if (obj->u.s64 < 0) {
-			bon_r_set_error(doc, BON_ERR_NARROWING);
-		} else {
-			return (uint64_t)obj->u.s64;
-		}
-	} else {
-		bon_r_set_error(doc, BON_ERR_BAD_TYPE);
-	}
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return 0; }
 	
-	return 0; // On error
-}
-	
-bon_size bon_r_list_size(const bon_value* val)
-{
 	switch (val->type) {
 		case BON_VALUE_LIST:
 			return val->u.list.size;
@@ -1795,9 +1971,126 @@ bon_size bon_r_list_size(const bon_value* val)
 			return 0;
 	}
 }
-	
-const bon_value* bon_r_list_elem(const bon_value* val, bon_size ix)
+
+
+bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
+								  bon_type* type, bon_reader* br)
 {
+	bon_type_id id = type->id;
+	
+	switch (id)
+	{
+		case BON_TYPE_ARRAY: {
+			bon_type_array* array  =  type->u.array;
+			bon_size n             =  array->size;
+			
+			dst->type              =  BON_VALUE_LIST;
+			
+			bon_value_list* list   =  &dst->u.list;
+			list->size             =  n;
+			list->cap              =  n;
+			list->data             =  ALLOC_TYPE(n, bon_value);
+			
+			for (bon_size ix=0; ix<n; ++ix) {
+				bon_explode_aggr(B, list->data +ix, array->type, br);
+			}
+			return BON_TRUE;
+		}
+			
+			
+		case BON_TYPE_STRUCT: {
+			bon_type_struct* strct  =  type->u.strct;
+			bon_size n              =  strct->size;
+			
+			dst->type               =  BON_VALUE_OBJ;
+			
+			bon_value_obj*  obj     =  &dst->u.obj;
+			bon_kvs*        kvs     =  &obj->kvs;
+			kvs->size               =  n;
+			kvs->cap                =  n;
+			kvs->data               =  ALLOC_TYPE(n, bon_kv);
+			
+			for (bon_size ix=0; ix<n; ++ix) {
+				bon_kv* kv = kvs->data + ix;
+				kv->key.type = BON_VALUE_STRING;
+				kv->key.u.str.ptr   = strct->keys[ix];
+				kv->key.u.str.size  = strlen((const char*)strct->keys[ix]); // HACK - embedded zero fail
+				
+				bon_explode_aggr(B, &kv->val, strct->types[ix], br);
+			}
+			return BON_TRUE;
+		}
+			
+			
+		case BON_TYPE_SINT8:
+		case BON_TYPE_SINT16_LE:  case BON_TYPE_SINT16_BE:
+		case BON_TYPE_SINT32_LE:  case BON_TYPE_SINT32_BE:
+		case BON_TYPE_SINT64_LE:  case BON_TYPE_SINT64_BE: {
+			dst->type   =  BON_VALUE_SINT64;
+			dst->u.s64  =  br_read_sint64(br, id);
+			return BON_TRUE;
+		}
+			
+			
+		case BON_TYPE_UINT8:
+		case BON_TYPE_UINT16_LE:  case BON_TYPE_UINT16_BE:
+		case BON_TYPE_UINT32_LE:  case BON_TYPE_UINT32_BE:
+		case BON_TYPE_UINT64_LE:  case BON_TYPE_UINT64_BE: {
+			dst->type   =  BON_VALUE_UINT64;
+			dst->u.u64  =  br_read_uint64(br, id);
+			return BON_TRUE;
+		}
+			
+			
+		case BON_TYPE_FLOAT32_LE:  case BON_TYPE_FLOAT32_BE:
+		case BON_TYPE_FLOAT64_LE:  case BON_TYPE_FLOAT64_BE: {
+			dst->type   =  BON_VALUE_DOUBLE;
+			dst->u.dbl  =  br_read_double(br, id);
+			return BON_TRUE;
+		}
+			
+			
+		default: {
+			br_set_err(br, BON_ERR_BAD_AGGREGATE_TYPE);
+			return BON_FALSE;
+		}
+	}
+}
+
+bon_bool bon_explode_aggr_inplace(bon_r_doc* B, bon_value* val)
+{
+	if (!val || val->type != BON_VALUE_AGGREGATE) {
+		return BON_TRUE; // Original is good
+	}
+	
+	bon_value_agg* agg = &val->u.agg;
+	bon_reader br = { agg->data, bon_aggregate_payload_size(&agg->type), 0, B };
+	
+	bon_value tmp;
+	if (!bon_explode_aggr( B, &tmp, &agg->type, &br )) {
+		return BON_FALSE;
+	}
+	
+	assert(br.error == 0);
+	assert(br.nbytes == 0);
+	
+	// Replace original
+	memcpy(val, &tmp, sizeof(bon_value));
+	
+	return BON_TRUE;
+}
+
+			 
+bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size ix)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return 0; }
+	
+	if (val->type == BON_VALUE_AGGREGATE) {
+		// If the user treats it like a list, then convert it into one.
+		bon_explode_aggr_inplace(B, val);
+	}
+	
 	if (val->type == BON_VALUE_LIST)
 	{
 		const bon_value_list* vals = &val->u.list;
@@ -1809,13 +2102,50 @@ const bon_value* bon_r_list_elem(const bon_value* val, bon_size ix)
 	return NULL;
 }
 
-///////////////////////////////////////////////////
+
+bon_value* bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key)
+{
+	val = bon_r_follow_refs(B, val);
+	
+	if (!val) {
+		return NULL;
+	}
+	
+	if (val->type == BON_VALUE_AGGREGATE) {
+		// If the user treats it like an object, convert it into one.
+		if (!bon_explode_aggr_inplace(B, val)) {
+			return NULL;
+		}
+	}
+	
+	if (!val || val->type != BON_VALUE_OBJ) {
+		return NULL;
+	}
+	
+	const bon_value_obj*  obj  = &val->u.obj;
+	const bon_kvs*        kvs  = &obj->kvs;
+	
+	for (bon_size i=0; i<kvs->size; ++i) {
+		bon_kv* kv = &kvs->data[i];
+		
+		// The key should always be a string:
+		if (kv->key.type == BON_VALUE_STRING) {
+			if (memcmp(key, kv->key.u.str.ptr, kv->key.u.str.size) == 0) {
+				return &kv->val;
+			}
+		}
+	}
+	
+	return NULL;
+}
+
+// -----------------------------------------------------------------
 
 
 /*
  from and to aggregate (i.e. structs and array)
  */
-bon_bool br_read_aggregate(bon_r_doc* doc, const bon_type* srcType, bon_reader* br,
+bon_bool br_read_aggregate(bon_r_doc* B, const bon_type* srcType, bon_reader* br,
 									const bon_type* dstType, bon_writer* bw)
 {
 	if (dstType->id == BON_TYPE_ARRAY &&
@@ -1830,10 +2160,10 @@ bon_bool br_read_aggregate(bon_r_doc* doc, const bon_type* srcType, bon_reader* 
 		}
 		
 		for (bon_size ai=0; ai<srcArray->size; ++ai) {
-			bon_bool win = br_read_aggregate(doc, srcArray->type, br,
+			bon_bool win = br_read_aggregate(B, srcArray->type, br,
 														dstArray->type, bw);
 			
-			if (!win || doc->error || br->error || bw->error) {
+			if (!win || B->error || br->error || bw->error) {
 				return BON_FALSE;
 			}
 		}
@@ -1865,9 +2195,9 @@ bon_bool br_read_aggregate(bon_r_doc* doc, const bon_type* srcType, bon_reader* 
 						0
 					};
 					
-					bon_bool win = br_read_aggregate(doc, srcValType, &br_val,
+					bon_bool win = br_read_aggregate(B, srcValType, &br_val,
 																dstStruct->types[dst_ki], bw);
-					if (!win || doc->error || br_val.error || bw->error) {
+					if (!win || B->error || br_val.error || bw->error) {
 						return BON_FALSE;
 					}
 					
@@ -1942,17 +2272,18 @@ bon_bool br_read_aggregate(bon_r_doc* doc, const bon_type* srcType, bon_reader* 
 }
 
 
-bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, bon_writer* bw)
+bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
+									const bon_type* dstType, bon_writer* bw)
 {
 	switch (srcVal->type)
 	{
 		case BON_VALUE_NIL:
-			fprintf(stderr, "bon_r_read_aggregate: nil\n");
+			fprintf(stderr, "bon_r_aggr_read: nil\n");
 			return BON_FALSE; // There is no null-able type
 			
 		case BON_VALUE_BOOL:
 			if (dstType->id!=BON_TYPE_BOOL) {
-				fprintf(stderr, "bon_r_read_aggregate: bool err\n");
+				fprintf(stderr, "bon_r_aggr_read: bool err\n");
 				return BON_FALSE;
 			}
 			return bw_write_uint8( bw, srcVal->u.boolean ? BON_TRUE : BON_FALSE );
@@ -2014,7 +2345,7 @@ bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_ty
 			const bon_value_agg* agg = &srcVal->u.agg;
 			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
 			bon_reader br = { agg->data, byteSize, 0, 0 };
-			bon_bool win = br_read_aggregate(doc, &agg->type, &br, dstType, bw);
+			bon_bool win = br_read_aggregate(B, &agg->type, &br, dstType, bw);
 			return win && br.error==0;
 		}
 			
@@ -2028,7 +2359,7 @@ bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_ty
 			const bon_type_struct* strct = dstType->u.strct;
 			for (bon_size ki=0; ki<strct->size; ++ki) {
 				const char*       key = strct->keys[ki];
-				const bon_value*  val = bon_r_get_key(doc, srcVal, key);
+				bon_value*  val = bon_r_get_key(B, srcVal, key);
 				
 				if (val == NULL) {
 					fprintf(stderr, "Failed to find key in src: \"%s\"\n", key);
@@ -2041,7 +2372,7 @@ bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_ty
 				if (bw->nbytes < nByteInVal) {
 					return BON_FALSE;
 				}
-				bw_read_aggregate(doc, val, kv_type, bw);
+				bw_read_aggregate(B, val, kv_type, bw);
 			}
 			
 			return bw->nbytes == 0; // There should be none left
@@ -2049,9 +2380,9 @@ bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_ty
 			
 			
 		case BON_VALUE_BLOCK_REF: {
-			const bon_value* val = bon_r_get_block(doc, srcVal->u.blockRefId );
+			bon_value* val = bon_r_get_block(B, srcVal->u.blockRefId );
 			if (val) {
-				return bw_read_aggregate(doc, val, dstType, bw);
+				return bw_read_aggregate(B, val, dstType, bw);
 			} else {
 				fprintf(stderr, "Missing block, id %"PRIu64 "\n", srcVal->u.blockRefId );
 				return BON_FALSE;
@@ -2061,7 +2392,9 @@ bon_bool bw_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_ty
 	}
 }
 
-bon_bool bon_r_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, void* dst, bon_size nbytes)
+bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
+								 void* dst, bon_size nbytes,
+								 const bon_type* dstType)
 {
 	bon_size expected = bon_aggregate_payload_size(dstType);
 	if (expected != nbytes) {
@@ -2070,24 +2403,55 @@ bon_bool bon_r_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon
 	}
 	
 	bon_writer bw = {dst, nbytes, 0};
-	bon_bool win = bw_read_aggregate(doc, srcVal, dstType, &bw);
+	bon_bool win = bw_read_aggregate(B, srcVal, dstType, &bw);
 	return win && bw.nbytes==0 && bw.error==0;
 }
 	
 // Convenience:
-bon_bool bon_r_read_aggregate_fmt(bon_r_doc* doc, const bon_value* srcVal,
-											 void* dst, bon_size nbytes, const char* fmt)
+bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
+									  void* dst, bon_size nbytes,
+									  const char* fmt, ...)
 {
-	// TODO: var args ...
-	bon_type* type = bon_new_type_fmt(fmt);
+	va_list ap;
+	va_start(ap, fmt);
+	bon_type* type = bon_new_type_fmt_ap(&fmt, &ap);
+	va_end(ap);
+	
 	if (!type) {
 		return BON_FALSE;
 	}
-	bon_bool win = bon_r_read_aggregate(doc, srcVal, type, dst, nbytes);
+	bon_bool win = bon_r_aggr_read(B, srcVal, dst, nbytes, type);
 	bon_free_type(type);
 	
 	return win;
 }
+
+#if 0
+const void* bon_r_aggr_ptr(bon_r_doc* B, bon_value* val,
+									bon_size nbytes, const bon_type* dstType)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return NULL; }
+}
+
+const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* val,
+										 bon_size nbytes, const char* fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	bon_type* type = bon_new_type_fmt_ap(&fmt, &ap);
+	va_end(ap);
+	
+	if (!type) {
+		return BON_FALSE;
+	}
+	
+	const void* ptr = bon_r_aggr_ptr(B, val, nbytes, type);
+	bon_free_type(type);
+	
+	return ptr;
+}
+#endif
 
 ////////////////////////////////////
 
@@ -2167,7 +2531,7 @@ void bon_print_aggr(FILE* out, const bon_type* aggType, bon_reader* br)
 }
 
 // Will print in json format.
-void bon_print(FILE* out, const bon_value* v, size_t indent)
+void bon_print(FILE* out, bon_value* v, size_t indent)
 {
 #define INDENT "\t"
 #define PRINT_NEWLINE_INDENT fprintf(out, "\n"); for (size_t iix=0; iix<indent; ++iix) fprintf(out, INDENT);
@@ -2246,7 +2610,7 @@ void bon_print(FILE* out, const bon_value* v, size_t indent)
 				}
 				
 				for (bon_size i=0; i<size; ++i) {
-					const bon_kv* kv = &kvs->data[i];
+					bon_kv* kv = &kvs->data[i];
 					
 					bon_print(out, &kv->key, indent);
 					fprintf(out, ": ");

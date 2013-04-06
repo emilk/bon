@@ -7,6 +7,7 @@
 //
 
 #include "bon.h"
+#include "bon_private.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +48,7 @@ uint8_t* readFile(size_t* out_size, const char* path)
 }
 
 
-void print_summary(const bon_value* v)
+void print_summary(bon_value* v)
 {
 	// TODO: use bon_logical_type(val)
 	
@@ -90,14 +91,14 @@ bon_bool open_file(const char* path) {
 		return BON_FALSE;
 	}
 	
-	bon_r_doc* doc   = bon_r_open(data, size);
-	if (!doc) {
+	bon_r_doc* B   = bon_r_open(data, size);
+	if (!B) {
 		fprintf(stderr, "Failed to parse .bon file at %s\n", path);
 		return BON_FALSE;
 	}
 	
-	const bon_value* root  = bon_r_root(doc);
-	const bon_value* dir   = root;
+	bon_value* root  = bon_r_root(B);
+	bon_value* dir   = root;
 	
 	/* TODO: we should really use something like bon_r_as_obj(doc, root).
 	 Why? So we can follow block refs and handle struct:s. */
@@ -118,7 +119,7 @@ bon_bool open_file(const char* path) {
 			if (dir->type == BON_VALUE_OBJ) {
 				const bon_value_obj* o = &dir->u.obj;
 				for (bon_size ki=0; ki<o->kvs.size; ++ki) {
-					const bon_kv* kv = &o->kvs.data[ki];
+					bon_kv* kv = &o->kvs.data[ki];
 					bon_print(stdout, &kv->key, 0);
 					printf("              ");
 					print_summary(&kv->val);
@@ -131,7 +132,7 @@ bon_bool open_file(const char* path) {
 			if (strcmp(key_name, ".\n")==0) {
 				bon_print(stdout, dir, 0);
 			} else {
-				const bon_value* val = bon_r_get_key(doc, dir, key_name);
+				bon_value* val = bon_r_get_key(B, dir, key_name);
 				if (val) {
 					bon_print(stdout, val, 0);
 					printf("\n");
@@ -140,7 +141,7 @@ bon_bool open_file(const char* path) {
 				}
 			}
 		} else if (strncmp(line, "stats\n", 6)==0) {
-			bon_stats* stats = &doc->stats;
+			bon_stats* stats = &B->stats;
 			printf("-----------------\n");
 			printf("%8d bytes in total\n",                  (int)stats->bytes_file);
 			//printf("%8d bytes in %d strings (incl header)\n",  (int)stats->bytes_string_wet, (int)stats->count_string);
@@ -153,7 +154,7 @@ bon_bool open_file(const char* path) {
 		}
 	}
 	
-	bon_r_close(doc);
+	bon_r_close(B);
 	return BON_TRUE;
 }
 

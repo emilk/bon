@@ -104,6 +104,7 @@ BON is highly influenced by MessagePack, and it might be worth to read the [Mess
 * Object (aka “map”)
 	* Maps string keys to values of any type
 	* Ended by an END_OBJECT control byte
+	* Keys must be strings, and they may NOT contain the unicode point 0.
 * List (heterogenous)
 	* Any number of values of any type (mixing of types allowed)
 	* Ended by an END_LIST control byte
@@ -256,7 +257,9 @@ Here’s an example of a blocked BON file for storing user names and images:
 
 When the user now wants to access an image of Paul, the parser can completely skip over parsing the block for John.
 
-Blocks can refer to other blocks, but the references may not form cycles (so the structure is a DAG). Even when several block refers to the same block, the logical structure is still that of a tree. For instance, when transforming BON to JSON, a block referenced from several other blocks will be represented multiple times in the JSON document. Therefore, blocks can also be used as a form of compression.
+Blocks can refer to other blocks, but the references may not form cycles (so the structure is a DAG). To prevent such cycles, a block may only contain references to block with a strictly larger ID.
+
+Even when several block refers to the same block, the logical structure is still that of a tree. For instance, when transforming BON to JSON, a block referenced from several other blocks will be represented multiple times in the JSON document. Therefore, blocks can also be used as a form of compression.
 
 Block sizes are excluding the BLOCK_BEGIN and BLOCK_END, and also excluding the VLQ:s encoding the id and block size. The size, in other words, is of the payload - the contained value. A block-size of 0 is reserved to mean "undefined size - parse to BLOCK_END".
 

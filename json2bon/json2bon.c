@@ -15,7 +15,7 @@
 #define PRESERVE_ORDER 1
 #define ATTEMPT_RECOVERY 1
 
-bon_bool write_json(json_t* json, bon_w_doc* bon);
+bon_bool write_json(json_t* json, bon_w_doc* B);
 
 
 struct object_key {
@@ -31,7 +31,7 @@ static int object_key_compare_serials(const void *key1, const void *key2)
 	return a < b ? -1 : a == b ? 0 : 1;
 }
 
-bon_bool write_obj(json_t* json, bon_w_doc* bon)
+bon_bool write_obj(json_t* json, bon_w_doc* B)
 {
 	bon_bool success = BON_TRUE;
 	
@@ -53,51 +53,51 @@ bon_bool write_obj(json_t* json, bon_w_doc* bon)
 		
 	qsort(keys, size, sizeof(struct object_key), object_key_compare_serials);
 	
-	bon_w_begin_obj(bon);
+	bon_w_begin_obj(B);
 	for (i = 0; i < size; ++i)
 	{
 		const char* key   = keys[i].key;
 		json_t*     value = json_object_get(json, key);
-		bon_w_key(bon, key, BON_ZERO_ENDED);
-		if (!write_json(value, bon)) {
+		bon_w_key(B, key, BON_ZERO_ENDED);
+		if (!write_json(value, B)) {
 			success = BON_FALSE;
 			if (!ATTEMPT_RECOVERY)
 				break;
 		}
 	}
-	bon_w_end_obj(bon);
+	bon_w_end_obj(B);
 	
 	free(keys);	
 #else
 	const char* key;
 	json_t* value;
 	
-	bon_w_begin_obj(bon);
+	bon_w_begin_obj(B);
 	json_object_foreach(json, key, value) {
-		bon_w_key(bon, key, BON_ZERO_ENDED);
-		if (!write_json(value, bon)) {
+		bon_w_key(B, key, BON_ZERO_ENDED);
+		if (!write_json(value, B)) {
 			success = BON_FALSE;
 			if (!ATTEMPT_RECOVERY)
 				break;
 		}
 	}
-	bon_w_end_obj(bon);
+	bon_w_end_obj(B);
 #endif
 	
 	return success;
 }
 
 
-bon_bool write_json(json_t* json, bon_w_doc* bon)
+bon_bool write_json(json_t* json, bon_w_doc* B)
 {
 	if (!json) {
 		fprintf(stderr, "write_json got NULL\n");
 		return BON_FALSE;
 	}
 	
-	if (bon->error) {
+	if (B->error) {
 		if (ATTEMPT_RECOVERY)
-			bon->error = 0;
+			B->error = 0;
 	}
 	
 	bon_bool success = BON_TRUE;
@@ -105,53 +105,53 @@ bon_bool write_json(json_t* json, bon_w_doc* bon)
 	switch (json_typeof(json))
 	{
 		case JSON_OBJECT: {
-			return write_obj(json, bon);
+			return write_obj(json, B);
 		} break;
 			
 			
 		case JSON_ARRAY: {
 			size_t size = json_array_size(json);
 			
-			bon_w_begin_list(bon);
+			bon_w_begin_list(B);
 			for (size_t ix=0; ix<size; ++ix) {
 				json_t* elem = json_array_get(json, ix);
-				if (!write_json(elem, bon)) {
+				if (!write_json(elem, B)) {
 					success = BON_FALSE;
 					if (!ATTEMPT_RECOVERY)
 						break;
 				}
 			}
-			bon_w_end_list(bon);
+			bon_w_end_list(B);
 		} break;
 			
 			
 		case JSON_STRING:
-			bon_w_string(bon, json_string_value(json), BON_ZERO_ENDED);
+			bon_w_string(B, json_string_value(json), BON_ZERO_ENDED);
 			break;
 			
 			
 		case JSON_INTEGER:
-			bon_w_sint64(bon, json_integer_value(json));
+			bon_w_sint64(B, json_integer_value(json));
 			break;
 			
 			
 		case JSON_REAL:
-			bon_w_double(bon, json_real_value(json));
+			bon_w_double(B, json_real_value(json));
 			break;
 			
 			
 		case JSON_TRUE:
-			bon_w_bool(bon, BON_TRUE);
+			bon_w_bool(B, BON_TRUE);
 			break;
 			
 			
 		case JSON_FALSE:
-			bon_w_bool(bon, BON_FALSE);
+			bon_w_bool(B, BON_FALSE);
 			break;
 			
 			
 		case JSON_NULL:
-			bon_w_nil(bon);
+			bon_w_nil(B);
 			break;
 			
 			
@@ -160,7 +160,7 @@ bon_bool write_json(json_t* json, bon_w_doc* bon)
 			return BON_FALSE;
 	}
 	
-	return success && (bon->error == BON_SUCCESS);
+	return success && (B->error == BON_SUCCESS);
 }
 
 bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
@@ -174,18 +174,18 @@ bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
 		return BON_FALSE;
 	}
 	
-	bon_w_doc* bon = bon_w_new_doc(&bon_file_writer, out);
+	bon_w_doc* B = bon_w_new_doc(&bon_file_writer, out, BON_FLAG_DEFAULT);
 	
-	if (!bon) {
+	if (!B) {
 		return BON_FALSE;
 	}
 	
-	bon_w_header(bon);	
-	bon_bool success = write_json(json, bon);
-	bon_w_footer(bon);
-	if (bon->error)
+	bon_w_header(B);	
+	bon_bool success = write_json(json, B);
+	bon_w_footer(B);
+	if (B->error)
 		success = BON_FALSE;
-	bon_w_close_doc(bon);
+	bon_w_close_doc(B);
 	
 	return success;
 }

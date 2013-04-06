@@ -40,7 +40,7 @@ typedef enum {
 	
 	// Write errors
 	BON_ERR_WRITE_ERROR,        // Writer refused
-	BON_ERR_BAD_AGGREGATE_SIZE, // bon_w_aggregate got data of the wrong size
+	BON_ERR_BAD_AGGREGATE_SIZE, // bon_w_aggr got data of the wrong size
 	
 	// Read errors
 	BON_ERR_TOO_SHORT,   // Premature end of file
@@ -88,10 +88,15 @@ typedef enum {
 	BON_SHORT_BLOCK_END         = BON_SHORT_BLOCK_START + BON_SHORT_BLOCK_COUNT,
 	
 	BON_SHORT_ARRAY_START       = BON_SHORT_BLOCK_END,
-	BON_SHORT_BYTE_ARRAY_START  = BON_SHORT_ARRAY_START       + 16,
-	BON_SHORT_STRUCT_START      = BON_SHORT_BYTE_ARRAY_START  + 16,
+	BON_SHORT_ARRAY_COUNT       = 16,
 	
-	BON_SHORT_NEG_INT_START     = BON_SHORT_STRUCT_START      + 16,
+	BON_SHORT_BYTE_ARRAY_START  = BON_SHORT_ARRAY_START + BON_SHORT_ARRAY_COUNT,
+	BON_SHORT_BYTE_ARRAY_COUNT  = 16,
+	
+	BON_SHORT_STRUCT_START      = BON_SHORT_BYTE_ARRAY_START + BON_SHORT_BYTE_ARRAY_COUNT,
+	BON_SHORT_STRUCT_COUNT      = 16,
+	
+	BON_SHORT_NEG_INT_START     = BON_SHORT_STRUCT_START + BON_SHORT_STRUCT_COUNT,
 	BON_SHORT_NEG_INT_COUNT     = 16,
 	
 	BON_SHORT_AGGREGATES_START  = BON_SHORT_ARRAY_START
@@ -105,8 +110,11 @@ typedef enum {
 
 #define BON_COMPRESS(prefix, n)  BON_COMPRESS_(prefix ## START, prefix ## COUNT, n)
 
-#define BON_SHORT_STRING(n)  BON_COMPRESS(BON_SHORT_STRING_, n)
-#define BON_SHORT_BLOCK(n)   BON_COMPRESS(BON_SHORT_BLOCK_, n)
+#define BON_SHORT_STRING(n)       BON_COMPRESS(BON_SHORT_STRING_,       n)
+#define BON_SHORT_BLOCK(n)        BON_COMPRESS(BON_SHORT_BLOCK_,        n)
+#define BON_SHORT_ARRAY(n)        BON_COMPRESS(BON_SHORT_ARRAY_,        n)
+#define BON_SHORT_BYTE_ARRAY(n)   BON_COMPRESS(BON_SHORT_BYTE_ARRAY_,   n)
+#define BON_SHORT_STRUCT(n)       BON_COMPRESS(BON_SHORT_STRUCT_,       n)
 
 //-------------------------------------------------------------------
 
@@ -235,35 +243,6 @@ typedef struct bon_type bon_type;
 typedef struct bon_type_tuple bon_type_tuple;
 
 typedef struct bon_type_array bon_type_array;
-struct bon_type_array {
-	bon_size size;
-	bon_type* type;
-};
-
-/*
-struct bon_type_tuple {
-	bon_size size;
-	bon_type** types;
-};
- */
-
-typedef struct bon_type_struct bon_type_struct;
-struct bon_type_struct {
-	bon_size     size;
-	const char** keys;   // array of utf8 strings
-	bon_type**   types;  // array of types
-};
-
-struct bon_type {
-	bon_type_id id;
-	
-	// Further info (if applicable)
-	union {
-		bon_type_array*  array;
-		//bon_type_tuple*  tuple;
-		bon_type_struct* strct;
-	} u;
-};
 
 
 void      bon_free_type(bon_type* t);
@@ -275,27 +254,24 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type);
 bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types);
 
 /*
- struct { float pos[3]; uint8_t color[4]; }
+ struct Vert { float pos[3]; uint8_t color[4]; }
  bon_type* bon_new_type_fmt("{[3f][4u8]}", "pos", "color")
  
- n                - null
- b                - bool
- k                - key (given in vargs)
+ b                - bon_bool (single byte)
  u8 u16 u32 u64   - unsigned
- s8 s16 s32 s64   - signed
- i                - int
- ui               - unsigned int
- s                - const char*
+ i8 i16 i32 i64   - signed
  f                - float
  d                - double
- 
- captials means "convert to this type from other types"
- 
+ s                - const char*
+ {...}            - object with any number of types (keys given in vargs)
+ [3f]             - array of three floats
+ [#i]             - array of signed integers (size given in vargs as bon_size)
+  
  NULL on fail
  */
 bon_type* bon_new_type_fmt(const char* fmt, ...);
 
-bon_size bon_aggregate_payload_size(const bon_type* type);
+bon_size  bon_aggregate_payload_size(const bon_type* type);
 
 
 //-------------------------------------------------------------------
@@ -322,7 +298,7 @@ bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes);
 /*
  Usage:
  FILE* fp = fopen(FILE_NAME, "wb");
- bon_w_doc* doc = bon_w_new_doc(&bon_file_writer, fp);
+ bon_w_doc* B = bon_w_new_doc(&bon_file_writer, fp);
  write_bon( bon );
  bon_w_close_doc( &bon );
  fclose( fp );
@@ -361,38 +337,48 @@ typedef struct {
 } bon_w_doc;
 
 
-bon_error      on_get_error(bon_w_doc* doc);
+bon_error      on_get_error(bon_w_doc* B);
 
 // Top level structure
 bon_w_doc*   bon_w_new_doc                     (bon_w_writer_t, void* userData, bon_flags flags);
-void         bon_w_flush                       (bon_w_doc* doc); 
-void         bon_w_close_doc                   (bon_w_doc* doc);
-void         bon_w_header                (bon_w_doc* doc);  // Should be the first thing written, if written at all.
-void         bon_w_footer                (bon_w_doc* doc);  // Should be the last thing written, if written at all.
+void         bon_w_flush                       (bon_w_doc* B); 
+void         bon_w_close_doc                   (bon_w_doc* B);
+void         bon_w_header                (bon_w_doc* B);  // Should be the first thing written, if written at all.
+void         bon_w_footer                (bon_w_doc* B);  // Should be the last thing written, if written at all.
 
-void         bon_w_block_ref(bon_w_doc* doc, uint64_t block_id);
-void         bon_w_begin_block(bon_w_doc* doc, uint64_t block_id);  // open-ended
-void         bon_w_end_block(bon_w_doc* doc);
-void         bon_w_block                 (bon_w_doc* doc, uint64_t block_id, const void* data, bon_size nbytes);
+void         bon_w_block_ref(bon_w_doc* B, uint64_t block_id);
+void         bon_w_begin_block(bon_w_doc* B, uint64_t block_id);  // open-ended
+void         bon_w_end_block(bon_w_doc* B);
+void         bon_w_block                 (bon_w_doc* B, uint64_t block_id, const void* data, bon_size nbytes);
 
 
 // The different types of values:
-void         bon_w_block_ref  (bon_w_doc* doc, uint64_t block_id);
-void         bon_w_begin_obj        (bon_w_doc* doc);
-void         bon_w_end_obj          (bon_w_doc* doc);
-void         bon_w_key              (bon_w_doc* doc, const char* utf8, bon_size nbytes);  // you must write a value right after this
-void         bon_w_begin_list       (bon_w_doc* doc);
-void         bon_w_end_list         (bon_w_doc* doc);
+void         bon_w_block_ref  (bon_w_doc* B, uint64_t block_id);
+void         bon_w_begin_obj        (bon_w_doc* B);
+void         bon_w_end_obj          (bon_w_doc* B);
+void         bon_w_key              (bon_w_doc* B, const char* utf8, bon_size nbytes);  // you must write a value right after this
+void         bon_w_begin_list       (bon_w_doc* B);
+void         bon_w_end_list         (bon_w_doc* B);
 
-void         bon_w_nil        (bon_w_doc* doc);
-void         bon_w_bool       (bon_w_doc* doc, bon_bool val);
-void         bon_w_string     (bon_w_doc* doc, const char* utf8, bon_size nbytes);
-void         bon_w_uint64     (bon_w_doc* doc, uint64_t val);
-void         bon_w_sint64     (bon_w_doc* doc, int64_t val);
-void         bon_w_float      (bon_w_doc* doc, float val);
-void         bon_w_double     (bon_w_doc* doc, double val);
-void         bon_w_aggregate  (bon_w_doc* doc, bon_type* type, const void* data, bon_size nbytes);             // Number of bytes implied by 'type', but required for extra safety
-void         bon_w_array      (bon_w_doc* doc, bon_size n_elem, bon_type_id type, const void* data, bon_size nbytes);      // Helper
+void         bon_w_nil        (bon_w_doc* B);
+void         bon_w_bool       (bon_w_doc* B, bon_bool val);
+void         bon_w_string     (bon_w_doc* B, const char* utf8, bon_size nbytes);
+void         bon_w_uint64     (bon_w_doc* B, uint64_t val);
+void         bon_w_sint64     (bon_w_doc* B, int64_t val);
+void         bon_w_float      (bon_w_doc* B, float val);
+void         bon_w_double     (bon_w_doc* B, double val);
+
+// Writing coherent data
+// nbytes == number of bytes implied by 'type', but required for extra safety
+void         bon_w_aggr    (bon_w_doc* B, const void* data, bon_size nbytes,
+								    bon_type* type);
+
+void         bon_w_aggr_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
+								    const char* fmt, ...);
+
+// Helper:
+void         bon_w_array      (bon_w_doc* B, bon_size n_elem, bon_type_id type,
+										 const void* data, bon_size nbytes);
 
 
 
@@ -414,129 +400,84 @@ typedef enum {
 } bon_value_type;
 
 
-typedef struct bon_value bon_value;
-typedef struct bon_kv bon_kv;
-typedef struct bon_r_block_t bon_r_block_t;
-
-// TODO: make all these struct opaque (move to bon.c)
-
-typedef struct {
-	bon_size  size;
-	bon_size  cap;
-	bon_kv*   data;
-} bon_kvs;
+typedef struct bon_value      bon_value;
+typedef struct bon_r_doc      bon_r_doc;
 
 
-typedef struct {
-	bon_size        size;  // Size in bytes, excluding trailing zero.
-	const uint8_t*  ptr;   // Points to 'size' bytes of an utf8 encoded string, followed by a zero.
-} bon_value_str;
-
-
-typedef struct {
-	bon_size   size;
-	bon_size   cap;
-	bon_value* data;
-} bon_value_list;
-
-
-typedef struct {
-	bon_type        type;
-	const uint8_t*  data;
-} bon_value_agg;
-
-
-typedef struct {
-	bon_kvs  kvs;
-} bon_value_obj;
-
-
-typedef union {
-	bon_bool        boolean;
-	uint64_t        u64;
-	int64_t         s64;
-	double          dbl;
-	bon_value_str   str;
-	bon_value_list  list;
-	bon_value_obj   obj;
-	bon_value_agg   agg;
-	uint64_t        blockRefId;
-} bon_value_union;
-
-
-struct bon_value {
-	bon_value_type  type;
-	bon_value_union u;
-};
-
-
-struct bon_kv {
-	bon_value key; // will be a string
-	bon_value val;
-};
-	
-
-/* Low level statistics about a bon-file. */
-typedef struct {
-	bon_size bytes_file;         // Number of bytes in the entire file
-	
-	bon_size count_string;
-	bon_size bytes_string_dry;   // Number of bytes taken up by strings (excluding fluff).
-	//bon_size bytes_string_wet;   // Number of bytes taken up by strings (including header and zero byte).
-	
-	bon_size count_aggr;
-	bon_size bytes_aggr_dry;     // Number of bytes taken up by strings (excluding header).
-	//bon_size bytes_aggr_wet;     // Number of bytes taken up by strings (including header).
-} bon_stats;
-
-typedef struct {
-	bon_size        id;              // Id of block
-	const uint8_t*  payload;         // Pointer into document to payload start
-	bon_size        payload_size;    // Byte size of payload. 0 means unknown.
-	bon_value       value;           // value, if 'parsed' is true.
-	bon_bool        parsed;          // if false, 'value' is not yet valid.
-} bon_r_block;
-
-typedef struct {
-	bon_size      size;
-	bon_size      cap;
-	bon_r_block*  data;
-} bon_r_blocks;
-
-typedef struct {
-	bon_error      error;       // If any
-	bon_r_blocks   blocks;
-	bon_stats      stats;       // Info about the read file
-} bon_r_doc;
-
-
-// Will parse a BON file.
-bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes);
-void       bon_r_close(bon_r_doc* doc);
+// -----------------------------------------------------------------
+// TODO: make this section private:
 
 // Returns NULL on fail
-const bon_value* bon_r_get_block(bon_r_doc* doc, uint64_t block_id);
+bon_value* bon_r_get_block(bon_r_doc* B, uint64_t block_id);
+
+bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
 
 
-const bon_value* bon_r_root(bon_r_doc* doc);
+//-------------------------------------------------------------------
+// Public API:
+
+// Will parse a BON file.
+bon_r_doc*        bon_r_open  (const uint8_t* data, bon_size nbytes);
+void              bon_r_close (bon_r_doc* B);
+bon_value*  bon_r_root  (bon_r_doc* B);
+bon_error         bon_r_error (bon_r_doc* B);
 
 
-// TODO: move away from public API!
-const bon_value* bon_r_follow_refs(bon_r_doc* doc, const bon_value* val);
+//-------------------------------------------------------------------
+// Inspeciting values. Use these before attemting to read a value.
+// Passing NULL as 'val' will make all these functions return BON_FALSE.
 
+// val==NULL  ->  BON_FALSE;
+bon_bool  bon_r_is_nil     (bon_r_doc* B, bon_value* val);
 
-const bon_value* bon_r_get_key(bon_r_doc* doc, const bon_value* obj, const char* key);
-	
-// Convenicence: returns NULL if wrong type
-const char* bon_r_cstr(const bon_value* obj);
-	
-// Convenicence: sets an error if incompatible type
-uint64_t bon_r_uint(bon_r_doc* doc, const bon_value* obj);
+bon_bool  bon_r_is_bool    (bon_r_doc* B, bon_value* val);
 
-	
+// signed or unsigned
+bon_bool  bon_r_is_int     (bon_r_doc* B, bon_value* val);
+
+// int or double:
+bon_bool  bon_r_is_number  (bon_r_doc* B, bon_value* val);
+
+// Specifically double
+bon_bool  bon_r_is_double  (bon_r_doc* B, bon_value* val);
+
+bon_bool  bon_r_is_string  (bon_r_doc* B, bon_value* val);
+
+bon_bool  bon_r_is_list    (bon_r_doc* B, bon_value* val);
+
+bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
+
+//-------------------------------------------------------------------
+// Reading values.
+
+// Returns true iff 'val' is a bool and is true. False on fail. No implicit conversion.
+bon_bool  bon_r_bool    (bon_r_doc* B, bon_value* val);
+
+// Will return zeroif of the wrong type. Double/ints are converted to each other.
+uint64_t  bon_r_uint    (bon_r_doc* B, bon_value* val);
+int64_t   bon_r_int     (bon_r_doc* B, bon_value* val);
+double    bon_r_double  (bon_r_doc* B, bon_value* val);
+float     bon_r_float   (bon_r_doc* B, bon_value* val);
+
+// Returns NULL if wrong type
+bon_size     bon_r_strlen(bon_r_doc* B, bon_value* val);
+const char*  bon_r_cstr  (bon_r_doc* B, bon_value* val);
+
 // Returns 0 if it is not a list.
-bon_size          bon_r_list_size(const bon_value* list);
-const bon_value*  bon_r_list_elem(const bon_value* list, bon_size ix);
+bon_size          bon_r_list_size(bon_r_doc* B, bon_value* list);
+bon_value*  bon_r_list_elem(bon_r_doc* B, bon_value* list, bon_size ix);
+
+// Returns NULL if 'val' is not an object or does not have the given key.
+bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
+
+
+//-------------------------------------------------------------------
+/*
+ API for quickly reading aggregates:
+ Any BON value can be read with the 'normal' functions above.
+ However, ff the BON encoder wrote data in "aggregate" format,
+ the following may prove to be faster, and _much_ faster for large amounts of data.
+*/
 
 /* 
  Can read to:
@@ -550,19 +491,43 @@ const bon_value*  bon_r_list_elem(const bon_value* list, bon_size ix);
  
  False on fail
  */
-bon_bool bon_r_read_aggregate(bon_r_doc* doc, const bon_value* srcVal, const bon_type* dstType, void* dst, bon_size nbytes);
+bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
+								 void* dst, bon_size nbytes,
+								 const bon_type* dstType);
 
 // Convenience:
-bon_bool bon_r_read_aggregate_fmt(bon_r_doc* doc, const bon_value* srcVal,
-											 void* dst, bon_size nbytes, const char* fmt);
+bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
+											 void* dst, bon_size nbytes, const char* fmt, ...);
 
+/*
+ bon_r_aggr_ptr_fmt is by far the fastest way to read data, but it only works if the format is EXACTLY right. If it is, bon_r_aggr_ptr_fmt returns a pointer to the data. Else, NULL.
+ 
+ Even if bon_r_raw_fmt returns NULL, bon_r_aggr_read_fmt may work with the same arguments.
+ This is because bon_r_aggr_read_fmt can do value conversions, ignore extra keys in objects etc.
+ 
+ Examples:
+ 
+ const int n = bon_r_list_size(B, val)
+ const float* src = bon_r_raw_fmt(B, val, n * sizeof(float), "[#f]", n);
+ 
+ struct Vert { float pos[3]; uint8_t color[4]; }
+ const int n = bon_r_list_size(B, val)
+ const Vert* verts = bon_r_raw_fmt(B, val, n * sizeof(Vert), "[#{[3f][4u8]}]", n, "pos", "color");
+ 
+ */
+#if 0
+const void* bon_r_aggr_ptr    (bon_r_doc* B, bon_value* srcVal,
+										 bon_size nbytes, const bon_type* dstType);
+const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* srcVal,
+										 bon_size nbytes, const char* fmt, ...);
+#endif
 
 
 //-------------------------------------------------------------------
 
 
 // Quick and dirty printout of a value, in json-like format, but NOT json conforming.
-void bon_print(FILE* out, const bon_value* value, size_t indent);
+void bon_print(FILE* out, bon_value* value, size_t indent);
 
 
 
@@ -573,7 +538,7 @@ typedef struct {
 	const uint8_t*  data;
 	bon_size        nbytes;
 	bon_error       error;
-	bon_r_doc*      doc;     // For stats. May be null.
+	bon_r_doc*      B;     // For stats. May be null.
 } bon_reader;
 
 

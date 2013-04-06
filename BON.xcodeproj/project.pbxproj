@@ -126,6 +126,7 @@
 		80D9FC99170ED401005DBF0D /* test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
 		80D9FC9B170ED401005DBF0D /* test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = test.1; sourceTree = "<group>"; };
 		80D9FCA0170ED5A3005DBF0D /* catch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
+		80E9B2F8171046C20095BC59 /* bon_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bon_private.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -190,6 +191,7 @@
 				806742A016BB36970029D4E1 /* BON.1 */,
 				806742A716BB36A70029D4E1 /* bon.h */,
 				806742A816BB7C8A0029D4E1 /* bon.c */,
+				80E9B2F8171046C20095BC59 /* bon_private.h */,
 			);
 			path = BON;
 			sourceTree = "<group>";
@@ -598,6 +600,7 @@
 				80D9FC9E170ED401005DBF0D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
