@@ -271,7 +271,7 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 			  
 			  bon_w_end_obj(B);
 			  
-			  REQUIRE( B->error == BON_SUCCESS );
+			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
 		  
@@ -372,7 +372,7 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 			  
 			  bon_w_end_obj(B);
 			  
-			  REQUIRE( B->error == BON_SUCCESS );
+			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
 		  [=](Parser& p) {
@@ -422,7 +422,7 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 	bon_w_key(block_1, "ref2", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 2);
 	bon_w_key(block_1, "ref1337", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 1337);
 	bon_w_end_obj(block_1);
-	REQUIRE( block_1->error == 0 );
+	REQUIRE( bon_w_error(block_1) == 0 );
 	bon_w_close_doc(block_1);
 	
 	
@@ -444,7 +444,7 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 			  bon_w_block_ref(B, 1);
 			  bon_w_end_block(B);
 			  
-			  REQUIRE( B->error == BON_SUCCESS );
+			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
 		  [=](Parser& p) {
@@ -477,12 +477,12 @@ TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
 	const int NVecs = 2;
 	
 	struct InVert {
-		float    pos[3];
+		double   pos[3];
 		float    normal[3];
 		uint8_t  color[4];
 	};
 	
-	static_assert(sizeof(InVert) == 6*sizeof(float) + 4, "pack");
+	static_assert(sizeof(InVert) == 3*sizeof(InVert::pos[0]) + 3*sizeof(InVert::normal[0]) + 4, "pack");
 	
 	InVert inVecs[NVecs] = {
 		{
@@ -504,11 +504,11 @@ TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
 			  
 			  bon_w_key(B, "vecs", BON_ZERO_ENDED);
 			  bon_w_aggr_fmt(B, inVecs, sizeof(inVecs),
-								  "[#{[3f][3f][4u8]}]", (bon_size)NVecs, "pos", "normal", "color");
+								  "[#{[3d][3f][4u8]}]", (bon_size)NVecs, "pos", "normal", "color");
 			  
 			  bon_w_end_obj(B);
 			  
-			  REQUIRE( B->error == BON_SUCCESS );
+			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
 		  [=](Parser& p) {
@@ -519,17 +519,17 @@ TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
 			  
 			  p( BON_SHORT_STRUCT(3) );
 			  p( BON_SHORT_STRING(3), "pos", 0);
-			  p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT32 );
+			  p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT64 );
 			  p( BON_SHORT_STRING(6), "normal", 0);
 			  p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT32 );
 			  p( BON_SHORT_STRING(5), "color", 0);
 			  p( BON_SHORT_BYTE_ARRAY(4) );
 			  
-			  p( 1.0f, 2.0f, 3.0f );
+			  p( 1.0,  2.0,  3.0  );
 			  p( 0.0f, 0.0f, 1.0f );
 			  p( 255,196,128,64 );
 			  
-			  p( 4.0f, 5.0f, 6.0f );
+			  p( 4.0 , 5.0 , 6.0  );
 			  p( 1.0f, 0.0f, 0.0f );
 			  p( 64,128,196,255 );
 			  
@@ -542,26 +542,55 @@ TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
 			  REQUIRE( root );
 			  
 			  // ------------------------------------------------
-			  // Read using aggregate API
-			  
-			  // ------------------------------------------------
-			  // Read using tradional API (will convert aggregate):
 			  
 			  auto vecs  = read_key(B, root, "vecs");
 			  REQUIRE( bon_r_is_list(B, vecs) );
 			  REQUIRE( bon_r_list_size(B, vecs) == (bon_size)NVecs );
+			  
+			  // ------------------------------------------------
+			  // Read using aggregate API:
+			  
+			  {
+				  auto vertPtr = (const InVert*)bon_r_aggr_ptr_fmt(B, vecs, 2*sizeof(InVert),
+																					"[#{[3d][3f][4u8]}]", (bon_size)NVecs,
+																					"pos", "normal", "color");
+				  REQUIRE( vertPtr );
+				  REQUIRE( vertPtr[1].color[0] == 64 );
+			  }
+			  
+			  {
+				  struct alignas(1) OutVert {
+					  uint8_t   color[4];
+					  float     pos[3];
+				  };
+				  
+				  static_assert(sizeof(OutVert) == 4 + 3 * sizeof(OutVert::pos[0]), "pack");
+				  
+				  OutVert outVerts[NVecs];
+				  
+				  bool win = bon_r_aggr_read_fmt(B, vecs, outVerts, sizeof(outVerts),
+															"[2{[4u8][3f]}]", "color", "pos");
+				  REQUIRE( win );
+				  REQUIRE( outVerts[0].color[0]  == 255  );
+				  REQUIRE( outVerts[0].pos[0]    == 1.0f );
+				  REQUIRE( outVerts[1].pos[2]    == 6.0f );
+			  }
+			  
+			  // ------------------------------------------------
+			  // Read using tradional API (will convert aggregate):
+			  
 			  auto v1    = bon_r_list_elem(B, vecs, 1);
 			  
 			  auto pos   = read_key(B, v1, "pos");
 			  REQUIRE( bon_r_is_list(B, pos) );
-			  REQUIRE( bon_r_list_size(B, pos) == 3 );
+			  REQUIRE( bon_r_list_size(B, pos) == (bon_size)3 );
 			  test_val_float(B, bon_r_list_elem(B, pos, 0), 4.0f);
 			  test_val_float(B, bon_r_list_elem(B, pos, 1), 5.0f);
 			  test_val_float(B, bon_r_list_elem(B, pos, 2), 6.0f);
 			  
 			  auto color   = read_key(B, v1, "color");
 			  REQUIRE( bon_r_is_list(B, color) );
-			  REQUIRE( bon_r_list_size(B, color) == 4 );
+			  REQUIRE( bon_r_list_size(B, color) == (bon_size)4 );
 			  test_val_int(B, bon_r_list_elem(B, color, 0), 64);
 			  test_val_int(B, bon_r_list_elem(B, color, 1), 128);
 			  test_val_int(B, bon_r_list_elem(B, color, 2), 196);

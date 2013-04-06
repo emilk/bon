@@ -402,7 +402,32 @@ bon_size bon_aggregate_payload_size(const bon_type* type)
 	}
 }
 
-/////////////////////////////////////
+bon_bool bon_type_eq(const bon_type* a, const bon_type* b)
+{
+	if (a==b)            { return BON_TRUE;  }
+	if (!a || !b)        { return BON_FALSE; }
+	if (a->id != b->id)  { return BON_FALSE; }
+	
+	if (a->id == BON_TYPE_ARRAY) {
+		if (a->u.array->size != b->u.array->size)  { return BON_FALSE; }
+		return bon_type_eq(a->u.array->type, b->u.array->type);
+	} else if (a->id == BON_TYPE_STRUCT) {
+		const bon_type_struct* as = a->u.strct;
+		const bon_type_struct* bs = b->u.strct;
+		if (as->size != bs->size)  { return BON_FALSE; }
+		for (bon_size ix=0; ix<as->size; ++ix) {
+			if (strcmp(as->keys[ix], bs->keys[ix]) != 0)     { return BON_FALSE; }
+			if (!bon_type_eq(as->types[ix], bs->types[ix]))  { return BON_FALSE; }
+		}
+		return BON_TRUE;
+	} else {
+		return a->id == b->id;
+	}
+}
+
+
+//-----------------------------------------------------
+
 
 bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes) {
 	bon_byte_vec* vec = (bon_byte_vec*)userData;
@@ -733,7 +758,7 @@ bon_bool bw_write_uint_as_uint8(bon_writer* bw, uint64_t val) {
 /////////////////////////////////////
 
 
-bon_error bon_w_get_error(bon_w_doc* B) {
+bon_error bon_w_error(bon_w_doc* B) {
 	return B->error;
 }
 
@@ -2426,12 +2451,23 @@ bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
 	return win;
 }
 
-#if 0
 const void* bon_r_aggr_ptr(bon_r_doc* B, bon_value* val,
 									bon_size nbytes, const bon_type* dstType)
 {
 	val = bon_r_follow_refs(B, val);
 	if (!val) { return NULL; }
+	
+	if (val->type != BON_VALUE_AGGREGATE) { return NULL; }
+	
+	if (bon_type_eq(&val->u.agg.type, dstType) == BON_FALSE) { return NULL; }
+	
+	if (nbytes != bon_aggregate_payload_size(&val->u.agg.type)) {
+		fprintf(stderr, "Aggregate size mismatch\n");
+		return NULL;
+	}
+	
+	// All win
+	return val->u.agg.data;
 }
 
 const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* val,
@@ -2451,7 +2487,26 @@ const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* val,
 	
 	return ptr;
 }
-#endif
+
+
+// Quick access to a pointer e.g. pointer of bytes or floats
+const void* bon_r_array_ptr(bon_r_doc* B, bon_value* val,
+									 bon_size nelem, bon_type_id type)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return NULL; }
+	
+	if (val->type != BON_VALUE_AGGREGATE) { return NULL; }
+	
+	bon_value_agg* agg = &val->u.agg;
+	if (agg->type.id != BON_TYPE_ARRAY) { return NULL; }
+	
+	bon_type_array* arr = agg->type.u.array;
+	if (arr->type->id != type)  { return NULL; }
+	if (arr->size != nelem)     { return NULL; }
+	
+	return agg->data; // Win
+}
 
 ////////////////////////////////////
 

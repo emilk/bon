@@ -95,9 +95,10 @@ bon_bool write_json(json_t* json, bon_w_doc* B)
 		return BON_FALSE;
 	}
 	
-	if (B->error) {
-		if (ATTEMPT_RECOVERY)
-			B->error = 0;
+	if (bon_w_error(B) != BON_SUCCESS) {
+		if (ATTEMPT_RECOVERY) {
+			bon_w_set_error(B, BON_SUCCESS);
+		}
 	}
 	
 	bon_bool success = BON_TRUE;
@@ -160,7 +161,7 @@ bon_bool write_json(json_t* json, bon_w_doc* B)
 			return BON_FALSE;
 	}
 	
-	return success && (B->error == BON_SUCCESS);
+	return success && (bon_w_error(B) == BON_SUCCESS);
 }
 
 bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
@@ -183,8 +184,9 @@ bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
 	bon_w_header(B);	
 	bon_bool success = write_json(json, B);
 	bon_w_footer(B);
-	if (B->error)
+	if (bon_w_error(B)) {
 		success = BON_FALSE;
+	}
 	bon_w_close_doc(B);
 	
 	return success;

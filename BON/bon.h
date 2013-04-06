@@ -240,9 +240,6 @@ typedef enum {
 
 
 typedef struct bon_type bon_type;
-typedef struct bon_type_tuple bon_type_tuple;
-
-typedef struct bon_type_array bon_type_array;
 
 
 void      bon_free_type(bon_type* t);
@@ -272,6 +269,9 @@ bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types);
 bon_type* bon_new_type_fmt(const char* fmt, ...);
 
 bon_size  bon_aggregate_payload_size(const bon_type* type);
+
+// Returns true if the two types are exactly equal
+bon_bool  bon_type_eq(const bon_type* a, const bon_type* b);
 
 
 //-------------------------------------------------------------------
@@ -324,20 +324,11 @@ bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
 typedef bon_bool (*bon_w_writer_t)(void* userData, const void* data, uint64_t nbytes);
 
 
-typedef struct {
-	bon_w_writer_t  writer;
-	void*           userData;  // Sent to writer
-	bon_flags       flags;
-	bon_error       error;     // If any
-	
-	// For buffered writing
-	uint8_t*  buff;
-	bon_size  buff_ix;
-	bon_size  buff_size;
-} bon_w_doc;
+typedef struct bon_w_doc bon_w_doc;
 
 
-bon_error      on_get_error(bon_w_doc* B);
+void         bon_w_set_error(bon_w_doc* B, bon_error err);
+bon_error    bon_w_error(bon_w_doc* B);
 
 // Top level structure
 bon_w_doc*   bon_w_new_doc                     (bon_w_writer_t, void* userData, bon_flags flags);
@@ -515,12 +506,14 @@ bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
  const Vert* verts = bon_r_raw_fmt(B, val, n * sizeof(Vert), "[#{[3f][4u8]}]", n, "pos", "color");
  
  */
-#if 0
 const void* bon_r_aggr_ptr    (bon_r_doc* B, bon_value* srcVal,
 										 bon_size nbytes, const bon_type* dstType);
 const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* srcVal,
 										 bon_size nbytes, const char* fmt, ...);
-#endif
+
+// Quick access to a pointer e.g. pointer of bytes or floats
+const void* bon_r_array_ptr(bon_r_doc* B, bon_value* srcVal,
+									 bon_size nelem, bon_type_id type);
 
 
 //-------------------------------------------------------------------

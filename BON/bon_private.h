@@ -20,9 +20,11 @@
 //-----------------------------------------------
 // bon_type etc
 
+typedef struct bon_type_array bon_type_array;
+
 struct bon_type_array {
-	bon_size size;
-	bon_type* type;
+	bon_size   size;
+	bon_type*  type;
 };
 
 /*
@@ -45,12 +47,25 @@ struct bon_type {
 	// Further info (if applicable)
 	union {
 		bon_type_array*  array;
-		//bon_type_tuple*  tuple;
 		bon_type_struct* strct;
 	} u;
 };
 
 
+//-----------------------------------------------
+
+
+struct bon_w_doc {
+	bon_w_writer_t  writer;
+	void*           userData;  // Sent to writer
+	bon_flags       flags;
+	bon_error       error;     // If any
+	
+	// For buffered writing
+	uint8_t*  buff;
+	bon_size  buff_ix;
+	bon_size  buff_size;
+};
 
 //-----------------------------------------------
 
