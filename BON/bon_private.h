@@ -17,7 +17,7 @@
 
 
 
-//-----------------------------------------------
+//------------------------------------------------------------------------------
 // bon_type etc
 
 typedef struct bon_type_array bon_type_array;
@@ -53,7 +53,7 @@ struct bon_type {
 };
 
 
-//-----------------------------------------------
+//------------------------------------------------------------------------------
 
 
 struct bon_w_doc {
@@ -68,7 +68,7 @@ struct bon_w_doc {
 	bon_size  buff_size;
 };
 
-//-----------------------------------------------
+//------------------------------------------------------------------------------
 
 
 
@@ -165,7 +165,28 @@ struct bon_kv {
 };
 
 
-//-----------------------------------------------
+//------------------------------------------------------------------------------
 
+
+// Helper for reading a binary stream without overflowing:
+
+typedef struct {
+	const uint8_t*  data;
+	bon_size        nbytes;
+	bon_error       error;
+	bon_r_doc*      B;     // For stats. May be null.
+} bon_reader;
+
+
+/* Read a simple value denoted by 't', and interpret is as a signed int. */
+int64_t br_read_sint64(bon_reader* br, bon_type_id t);
+
+/* Read a simple value denoted by 't', and interpret is as an unsigned int. */
+uint64_t br_read_uint64(bon_reader* br, bon_type_id t);
+
+/* Read a simple value denoted by 't', and interpret is as a double. */
+double br_read_double(bon_reader* br, bon_type_id t);
+
+//------------------------------------------------------------------------------
 
 #endif

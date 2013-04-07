@@ -22,7 +22,7 @@
 #include <inttypes.h>
 
 
-//-----------------------------------------------
+//------------------------------------------------------------------------------
 
 void onError(const char* msg)
 {
@@ -35,7 +35,7 @@ void onError(const char* msg)
 }
 
 
-//-----------------------------------------------
+//------------------------------------------------------------------------------
 
 
 #define ALLOC_TYPE(n, type) (type*)calloc(n, sizeof(type))
@@ -50,7 +50,7 @@ void onError(const char* msg)
 
 
 
-//-----------------------------------------------
+//------------------------------------------------------------------------------
 
 uint64_t bon_w_type_size(bon_type_id t)
 {
@@ -165,7 +165,7 @@ bon_bool bon_is_simple_type(uint8_t ctrl)
 }
 
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 
 void bon_free_type(bon_type* t) {
 	switch (t->id) {
@@ -426,7 +426,7 @@ bon_bool bon_type_eq(const bon_type* a, const bon_type* b)
 }
 
 
-//-----------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes) {
@@ -450,7 +450,7 @@ bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes)
 }
 
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 
 uint16_t swap_endian_uint16(uint16_t us)
 {
@@ -560,7 +560,7 @@ uint64_t be_to_uint64(uint64_t v) {
 #endif
 
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 
 
 const char* bon_err_str(bon_error err)
@@ -596,7 +596,7 @@ const char* bon_err_str(bon_error err)
 	return err_str[err];
 }
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 
 
 // Helper for reading without overflowing:
@@ -679,7 +679,7 @@ void br_swallow(bon_reader* br, uint8_t token) {
 	}
 }
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 
 // Helper for writing to a binary stream without overflowing:
 
@@ -755,7 +755,7 @@ bon_bool bw_write_uint_as_uint8(bon_writer* bw, uint64_t val) {
 	}
 }
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 
 
 bon_error bon_w_error(bon_w_doc* B) {
@@ -780,7 +780,7 @@ void bon_w_assert(bon_w_doc* B, bon_bool statement, bon_error onFail)
 }
 
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 // Writing
 	
 void bon_w_flush(bon_w_doc* B) {
@@ -835,7 +835,7 @@ void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
 }
 
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 // VarInt - standard VLQ
 // See http://en.wikipedia.org/wiki/Variable-length_quantity
 // See http://rosettacode.org/wiki/Variable-length_quantity
@@ -901,7 +901,7 @@ uint64_t br_read_vlq(bon_reader* br)
 	return r;
 }
 
-/////////////////////////////////////
+//------------------------------------------------------------------------------
 
 
 bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_flags flags)
@@ -973,7 +973,7 @@ void bon_w_block(bon_w_doc* B, uint64_t block_id, const void* data, bon_size nby
 }
 
 
-//////////////////////////////////////
+//------------------------------------------------------------------------------
 // Value writing
 
 void bon_w_begin_obj(bon_w_doc* B) {
@@ -1203,11 +1203,11 @@ void bon_w_array(bon_w_doc* B, bon_size len, bon_type_id element_t,
 }
 
 
-////////////////////////////////////////////
+//------------------------------------------------------------------------------
 // BON bon_reader API
 
 
-////////////////////////////////////////////////////////
+//------------------------------------------------------------------------------
 
 void bon_r_list_values(bon_reader* br, bon_value_list* vals);
 void bon_r_kvs(bon_reader* br, bon_kvs* kvs);
@@ -1851,7 +1851,7 @@ bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
 	return val;
 }
 
-// -----------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 bon_bool bon_r_is_nil(bon_r_doc* B, bon_value* val)
 {
@@ -1925,7 +1925,7 @@ bon_bool bon_r_is_object(bon_r_doc* B, bon_value* val)
 	return BON_FALSE;
 }
 
-// -----------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 bon_bool bon_r_bool(bon_r_doc* B, bon_value* val)
 {
@@ -2199,7 +2199,7 @@ bon_value* bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key)
 	return NULL;
 }
 
-// -----------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 /*
@@ -2456,15 +2456,23 @@ bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
 								 void* dst, bon_size nbytes,
 								 const bon_type* dstType)
 {
-	bon_size expected = bon_aggregate_payload_size(dstType);
-	if (expected != nbytes) {
-		fprintf(stderr, "destination type and buffer size does not match. Expected %d, got %d\n", (int)expected, (int)nbytes);
-		return BON_FALSE;
-	}
+	const void* src = bon_r_aggr_ptr(B, srcVal, nbytes, dstType);
 	
-	bon_writer bw = {dst, nbytes, 0};
-	bon_bool win = bw_read_aggregate(B, srcVal, dstType, &bw);
-	return win && bw.nbytes==0 && bw.error==0;
+	if (src) {
+		// Perfectly matching types
+		memcpy(dst, src, nbytes);
+		return BON_TRUE;
+	} else {
+		bon_size expected = bon_aggregate_payload_size(dstType);
+		if (expected != nbytes) {
+			fprintf(stderr, "destination type and buffer size does not match. Expected %d, got %d\n", (int)expected, (int)nbytes);
+			return BON_FALSE;
+		}
+		
+		bon_writer bw = {dst, nbytes, 0};
+		bon_bool win = bw_read_aggregate(B, srcVal, dstType, &bw);
+		return win && bw.nbytes==0 && bw.error==0;
+	}
 }
 	
 // Convenience:
@@ -2543,7 +2551,10 @@ const void* bon_r_array_ptr(bon_r_doc* B, bon_value* val,
 	return agg->data; // Win
 }
 
-////////////////////////////////////
+
+//------------------------------------------------------------------------------
+// Debug printing
+
 
 void bon_print_float(FILE* out, double dbl)
 {

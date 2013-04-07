@@ -20,7 +20,7 @@
 #endif
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // BON common
 
 typedef char bon_bool;
@@ -32,7 +32,7 @@ typedef uint64_t bon_size;
 #define BON_ZERO_ENDED (bon_size)(-1)  // Valid as argument of string size
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 typedef enum {
@@ -67,7 +67,7 @@ typedef enum {
 
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 /* A code byte is divided into several ranges of values.
@@ -116,7 +116,7 @@ typedef enum {
 #define BON_SHORT_BYTE_ARRAY(n)   BON_COMPRESS(BON_SHORT_BYTE_ARRAY_,   n)
 #define BON_SHORT_STRUCT(n)       BON_COMPRESS(BON_SHORT_STRUCT_,       n)
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 /* The control codes are all in [0x08, 0x10)
@@ -172,7 +172,7 @@ typedef enum {
 } bon_ctrl;
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 /*
  The general type system.
  This is used for reading and writing.
@@ -227,7 +227,7 @@ typedef enum {
 } bon_type_id;
 
 
-// ------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 typedef enum {
@@ -236,7 +236,7 @@ typedef enum {
 } bon_flags;
 
 
-// ------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 typedef struct bon_type bon_type;
@@ -274,7 +274,7 @@ bon_size  bon_aggregate_payload_size(const bon_type* type);
 bon_bool  bon_type_eq(const bon_type* a, const bon_type* b);
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 typedef struct {
@@ -307,7 +307,7 @@ bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
 
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // BON writer API
 
 /*
@@ -373,7 +373,7 @@ void         bon_w_array      (bon_w_doc* B, bon_size n_elem, bon_type_id type,
 
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // BON bon_reader API
 
 
@@ -396,7 +396,7 @@ typedef struct bon_value      bon_value;
 typedef struct bon_r_doc      bon_r_doc;
 
 
-// -----------------------------------------------------------------
+//------------------------------------------------------------------------------
 // TODO: make this section private:
 
 // Returns NULL on fail
@@ -405,7 +405,7 @@ bon_value* bon_r_get_block(bon_r_doc* B, uint64_t block_id);
 bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Public API:
 
 // Will parse a BON file.
@@ -415,7 +415,7 @@ bon_value*  bon_r_root  (bon_r_doc* B);
 bon_error         bon_r_error (bon_r_doc* B);
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Inspeciting values. Use these before attemting to read a value.
 // Passing NULL as 'val' will make all these functions return BON_FALSE.
 
@@ -439,7 +439,7 @@ bon_bool  bon_r_is_list    (bon_r_doc* B, bon_value* val);
 
 bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Reading values.
 
 // Returns true iff 'val' is a bool and is true. False on fail. No implicit conversion.
@@ -463,7 +463,7 @@ bon_value*  bon_r_list_elem(bon_r_doc* B, bon_value* list, bon_size ix);
 bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 /*
  API for quickly reading aggregates:
  Any BON value can be read with the 'normal' functions above.
@@ -472,16 +472,14 @@ bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
 */
 
 /* 
- Can read to:
- BON_BOOL,
- const char*,
- int,
- ..
+ Can read to:      BON_BOOL, const char*, ints, floats, structs
+ Can NOT read to:  lists
  
- Can NOT read to:
- lists
+ If the type is a perfect match, bon_r_aggr_read may do a simple memcpy.
+ If not, it will try to convert the values (double->int etc).
  
- False on fail
+ return BON_FALSE if there is a mismatch in types,
+ array sizes or any missing object keys.
  */
 bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
 								 void* dst, bon_size nbytes,
@@ -517,33 +515,13 @@ const void* bon_r_array_ptr(bon_r_doc* B, bon_value* srcVal,
 									 bon_size nelem, bon_type_id type);
 
 
-//-------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 
 // Quick and dirty printout of a value, in json-like format, but NOT json conforming.
+// Useful for debugging.
 void bon_print(FILE* out, bon_value* value, size_t indent);
 
-
-
-//-------------------------------------------------------------------
-// Helper for reading a binary stream without overflowing:
-
-typedef struct {
-	const uint8_t*  data;
-	bon_size        nbytes;
-	bon_error       error;
-	bon_r_doc*      B;     // For stats. May be null.
-} bon_reader;
-
-
-/* Read a simple value denoted by 't', and interpret is as a signed int. */
-int64_t br_read_sint64(bon_reader* br, bon_type_id t);
-
-/* Read a simple value denoted by 't', and interpret is as an unsigned int. */
-uint64_t br_read_uint64(bon_reader* br, bon_type_id t);
-
-/* Read a simple value denoted by 't', and interpret is as a double. */
-double br_read_double(bon_reader* br, bon_type_id t);
 
 
 #endif
