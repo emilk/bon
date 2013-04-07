@@ -595,3 +595,19 @@ BON files can optionally include a CRC-32 for verifying message integrity. The C
 The FOOTER_CRC replaces the standard footer (FOOTER) in a way so that the last byte of any BON file is either FOOTER or FOOTER_CRC. This enables a BON reader to ensure a BON file has a CRC, and if so to verify it before parsing the file. To do this, the reader simply calculate the CRC of all but the last *six* bytes, and compare it to the CRC stored in the BON file.
 
 The CRC is always stoed in little endian.
+
+Here's an example of the smallest legal BON file:
+
+	BON0
+	BON_CTRL_OBJ_BEGIN, BON_CTRL_OBJ_END
+	FOOTER
+
+And here is the same BON file with a (correct) CRC:
+
+	BON0
+	BON_CTRL_OBJ_BEGIN, BON_CTRL_OBJ_END
+	FOOTER_CRC,
+	0x7E, 0xA2, 0x2E, 0x94,
+	FOOTER_CRC
+	
+You can refer that is the right CRC-32 by passing the first six bytes ("BON0{}") to a [CRC-32 checker](http://www.lammertbies.nl/comm/info/crc-calculation.html).
