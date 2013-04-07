@@ -148,8 +148,8 @@ typedef union {
 
 
 struct bon_value {
-	bon_value_type  type;
-	bon_value_union u;
+	bon_value_type   type;
+	bon_value_union  u;
 };
 
 
@@ -166,6 +166,7 @@ typedef struct {
 	//bon_size bytes_aggr_wet;     // Number of bytes taken up by strings (including header).
 } bon_stats;
 
+
 typedef struct {
 	bon_size        id;              // Id of block
 	const uint8_t*  payload;         // Pointer into document to payload start
@@ -174,17 +175,20 @@ typedef struct {
 	bon_bool        parsed;          // if false, 'value' is not yet valid.
 } bon_r_block;
 
+
 typedef struct {
 	bon_size      size;
 	bon_size      cap;
 	bon_r_block*  data;
 } bon_r_blocks;
 
+
 struct bon_r_doc {
 	bon_error      error;       // If any
 	bon_r_blocks   blocks;
 	bon_stats      stats;       // Info about the read file
 };
+
 
 struct bon_kv {
 	const char*  key;  // UTF8 - points to inside of document
@@ -221,6 +225,8 @@ double br_read_double(bon_reader* br, bon_type_id t);
 void onError(const char* msg);
 
 bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap);
+
+void bon_free_type_insides(bon_type* t);
 
 // Byte size of atomic types
 uint64_t bon_type_size(bon_type_id t);

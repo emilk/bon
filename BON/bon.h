@@ -379,8 +379,8 @@ void         bon_w_array      (bon_w_doc* B, bon_size n_elem, bon_type_id type,
 // BON bon_reader API
 
 
-typedef struct bon_value      bon_value;
-typedef struct bon_r_doc      bon_r_doc;
+typedef struct bon_value  bon_value;
+typedef struct bon_r_doc  bon_r_doc;
 
 
 //------------------------------------------------------------------------------

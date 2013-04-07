@@ -81,7 +81,7 @@ void bon_print_float(FILE* out, double dbl)
 {
 	if (isnan(dbl))      fprintf(out, "NaN");
 	else if (isinf(dbl)) fprintf(out, dbl < 0 ? "-Inf" : "+Inf");
-	else                 fprintf(out, "%f", dbl); // TODO: precision, NaN, Inf
+	else                 fprintf(out, "%f", dbl);
 }
 
 void bon_print_aggr(FILE* out, const bon_type* aggType, bon_reader* br)

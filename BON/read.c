@@ -894,9 +894,44 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes)
 	return B;
 }
 
+void bon_free_value_insides(bon_value* val)
+{
+	if (!val) { return; }
+	
+	switch (val->type)
+	{
+		case BON_VALUE_LIST: {
+			for (bon_size ix=0; ix < val->u.list.size; ++ix) {
+				bon_free_value_insides( val->u.list.data + ix );
+			}
+		} break;
+			
+		case BON_VALUE_OBJ: {
+			bon_kvs* kvs = &val->u.obj.kvs;
+			for (bon_size ix=0; ix<kvs->size; ++ix) {
+				bon_free_value_insides( &kvs->data[ix].val );
+			}
+		} break;
+			
+		case BON_VALUE_AGGREGATE: {
+			bon_free_type_insides( &val->u.agg.type );
+		} break;
+			
+		default:
+			break;
+	}
+}
+
 void bon_r_close(bon_r_doc* B)
 {
-	// TODO: right
+	for (bon_size bi=0; bi<B->blocks.size; ++bi) {
+		bon_r_block* block = B->blocks.data + bi;
+		if (block->parsed) {
+			bon_free_value_insides( &block->value );
+		}
+	}
+	
+	
 	free(B);
 }
 

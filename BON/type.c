@@ -17,7 +17,7 @@
 
 //------------------------------------------------------------------------------
 
-void bon_free_type_content(bon_type* t)
+void bon_free_type_insides(bon_type* t)
 {
 	switch (t->id) {
 		case BON_TYPE_ARRAY:
@@ -27,7 +27,7 @@ void bon_free_type_content(bon_type* t)
 			
 		case BON_TYPE_STRUCT: {
 			for (bon_size ti=0; ti < t->u.strct->size; ++ti) {
-				bon_free_type_content( &t->u.strct->kts[ti].type );
+				bon_free_type_insides( &t->u.strct->kts[ti].type );
 			}
 			free(t->u.strct);
 		} break;
@@ -38,7 +38,7 @@ void bon_free_type_content(bon_type* t)
 }
 
 void bon_free_type(bon_type* t) {
-	bon_free_type_content(t);
+	bon_free_type_insides(t);
 	free(t);
 }
 
@@ -128,7 +128,7 @@ bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 	
 on_error:
 	for (bon_size ix=0; ix<expStrct.size; ++ix) {
-		bon_free_type_content( &expStrct.data[ix].type );
+		bon_free_type_insides( &expStrct.data[ix].type );
 	}
 	return NULL;
 }
