@@ -123,117 +123,6 @@ bon_bool bon_is_simple_type(uint8_t ctrl)
 	}
 }
 
-
-//------------------------------------------------------------------------------
-
-
-uint16_t swap_endian_uint16(uint16_t us)
-{
-	return (uint16_t)( (us >> 8) | (us << 8) );
-}
-
-uint32_t swap_endian_uint32(uint32_t ui)
-{
-	ui = (ui >> 24) |
-	((ui<<8) & 0x00FF0000) |
-	((ui>>8) & 0x0000FF00) |
-	(ui << 24);
-	return ui;
-}
-
-uint64_t swap_endian_uint64(uint64_t ull)
-{
-	ull = (ull >> 56) |
-	((ull<<40) & 0x00FF000000000000ULL) |
-	((ull<<24) & 0x0000FF0000000000ULL) |
-	((ull<<8 ) & 0x000000FF00000000ULL) |
-	((ull>>8 ) & 0x00000000FF000000ULL) |
-	((ull>>24) & 0x0000000000FF0000ULL) |
-	((ull>>40) & 0x000000000000FF00ULL) |
-	(ull << 56);
-	return ull;
-}
-
-#if __LITTLE_ENDIAN__
-
-uint16_t uint16_to_le(uint16_t v) {
-	return v;
-}
-
-uint32_t uint32_to_le(uint32_t v) {
-	return v;
-}
-
-uint64_t uint64_to_le(uint64_t v) {
-	return v;
-}
-
-
-uint16_t le_to_uint16(uint16_t v) {
-	return v;
-}
-
-uint32_t le_to_uint32(uint32_t v) {
-	return v;
-}
-
-uint64_t le_to_uint64(uint64_t v) {
-	return v;
-}
-
-uint16_t be_to_uint16(uint16_t v) {
-	return swap_endian_uint16( v );
-}
-
-uint32_t be_to_uint32(uint32_t v) {
-	return swap_endian_uint32( v );
-}
-
-uint64_t be_to_uint64(uint64_t v) {
-	return swap_endian_uint64( v );
-}
-
-#else
-
-uint16_t uint16_to_le(uint16_t v) {
-	return swap_endian_uint16( v );
-}
-
-uint32_t uint32_to_le(uint32_t v) {
-	return swap_endian_uint32( v );
-}
-
-uint64_t uint64_to_le(uint64_t v) {
-	return swap_endian_uint64( v );
-}
-
-
-uint16_t le_to_uint16(uint16_t v) {
-	return swap_endian_uint16( v );
-}
-
-uint32_t le_to_uint32(uint32_t v) {
-	return swap_endian_uint32( v );
-}
-
-uint64_t le_to_uint64(uint64_t v) {
-	return swap_endian_uint64( v );
-}
-
-uint16_t be_to_uint16(uint16_t v) {
-	return v;
-}
-
-uint32_t be_to_uint32(uint32_t v) {
-	return v;
-}
-
-uint64_t be_to_uint64(uint64_t v) {
-	return v;
-}
-
-#endif
-
 //------------------------------------------------------------------------------
 
 
@@ -262,7 +151,7 @@ void br_skip(bon_reader* br, size_t n) {
 }
 
 // next byte [0,255] or -1
-int peek(bon_reader* br) {
+int br_peek(bon_reader* br) {
 	if (br->nbytes > 0) {
 		return br->data[0];
 	} else {
@@ -270,7 +159,7 @@ int peek(bon_reader* br) {
 	}
 }
 
-uint8_t next(bon_reader* br) {
+uint8_t br_next(bon_reader* br) {
 	if (br->nbytes > 0) {
 		uint8_t ret = br->data[0];
 		br->data   += 1;
@@ -312,7 +201,7 @@ const uint8_t* br_read(bon_reader* br, size_t size)
 
 // Will swallow a token, or set error if next byte isn't this token.
 void br_swallow(bon_reader* br, uint8_t token) {
-	if (next(br) != token) {
+	if (br_next(br) != token) {
 		br_set_err(br, BON_ERR_MISSING_TOKEN);
 	}
 }
@@ -332,7 +221,7 @@ uint64_t br_read_vlq(bon_reader* br)
 	uint32_t size = 0; // Sanity check
 	
 	for (;;) {
-		uint8_t in = next(br);
+		uint8_t in = br_next(br);
 		++size;
 		r = (r << 7) | (uint64_t)(in & 0x7f);
 		
@@ -466,7 +355,7 @@ double br_read_double(bon_reader* br, bon_type_id t) {
 
 int64_t br_read_sint64(bon_reader* br, bon_type_id t) {
 	switch (t) {
-		case BON_TYPE_SINT8:      return (int8_t)next(br);
+		case BON_TYPE_SINT8:      return (int8_t)br_next(br);
 		case BON_TYPE_SINT16_LE:  return (int16_t)le_to_uint16( br_read_u16(br) );
 		case BON_TYPE_SINT16_BE:  return (int16_t)be_to_uint16( br_read_u16(br) );
 		case BON_TYPE_SINT32_LE:  return (int32_t)le_to_uint32( br_read_u32(br) );
@@ -482,7 +371,7 @@ int64_t br_read_sint64(bon_reader* br, bon_type_id t) {
 
 uint64_t br_read_uint64(bon_reader* br, bon_type_id t) {
 	switch (t) {
-		case BON_TYPE_UINT8:      return (uint8_t)next(br);
+		case BON_TYPE_UINT8:      return (uint8_t)br_next(br);
 		case BON_TYPE_UINT16_LE:  return (uint16_t)le_to_uint16( br_read_u16(br) );
 		case BON_TYPE_UINT16_BE:  return (uint16_t)be_to_uint16( br_read_u16(br) );
 		case BON_TYPE_UINT32_LE:  return (uint32_t)le_to_uint32( br_read_u32(br) );
@@ -538,7 +427,7 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 	if (br->error)
 		return;
 	
-	uint8_t ctrl = next(br);
+	uint8_t ctrl = br_next(br);
 	
 	if (BON_SHORT_AGGREGATES_START <= ctrl   &&  ctrl < BON_SHORT_NEG_INT_START)
 	{
@@ -602,7 +491,7 @@ void bon_r_string_sized(bon_reader* br, bon_value* val, size_t strLen)
 	val->u.str.size = strLen;
 	val->u.str.ptr  = (const char*)br->data;
 	br_skip(br, strLen);
-	int zero = next(br);
+	int zero = br_next(br);
 	
 	if (zero != 0) {
 		br_set_err(br, BON_ERR_STRING_NOT_ZERO_ENDED);
@@ -692,7 +581,7 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 		case BON_CTRL_OBJ_BEGIN:
 			val->type      = BON_VALUE_OBJ;
 			bon_r_kvs(br, &val->u.obj.kvs);
-			if (next(br) != BON_CTRL_OBJ_END) {
+			if (br_next(br) != BON_CTRL_OBJ_END) {
 				br_set_err(br, BON_ERR_MISSING_OBJ_END);
 			}
 			break;
@@ -717,7 +606,7 @@ void bon_r_value(bon_reader* br, bon_value* val)
 {
 	memset(val, 0, sizeof(bon_value));
 	
-	uint8_t ctrl = next(br);
+	uint8_t ctrl = br_next(br);
 	
 	
 	if     (ctrl  >=  BON_SHORT_NEG_INT_START)
@@ -761,7 +650,7 @@ void bon_r_list_values(bon_reader* br, bon_value_list* vals)
 	
 	while (!br->error)
 	{
-		if (peek(br) == BON_CTRL_LIST_END) {
+		if (br_peek(br) == BON_CTRL_LIST_END) {
 			break;
 		}
 		
@@ -780,7 +669,7 @@ void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 	
 	while (!br->error)
 	{
-		int ctrl = peek(br);
+		int ctrl = br_peek(br);
 		if (ctrl == BON_CTRL_OBJ_END) {
 			break;
 		}
@@ -817,7 +706,7 @@ void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 
 void bon_r_header(bon_reader* br)
 {
-	if (peek(br) == BON_CTRL_HEADER)
+	if (br_peek(br) == BON_CTRL_HEADER)
 	{
 		uint8_t top[4];
 		if (read(br, top, 4) == BON_FALSE)
@@ -830,17 +719,37 @@ void bon_r_header(bon_reader* br)
 			return;
 		}
 	}
+	else
+	{
+		br_set_err(br, BON_ERR_BAD_HEADER);
+	}
+}
+
+void bon_r_footer(bon_reader* br)
+{
+	if (br_peek(br) == BON_CTRL_FOOTER)
+	{
+		br_skip(br, 1);
+	}
+	else if (br_peek(br) == BON_CTRL_FOOTER_CRC)
+	{
+		br_skip(br, 1);
+		br_skip(br, 4); // ignore crc
+		br_swallow(br, BON_CTRL_FOOTER_CRC);
+	}
+	
+	br_assert(br, br->nbytes==0, BON_ERR_TRAILING_DATA);
 }
 
 void bon_r_read_content(bon_reader* br)
 {
 	bon_r_blocks* blocks = &br->B->blocks;
 	
-	if (peek(br) == BON_CTRL_BLOCK_BEGIN)
+	if (br_peek(br) == BON_CTRL_BLOCK_BEGIN)
 	{
 		// Blocked document
 		
-		while (!br->error && peek(br)==BON_CTRL_BLOCK_BEGIN) {
+		while (!br->error && br_peek(br)==BON_CTRL_BLOCK_BEGIN) {
 			BON_VECTOR_EXPAND(*blocks, bon_r_block, 1);
 			bon_r_block* block = &blocks->data[blocks->size-1];
 			
@@ -861,9 +770,9 @@ void bon_r_read_content(bon_reader* br)
 				bon_reader block_br = {
 					br->data,
 					br->nbytes,
-					br->error,
 					br->B,
-					block->id
+					block->id,
+					br->error
 				};
 				bon_r_value(&block_br, &block->value);
 				bon_size nRead = br->nbytes - block_br.nbytes;
@@ -895,11 +804,6 @@ void bon_r_read_content(bon_reader* br)
 	}
 }
 
-void bon_r_footer(bon_reader* br)
-{
-	br_assert(br, br->nbytes==0, BON_ERR_TRAILING_DATA);
-}
-
 void bon_r_read_doc(bon_reader* br)
 {
 	bon_r_doc* B = br->B;
@@ -920,13 +824,14 @@ void bon_r_set_error(bon_r_doc* B, bon_error err)
 	}
 }
 
-bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes)
+bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes, bon_r_flags flags)
 {
 	assert(data);
 	
 	bon_r_doc* B = BON_ALLOC_TYPE(1, bon_r_doc);
+	B->flags = flags;
 	
-	bon_reader br_v = { data, nbytes, BON_FALSE, B, BON_BAD_BLOCK_ID };
+	bon_reader br_v = { data, nbytes, B, BON_BAD_BLOCK_ID, 0 };
 	bon_reader* br = &br_v;
 	
 	bon_r_read_doc(br);
@@ -999,7 +904,7 @@ bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id)
 	
 	if (!block->parsed) {
 		// Lazy parsing:
-		bon_reader br = { block->payload, block->payload_size, 0, B, id };
+		bon_reader br = { block->payload, block->payload_size, B, id, 0 };
 		
 		bon_r_value(&br, &block->value);
 		
@@ -1363,9 +1268,9 @@ bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val)
 		bon_reader     br  = {
 			agg->data,
 			bon_aggregate_payload_size(&agg->type),
-			0,
 			B,
-			BON_BAD_BLOCK_ID
+			BON_BAD_BLOCK_ID,
+			0
 		};
 		
 		agg->exploded = BON_ALLOC_TYPE(1, bon_value);
@@ -1769,9 +1674,9 @@ bon_bool translate_struct(bon_r_doc* B,
 				bon_reader br_val = {
 					br->data + src_byte_offset,
 					srcValSize,
-					br->error,
 					B,
-					BON_BAD_BLOCK_ID
+					BON_BAD_BLOCK_ID,
+					br->error
 				};
 				
 				bon_bool win = translate_aggregate(B, srcValType, &br_val,
@@ -1920,7 +1825,7 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 		case BON_VALUE_AGGREGATE: {
 			const bon_value_agg* agg = &srcVal->u.agg;
 			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
-			bon_reader br = { agg->data, byteSize, 0, B, BON_BAD_BLOCK_ID };
+			bon_reader br = { agg->data, byteSize, B, BON_BAD_BLOCK_ID, 0 };
 			bon_bool win = translate_aggregate(B, &agg->type, &br, dstType, bw);
 			return win && br.error==0;
 		}

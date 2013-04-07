@@ -138,13 +138,15 @@ struct bon_kt {
 struct bon_w_doc {
 	bon_w_writer_t  writer;
 	void*           userData;  // Sent to writer
-	bon_flags       flags;
-	bon_error       error;     // If any
 	
-	// For buffered writing
-	uint8_t*  buff;
-	bon_size  buff_ix;
-	bon_size  buff_size;
+	// Write buffer:
+	uint8_t*     buff;
+	bon_size     buff_size;  // size of 'buff
+	bon_size     buff_ix;    // usage of 'buff'
+	
+	uint32_t     crc_inv;    // Accumulator of crc value (if BON_W_FLAG_CRC is set)
+	bon_w_flags  flags;
+	bon_error    error;      // If any
 };
 
 //------------------------------------------------------------------------------
@@ -208,14 +210,14 @@ struct bon_value {
 
 /* Low level statistics about a bon-file. */
 typedef struct {
-	bon_size bytes_file;         // Number of bytes in the entire file
+	bon_size  bytes_file;          // Number of bytes in the entire file
 	
-	bon_size count_string;
-	bon_size bytes_string_dry;   // Number of bytes taken up by strings (excluding fluff).
+	bon_size  count_string;
+	bon_size  bytes_string_dry;    // Number of bytes taken up by strings (excluding fluff).
 	//bon_size bytes_string_wet;   // Number of bytes taken up by strings (including header and zero byte).
 	
-	bon_size count_aggr;
-	bon_size bytes_aggr_dry;     // Number of bytes taken up by strings (excluding header).
+	bon_size  count_aggr;
+	bon_size  bytes_aggr_dry;      // Number of bytes taken up by strings (excluding header).
 	//bon_size bytes_aggr_wet;     // Number of bytes taken up by strings (including header).
 } bon_stats;
 
@@ -237,9 +239,10 @@ typedef struct {
 
 
 struct bon_r_doc {
-	bon_error      error;       // If any
 	bon_r_blocks   blocks;
 	bon_stats      stats;       // Info about the read file
+	bon_error      error;       // If any
+	bon_r_flags    flags;
 };
 
 
@@ -257,9 +260,9 @@ struct bon_kv {
 typedef struct {
 	const uint8_t*  data;
 	bon_size        nbytes;
-	bon_error       error;
 	bon_r_doc*      B;
 	bon_block_id    block_id;  // Current block being read, or BON_BAD_BLOCK_ID.
+	bon_error       error;
 } bon_reader;
 
 

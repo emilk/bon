@@ -9,11 +9,124 @@
 
 #include "bon.h"
 #include "bon_private.h"
+#include "crc32.h"
 #include <assert.h>
 #include <math.h>         // isfinite
 #include <stdarg.h>       // va_list, va_start, va_arg, va_end
 #include <stdlib.h>       // malloc, free, realloc, calloc, ...
 #include <string.h>       // memcpy, memset
+
+
+
+//------------------------------------------------------------------------------
+
+
+uint16_t swap_endian_uint16(uint16_t us)
+{
+	return (uint16_t)( (us >> 8) | (us << 8) );
+}
+
+uint32_t swap_endian_uint32(uint32_t ui)
+{
+	ui = (ui >> 24) |
+	((ui<<8) & 0x00FF0000) |
+	((ui>>8) & 0x0000FF00) |
+	(ui << 24);
+	return ui;
+}
+
+uint64_t swap_endian_uint64(uint64_t ull)
+{
+	ull = (ull >> 56) |
+	((ull<<40) & 0x00FF000000000000ULL) |
+	((ull<<24) & 0x0000FF0000000000ULL) |
+	((ull<<8 ) & 0x000000FF00000000ULL) |
+	((ull>>8 ) & 0x00000000FF000000ULL) |
+	((ull>>24) & 0x0000000000FF0000ULL) |
+	((ull>>40) & 0x000000000000FF00ULL) |
+	(ull << 56);
+	return ull;
+}
+
+#if __LITTLE_ENDIAN__
+
+uint16_t uint16_to_le(uint16_t v) {
+	return v;
+}
+
+uint32_t uint32_to_le(uint32_t v) {
+	return v;
+}
+
+uint64_t uint64_to_le(uint64_t v) {
+	return v;
+}
+
+
+uint16_t le_to_uint16(uint16_t v) {
+	return v;
+}
+
+uint32_t le_to_uint32(uint32_t v) {
+	return v;
+}
+
+uint64_t le_to_uint64(uint64_t v) {
+	return v;
+}
+
+uint16_t be_to_uint16(uint16_t v) {
+	return swap_endian_uint16( v );
+}
+
+uint32_t be_to_uint32(uint32_t v) {
+	return swap_endian_uint32( v );
+}
+
+uint64_t be_to_uint64(uint64_t v) {
+	return swap_endian_uint64( v );
+}
+
+#else
+
+uint16_t uint16_to_le(uint16_t v) {
+	return swap_endian_uint16( v );
+}
+
+uint32_t uint32_to_le(uint32_t v) {
+	return swap_endian_uint32( v );
+}
+
+uint64_t uint64_to_le(uint64_t v) {
+	return swap_endian_uint64( v );
+}
+
+
+uint16_t le_to_uint16(uint16_t v) {
+	return swap_endian_uint16( v );
+}
+
+uint32_t le_to_uint32(uint32_t v) {
+	return swap_endian_uint32( v );
+}
+
+uint64_t le_to_uint64(uint64_t v) {
+	return swap_endian_uint64( v );
+}
+
+uint16_t be_to_uint16(uint16_t v) {
+	return v;
+}
+
+uint32_t be_to_uint32(uint32_t v) {
+	return v;
+}
+
+uint64_t be_to_uint64(uint64_t v) {
+	return v;
+}
+
+#endif
 
 
 //------------------------------------------------------------------------------
@@ -70,10 +183,15 @@ void bon_w_assert(bon_w_doc* B, bon_bool statement, bon_error onFail)
 // Writing
 
 void bon_w_flush(bon_w_doc* B) {
-	if (B->buff_ix > 0) {
+	if (B->buff_ix > 0) {		
 		if (!B->writer(B->userData, B->buff, B->buff_ix)) {
 			B->error = BON_ERR_WRITE_ERROR;
 		}
+		
+		if (B->flags & BON_W_FLAG_CRC) {
+			B->crc_inv = crc_update(B->crc_inv, B->buff, B->buff_ix);
+		}
+		
 		B->buff_ix = 0;
 	}
 }
@@ -81,12 +199,14 @@ void bon_w_flush(bon_w_doc* B) {
 void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs) {
 	if (B->buff) {
 		if (B->buff_ix + bs < B->buff_size) {
+			// Fits in the buffer
 			memcpy(B->buff + B->buff_ix, data, bs);
 			B->buff_ix += bs;
 		} else {
 			bon_w_flush(B);
 			
 			if (bs < B->buff_size) {
+				// Now it fits
 				memcpy(B->buff, data, bs);
 				B->buff_ix = bs;
 			} else {
@@ -94,12 +214,20 @@ void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs) {
 				if (!B->writer(B->userData, data, bs)) {
 					B->error = BON_ERR_WRITE_ERROR;
 				}
+				
+				if (B->flags & BON_W_FLAG_CRC) {
+					B->crc_inv = crc_update(B->crc_inv, data, bs);
+				}
 			}
 		}
 	} else {
 		// Unbuffered
 		if (!B->writer(B->userData, data, bs)) {
 			B->error = BON_ERR_WRITE_ERROR;
+		}
+		
+		if (B->flags & BON_W_FLAG_CRC) {
+			B->crc_inv = crc_update(B->crc_inv, data, bs);
 		}
 	}
 }
@@ -171,29 +299,6 @@ uint32_t bon_w_vlq(bon_w_doc* B, bon_size x)
 //------------------------------------------------------------------------------
 
 
-bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_flags flags)
-{
-	bon_w_doc* B = BON_ALLOC_TYPE(1, bon_w_doc);
-	B->writer    = writer;
-	B->userData  = userData;
-	B->error     = BON_SUCCESS;
-	B->flags     = flags;
-	
-	const unsigned BUFF_SIZE = 64*1024;
-	B->buff      = malloc(BUFF_SIZE);
-	B->buff_ix   = 0;
-	B->buff_size = BUFF_SIZE;
-	
-	return B;
-}
-
-void bon_w_close_doc(bon_w_doc* B)
-{
-	bon_w_flush(B);
-	free(B->buff);
-	free(B);
-}
-
 void bon_w_header(bon_w_doc* B)
 {
 	const uint8_t header[4] = {'B', 'O', 'N', '0'};
@@ -202,11 +307,58 @@ void bon_w_header(bon_w_doc* B)
 
 void bon_w_footer(bon_w_doc* B)
 {
+	if (B->flags & BON_W_FLAG_CRC)
+	{
+		// Add contribution of buffered data:
+		B->crc_inv = crc_update(B->crc_inv, B->buff, B->buff_ix);
+		
+		uint32_t crc = B->crc_inv ^ 0xffffffff;
+		uint32_t crc_le = uint32_to_le(crc);
+		
+		bon_w_raw_uint8 (B, BON_CTRL_FOOTER_CRC);
+		bon_w_raw_uint32(B, crc_le);
+		bon_w_raw_uint8 (B, BON_CTRL_FOOTER_CRC);
+	}
+	else
+	{
+		bon_w_raw_uint8 (B, BON_CTRL_FOOTER);
+	}
+}
+
+bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_w_flags flags)
+{
+	bon_w_doc* B = BON_ALLOC_TYPE(1, bon_w_doc);
+	B->writer    = writer;
+	B->userData  = userData;
+	B->crc_inv   = 0xffffffff;
+	B->error     = BON_SUCCESS;
+	B->flags     = flags;
+	
+	const unsigned BUFF_SIZE = 64*1024;
+	B->buff      = malloc(BUFF_SIZE);
+	B->buff_ix   = 0;
+	B->buff_size = BUFF_SIZE;
+	
+	if ((B->flags & BON_W_FLAG_SKIP_HEADER_FOOTER) == 0) {
+		bon_w_header(B);
+	}
+	
+	return B;
+}
+
+void bon_w_close_doc(bon_w_doc* B)
+{
+	if ((B->flags & BON_W_FLAG_SKIP_HEADER_FOOTER) == 0) {
+		bon_w_footer(B);
+	}
+	bon_w_flush(B);
+	free(B->buff);
+	free(B);
 }
 
 void bon_w_block_ref(bon_w_doc* B, bon_block_id block_id)
 {
-	if ((B->flags & BON_FLAG_NO_COMPRESS) == 0 && block_id < BON_SHORT_BLOCK_COUNT) {
+	if ((B->flags & BON_W_FLAG_NO_COMPRESS) == 0 && block_id < BON_SHORT_BLOCK_COUNT) {
 		bon_w_raw_uint8(B, BON_SHORT_BLOCK(block_id));
 	} else {
 		bon_w_raw_uint8(B, BON_CTRL_BLOCK_REF);
@@ -279,7 +431,7 @@ void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes) {
 		nbytes = strlen(utf8);
 	}
 	
-	if (B->flags & BON_FLAG_NO_COMPRESS || nbytes >= BON_SHORT_STRING_COUNT) {
+	if (B->flags & BON_W_FLAG_NO_COMPRESS || nbytes >= BON_SHORT_STRING_COUNT) {
 		bon_w_raw_uint8(B, BON_CTRL_STRING_VLQ);
 		bon_w_vlq(B, nbytes);
 	} else {
@@ -292,7 +444,7 @@ void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes) {
 
 void bon_w_uint64(bon_w_doc* B, uint64_t val)
 {
-	if (val < BON_SHORT_POS_INT_COUNT && !(B->flags & BON_FLAG_NO_COMPRESS)) {
+	if (val < BON_SHORT_POS_INT_COUNT && !(B->flags & BON_W_FLAG_NO_COMPRESS)) {
 		bon_w_raw_uint8(B, (uint8_t)val);
 	} else if (val == (val&0xff)) {
 		bon_w_raw_uint8(B, BON_CTRL_UINT8);
@@ -312,7 +464,7 @@ void bon_w_uint64(bon_w_doc* B, uint64_t val)
 void bon_w_sint64(bon_w_doc* B, int64_t val) {
 	if (val >= 0) {
 		bon_w_uint64(B, (uint64_t)val);
-	} else if (-16 <= val && !(B->flags & BON_FLAG_NO_COMPRESS)) {
+	} else if (-16 <= val && !(B->flags & BON_W_FLAG_NO_COMPRESS)) {
 		bon_w_raw_uint8(B, (uint8_t)val);
 	} else if (-0x80 <= val && val < 0x80) {
 		bon_w_raw_uint8(B, BON_CTRL_SINT8);
@@ -349,7 +501,7 @@ void bon_w_aggregate_type(bon_w_doc* B, bon_type* type);
 
 void bon_w_array_type(bon_w_doc* B, bon_size length, bon_type* element_type)
 {
-	if ((B->flags & BON_FLAG_NO_COMPRESS) == 0)
+	if ((B->flags & BON_W_FLAG_NO_COMPRESS) == 0)
 	{
 		if (element_type->id == BON_TYPE_UINT8 && length < BON_SHORT_BYTE_ARRAY_COUNT)
 		{
@@ -382,7 +534,7 @@ void bon_w_aggregate_type(bon_w_doc* B, bon_type* type)
 			bon_type_struct* strct = type->u.strct;
 			bon_size n = strct->size;
 			
-			if ((B->flags & BON_FLAG_NO_COMPRESS) == 0 &&
+			if ((B->flags & BON_W_FLAG_NO_COMPRESS) == 0 &&
 				 n < BON_SHORT_STRUCT_COUNT)
 			{
 				bon_w_raw_uint8(B, BON_SHORT_STRUCT(n));
@@ -444,7 +596,7 @@ void bon_w_array(bon_w_doc* B, bon_size len, bon_type_id element_t,
 		return;
 	}
 	
-	if ((B->flags & BON_FLAG_NO_COMPRESS) == 0)
+	if ((B->flags & BON_W_FLAG_NO_COMPRESS) == 0)
 	{
 		if (element_t == BON_TYPE_UINT8 && len < BON_SHORT_BYTE_ARRAY_COUNT)
 		{

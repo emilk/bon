@@ -45,14 +45,16 @@ typedef enum {
 	BON_ERR_WRITE_ERROR,        // Writer refused
 	BON_ERR_BAD_AGGREGATE_SIZE, // bon_w_aggr got data of the wrong size
 	
-	// Read errors
+	// Read errors:
+	BON_ERR_BAD_CRC,     // Missing or wrong
 	BON_ERR_TOO_SHORT,   // Premature end of file
-	BON_ERR_BAD_HEADER,
+	BON_ERR_BAD_HEADER,  // Missing or corrupt
+	BON_ERR_BAD_FOOTER,  // Missing or corrupt
 	BON_ERR_BAD_VLQ,
 	BON_ERR_MISSING_LIST_END,
 	BON_ERR_MISSING_OBJ_END,
 	BON_ERR_BAD_CTRL,
-	BON_ERR_BAD_KEY,
+	BON_ERR_BAD_KEY,     // Not a string, or string with zeros
 	BON_ERR_BAD_AGGREGATE_TYPE,
 	BON_ERR_BAD_TYPE,
 	BON_ERR_STRING_NOT_ZERO_ENDED,
@@ -77,31 +79,17 @@ const char* bon_err_str(bon_error err);
 //------------------------------------------------------------------------------
 
 
-typedef enum {
-	BON_FLAG_DEFAULT      =  0,
-	BON_FLAG_NO_COMPRESS  =  1 << 0  // Turn off compression of small integers, string, arrays etc
-} bon_flags;
-
-
-
-
-//------------------------------------------------------------------------------
-
-
 /* The control codes are all in [0x08, 0x10)
  */
 typedef enum {
-	BON_CTRL_BLOCK_REF   = 0x40,   BON_CTRL_STRING_VLQ  = 0x60,  // @  `
+	BON_CTRL_BLOCK_REF   = 0x40,   BON_CTRL_STRING_VLQ  = 0x60,  // @   `
 	BON_CTRL_ARRAY_VLQ   = 'A',
 	BON_CTRL_HEADER      = 'B',
 	BON_CTRL_TUPLE_VLQ   = 'C',    BON_CTRL_STRUCT_VLQ  = 'c',
 	BON_CTRL_BLOCK_BEGIN = 'D',    BON_CTRL_BLOCK_END   = 'd',
 	BON_CTRL_TRUE        = 'E',    BON_CTRL_FALSE       = 'e',
-	//BON_CTRL_FOOTER      = 'F',
-	//BON_CTRL_BLOCK_INDEX = 'I',
-	//BON_CTRL_LIST_VLQ    = 'L',
-	BON_CTRL_NIL        = 'N',
-	//BON_CTRL_OBJECT_VLQ  = 'O',
+	BON_CTRL_FOOTER      = 'F',    BON_CTRL_FOOTER_CRC  = 'f',
+	BON_CTRL_NIL         = 'N',
 	
 	BON_CTRL_SINT8       = 'P',
 	BON_CTRL_UINT8       = 'Q',
@@ -290,15 +278,21 @@ typedef bon_bool (*bon_w_writer_t)(void* userData, const void* data, uint64_t nb
 typedef struct bon_w_doc bon_w_doc;
 
 
-void         bon_w_set_error(bon_w_doc* B, bon_error err);
-bon_error    bon_w_error(bon_w_doc* B);
+typedef enum {
+	BON_W_FLAG_DEFAULT             =  0,
+	BON_W_FLAG_NO_COMPRESS         =  1 << 1,
+	BON_W_FLAG_CRC                 =  1 << 2,
+	BON_W_FLAG_SKIP_HEADER_FOOTER  =  1 << 3
+} bon_w_flags;
+
 
 // Top level structure
-bon_w_doc*   bon_w_new_doc    (bon_w_writer_t, void* userData, bon_flags flags);
-void         bon_w_flush      (bon_w_doc* B); 
+bon_w_doc*   bon_w_new_doc    (bon_w_writer_t, void* userData, bon_w_flags flags);
+void         bon_w_flush      (bon_w_doc* B);  // Flush writes to the writer
 void         bon_w_close_doc  (bon_w_doc* B);
-void         bon_w_header     (bon_w_doc* B);  // Should be the first thing written, if written at all.
-void         bon_w_footer     (bon_w_doc* B);  // Should be the last thing written, if written at all.
+
+void         bon_w_set_error  (bon_w_doc* B, bon_error err);
+bon_error    bon_w_error      (bon_w_doc* B);
 
 void         bon_w_begin_block  (bon_w_doc* B, bon_block_id block_id);  // open-ended
 void         bon_w_end_block    (bon_w_doc* B);
@@ -331,26 +325,31 @@ void         bon_w_aggr_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
 								    const char* fmt, ...);
 
 // Helper:
-void         bon_w_array      (bon_w_doc* B, bon_size n_elem, bon_type_id type,
-										 const void* data, bon_size nbytes);
+void         bon_w_array(bon_w_doc* B, bon_size n_elem, bon_type_id type,
+                         const void* data, bon_size nbytes);
 
 
 
 //------------------------------------------------------------------------------
-// BON bon_reader API
+// BON reader API
 
 
 typedef struct bon_value  bon_value;
 typedef struct bon_r_doc  bon_r_doc;
 
 
-//------------------------------------------------------------------------------
-// Public API:
+typedef enum {
+	BON_R_FLAG_DEFAULT      =  0,
+	
+	// Will trigger BON_ERR_CRC If the BON file has no CRC, or it is incorrect.
+	BON_R_FLAG_REQUIRE_CRC  =  1 << 2
+} bon_r_flags;
+
 
 // Will parse a BON file. use bon_r_error to query success.
-bon_r_doc*  bon_r_open  (const uint8_t* data, bon_size nbytes);
+bon_r_doc*  bon_r_open  (const uint8_t* data, bon_size nbytes, bon_r_flags flags);
 void        bon_r_close (bon_r_doc* B);
-bon_value*  bon_r_root  (bon_r_doc* B);
+bon_value*  bon_r_root  (bon_r_doc* B); // Access the root object
 bon_error   bon_r_error (bon_r_doc* B);
 
 
@@ -393,6 +392,7 @@ typedef enum {
 } bon_logical_type;
 
 bon_logical_type  bon_r_value_type(bon_r_doc* B, bon_value* val);
+
 
 //------------------------------------------------------------------------------
 // Reading values.
@@ -444,12 +444,12 @@ bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
  array sizes or any missing object keys.
  */
 bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
-								 void* dst, bon_size nbytes,
-								 const bon_type* dstType);
+                         void* dst, bon_size nbytes,
+                         const bon_type* dstType);
 
 // Convenience:
 bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
-											 void* dst, bon_size nbytes, const char* fmt, ...);
+                             void* dst, bon_size nbytes, const char* fmt, ...);
 
 /*
  bon_r_aggr_ptr_fmt is by far the fastest way to read data, but it only works if the format is EXACTLY right. If it is, bon_r_aggr_ptr_fmt returns a pointer to the data. Else, NULL.
@@ -480,7 +480,7 @@ const void* bon_r_array_ptr(bon_r_doc* B, bon_value* srcVal,
 //------------------------------------------------------------------------------
 
 
-// Quick and dirty printout of a value, in json-like format, but NOT json conforming.
+// Quick and dirty printout of a value, in json-like format (but NOT json conforming).
 // Useful for debugging.
 void bon_print(FILE* out, bon_value* value, size_t indent);
 

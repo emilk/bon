@@ -175,7 +175,7 @@ bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
 		return BON_FALSE;
 	}
 	
-	bon_w_doc* B = bon_w_new_doc(&bon_file_writer, out, BON_FLAG_DEFAULT);
+	bon_w_doc* B = bon_w_new_doc(&bon_file_writer, out, BON_W_FLAG_DEFAULT);
 	
 	if (!B) {
 		return BON_FALSE;

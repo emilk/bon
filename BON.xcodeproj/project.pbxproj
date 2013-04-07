@@ -61,6 +61,10 @@
 		80D9FC9A170ED401005DBF0D /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80D9FC99170ED401005DBF0D /* test.cpp */; };
 		80D9FC9C170ED401005DBF0D /* test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 80D9FC9B170ED401005DBF0D /* test.1 */; };
 		80D9FCA1170ED914005DBF0D /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
+		80F09126171207840000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
+		80F09127171207840000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
+		80F09128171207840000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
+		80F09129171207840000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -142,6 +146,8 @@
 		80D9FC9B170ED401005DBF0D /* test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = test.1; sourceTree = "<group>"; };
 		80D9FCA0170ED5A3005DBF0D /* catch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
 		80E9B2F8171046C20095BC59 /* bon_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bon_private.h; sourceTree = "<group>"; };
+		80F09122171203900000DE29 /* crc32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = crc32.h; sourceTree = "<group>"; };
+		80F09125171207840000DE29 /* crc32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crc32.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -210,6 +216,8 @@
 				8096DDC6171185F400F0BFCA /* read.c */,
 				8096DDC7171185F400F0BFCA /* type.c */,
 				8096DDC8171185F400F0BFCA /* write.c */,
+				80F09122171203900000DE29 /* crc32.h */,
+				80F09125171207840000DE29 /* crc32.c */,
 			);
 			path = BON;
 			sourceTree = "<group>";
@@ -385,6 +393,7 @@
 				8096DDC9171185F400F0BFCA /* read.c in Sources */,
 				8096DDCD171185F400F0BFCA /* type.c in Sources */,
 				8096DDD1171185F400F0BFCA /* write.c in Sources */,
+				80F09126171207840000DE29 /* crc32.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -407,6 +416,7 @@
 				8096DDCA171185F400F0BFCA /* read.c in Sources */,
 				8096DDCE171185F400F0BFCA /* type.c in Sources */,
 				8096DDD2171185F400F0BFCA /* write.c in Sources */,
+				80F09127171207840000DE29 /* crc32.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -429,6 +439,7 @@
 				8096DDCB171185F400F0BFCA /* read.c in Sources */,
 				8096DDCF171185F400F0BFCA /* type.c in Sources */,
 				8096DDD3171185F400F0BFCA /* write.c in Sources */,
+				80F09128171207840000DE29 /* crc32.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -441,6 +452,7 @@
 				8096DDCC171185F400F0BFCA /* read.c in Sources */,
 				8096DDD0171185F400F0BFCA /* type.c in Sources */,
 				8096DDD4171185F400F0BFCA /* write.c in Sources */,
+				80F09129171207840000DE29 /* crc32.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

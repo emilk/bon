@@ -252,6 +252,8 @@ Here’s an example of a blocked BON file for storing user names and images:
 			“image.jpg” ARRAY_VLQ 2000000 UINT8 [data]
 		OBJ_END
 	BLOCK_END
+	
+	FOOTER
 
 
 
@@ -289,6 +291,7 @@ An object key may also refer to a block, but in such cases the block MUST have b
 	BLOCK_BEGIN 3 0	  // block #3
 		"value_3"
 	BLOCK_END
+	FOOTER
 	
 ####An example of compression using blocks
 Let say we have a lot of objects on the following pattern:
@@ -315,6 +318,7 @@ In a naïve encoding these will take up about 20-23 bytes each, most of that tak
 	OBJ_BEGIN  REF_1 REF_5  REF_2 2  OBJ_END   // { “state” : “unknown”,  “id” : 2 }
 	…
 	BLOCK_END
+	FOOTER
 
 Of course, this is optional for an encoder, and should not be attempted without good cause.
 
@@ -326,6 +330,7 @@ One nice feature is to be able to append data to a .BON file without rewriting i
 	BLOCK #2
 	...
 	BLOCK #0
+	FOOTER
 
 To append a block of data:
 
@@ -383,6 +388,7 @@ We also optimize for small arrays, structs, strings and block refs. Block refs i
 	STRUCT_VLQ  = 'C',
 	BLOCK_BEGIN = 'D',    BLOCK_END   = 'd',
 	TRUE        = 'E',    FALSE       = 'e',
+	FOOTER      = 'F',    FOOTER_CRC  = 'f',
 	NIL         = 'N',
 	
 	SINT8       = 'P',
@@ -477,9 +483,10 @@ All other values in [64, 127] are reserved for future use. Any decoder encounter
 Words in capitals are control byte values (atoms). Explanations within bracketed, e.g. VLQ[size]
 
 
-	document		::= header? doc_contents footer?
+	document		::= header doc_contents footer
 	header	  		::= BON0
-	footer	  		::= ***TODO***
+	footer	  		::= FOOTER
+					  | FOOTER_CRC crc-32 FOOTER_CRC
 	doc_contents	::= value
 					  | block_doc
 	block_doc		::= block_decl+
@@ -581,3 +588,10 @@ This can be helpful when an encoder doesn't want to fill in the size of somethin
 	0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x80 0x00
 	
 The block can then be written and once done, and we know how large the block ended up becoming, the encoder could go back and change that VLQ size to any value (less than 2^64)
+
+# CRC
+BON files can optionally include a CRC-32 for verifying message integrity. The CRC is the standard CRC-32 [used in PNG](http://www.w3.org/TR/PNG/#D-CRCAppendix) and [GZIP](http://www.faqs.org/rfcs/rfc1952.html). This CRC32 is computed on the entire BON file up to (and NOT including) the first FOOTER_CRC.
+
+The FOOTER_CRC replaces the standard footer (FOOTER) in a way so that the last byte of any BON file is either FOOTER or FOOTER_CRC. This enables a BON reader to ensure a BON file has a CRC, and if so to verify it before parsing the file. To do this, the reader simply calculate the CRC of all but the last *six* bytes, and compare it to the CRC stored in the BON file.
+
+The CRC is always stoed in little endian.
