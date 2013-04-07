@@ -177,6 +177,7 @@ typedef struct {
 typedef struct {
 	bon_type        type;
 	const uint8_t*  data;
+	bon_value*      exploded; // if non-NULL, this contains the packed data in explicit form. Lazily calculated iff user queires it.
 } bon_value_agg;
 
 
@@ -302,6 +303,8 @@ bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
 /**/  if ((vec).size > (vec).cap) {                                        \
 /**/      size_t newCap = ((vec).size + 2) + (vec).size/2;                 \
 /**/      (vec).data = (Type*)realloc((vec).data, newCap * sizeof(Type));  \
+/**/      memset((Type*)((vec).data) + (vec).cap, 0,                       \
+/**/             (newCap - (vec).cap)*sizeof(Type));                       \
 /**/      (vec).cap  = newCap;                                             \
 /**/  }
 

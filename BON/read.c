@@ -715,6 +715,8 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 
 void bon_r_value(bon_reader* br, bon_value* val)
 {
+	memset(val, 0, sizeof(bon_value));
+	
 	uint8_t ctrl = next(br);
 	
 	
@@ -954,6 +956,10 @@ void bon_free_value_insides(bon_value* val)
 			
 		case BON_VALUE_AGGREGATE: {
 			bon_free_type_insides( &val->u.agg.type );
+			if (val->u.agg.exploded) {
+				bon_free_value_insides( val->u.agg.exploded );
+				free( val->u.agg.exploded );
+			}
 		} break;
 			
 		default:
@@ -1344,33 +1350,37 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 	}
 }
 
-bon_bool bon_explode_aggr_inplace(bon_r_doc* B, bon_value* val)
+
+bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val)
 {
 	if (!val || val->type != BON_VALUE_AGGREGATE) {
-		return BON_TRUE; // Original is good
+		return val; // Original is good
 	}
 	
 	bon_value_agg* agg = &val->u.agg;
-	bon_reader     br  = {
-		agg->data,
-		bon_aggregate_payload_size(&agg->type),
-		0,
-		B,
-		BON_BAD_BLOCK_ID
-	};
 	
-	bon_value tmp;
-	if (!bon_explode_aggr( B, &tmp, &agg->type, &br )) {
-		return BON_FALSE;
+	if (!agg->exploded) {
+		bon_reader     br  = {
+			agg->data,
+			bon_aggregate_payload_size(&agg->type),
+			0,
+			B,
+			BON_BAD_BLOCK_ID
+		};
+		
+		agg->exploded = BON_ALLOC_TYPE(1, bon_value);
+		
+		if (!bon_explode_aggr( B, agg->exploded, &agg->type, &br )) {
+			free( agg->exploded );
+			agg->exploded = NULL;
+			return BON_FALSE;
+		}
+		
+		assert(br.error == 0);
+		assert(br.nbytes == 0);
 	}
 	
-	assert(br.error == 0);
-	assert(br.nbytes == 0);
-	
-	// Replace original
-	memcpy(val, &tmp, sizeof(bon_value));
-	
-	return BON_TRUE;
+	return agg->exploded;
 }
 
 
@@ -1380,9 +1390,7 @@ bon_value* follow_and_explode(bon_r_doc* B, bon_value* val)
 	
 	if (val && val->type == BON_VALUE_AGGREGATE) {
 		// If the user treats it like an object, convert it into one.
-		if (!bon_explode_aggr_inplace(B, val)) {
-			return NULL;
-		}
+		val = bon_exploded_aggr(B, val);
 	}
 	
 	return val;

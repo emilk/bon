@@ -29,18 +29,5 @@
          landmarkName = "handle()"
          landmarkType = "7">
       </FileBreakpoint>
-      <FileBreakpoint
-         shouldBeEnabled = "Yes"
-         ignoreCount = "0"
-         continueAfterRunningActions = "No"
-         filePath = "test/test.cpp"
-         timestampString = "387044453.733014"
-         startingColumnNumber = "9223372036854775807"
-         endingColumnNumber = "9223372036854775807"
-         startingLineNumber = "722"
-         endingLineNumber = "722"
-         landmarkName = "TEST_CASE( &quot;BON/unpack/conversions&quot;, &quot;Automatic conversions when unpacking BON data&quot; )"
-         landmarkType = "7">
-      </FileBreakpoint>
    </FileBreakpoints>
 </Bucket>

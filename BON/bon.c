@@ -10,11 +10,6 @@
 #include "bon.h"
 #include "bon_private.h"
 #include <math.h>      // isnan, isinf
-//#include <string.h>  // memset
-//#include <stdlib.h>  // malloc
-//#include <stdio.h>   // fprintf(stderr, ...
-//#include <assert.h>
-//#include <stdarg.h>     // va_list, va_start, va_arg, va_end
 
 
 // For printf:ing int64

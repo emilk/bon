@@ -173,8 +173,7 @@ uint32_t bon_w_vlq(bon_w_doc* B, bon_size x)
 
 bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_flags flags)
 {
-	bon_w_doc* B = (bon_w_doc*)malloc(sizeof(bon_w_doc));
-	memset(B, 0, sizeof(bon_w_doc));
+	bon_w_doc* B = BON_ALLOC_TYPE(1, bon_w_doc);
 	B->writer    = writer;
 	B->userData  = userData;
 	B->error     = BON_SUCCESS;

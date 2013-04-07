@@ -606,7 +606,7 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 
 
 
-TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON data" )
+TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric conversions when unpacking BON data" )
 {	
 	test(
 		  // Write
@@ -615,8 +615,8 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  uint8_t   u8[]   =  { +8   };
 			  int16_t   s16[]  =  { -16  };
 			  uint16_t  u16[]  =  { +16  };
-			  int32_t   s32[]  =  { -32  };
-			  uint32_t  u32[]  =  { +32  };
+			  //int32_t   s32[]  =  { -32  };
+			  //uint32_t  u32[]  =  { +32  };
 			  int64_t   s64[]  =  { -64  };
 			  uint64_t  u64[]  =  { +64  };
 			  float     fn[]   =  { -3.14f    };
@@ -642,6 +642,7 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
+		  
 		  [=](Verifier& p) {
 			  p( BON_CTRL_OBJ_BEGIN );
 			  
@@ -660,6 +661,7 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  p( BON_CTRL_OBJ_END );
 		  },
 		  
+		  
 		  [=](bon_r_doc* B) {
 			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
 			  auto root = bon_r_root(B);
@@ -670,7 +672,7 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  float     f[]    =  { 0 };
 			  double    d[]    =  { 0 };
 			  
-			  // ------------------------------------------------
+			  //------------------------------------------------------------------------------
 			  // Converting to s8
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  s8, sizeof(s8), "[1i8]") );
 			  REQUIRE( *s8 == -8 );
@@ -683,7 +685,7 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dp"),  s8, sizeof(s8), "[1i8]") );
 			  REQUIRE( *s8 == +2 );
 			  
-			  // ------------------------------------------------
+			  //------------------------------------------------------------------------------
 			  // Converting to u64
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u8"),  u64, sizeof(u64), "[1u64]") );
 			  REQUIRE( *u64 == +8 );
@@ -696,7 +698,7 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dp"),  u64, sizeof(u64), "[1u64]") );
 			  REQUIRE( *u64 == +2 );
 			  
-			  // ------------------------------------------------
+			  //------------------------------------------------------------------------------
 			  // Converting to float 32
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  f, sizeof(f), "[1f]") );
 			  REQUIRE( *f == -8 );
@@ -709,7 +711,7 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dn"),  f, sizeof(f), "[1f]") );
 			  REQUIRE( *f == -2.71828f );
 			  
-			  // ------------------------------------------------
+			  //------------------------------------------------------------------------------
 			  // Converting to double 64
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  d, sizeof(d), "[1d]") );
 			  REQUIRE( *d == -8 );
@@ -724,3 +726,51 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 		  }
 		  );
 }
+
+
+
+TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON data" )
+{
+	test(
+		  // Write
+		  [=](bon_w_doc* B) {
+			  bon_w_begin_obj(B);
+			  
+			  bon_w_key(B, "-8",         BON_ZERO_ENDED);  bon_w_sint64(B, -8);
+			  bon_w_key(B, "0x12345678", BON_ZERO_ENDED);  bon_w_sint64(B, 0x12345678);
+			  
+			  bon_w_end_obj(B);
+			  
+			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
+		  },
+		  
+		  [=](Verifier& p) {
+			  p( BON_CTRL_OBJ_BEGIN );
+			  
+			  p( BON_SHORT_STRING(2),  "-8",         0,   -8 );
+			  p( BON_SHORT_STRING(10), "0x12345678", 0,    BON_CTRL_UINT32, 0x78, 0x56, 0x34, 0x12 );
+			  
+			  p( BON_CTRL_OBJ_END );
+		  },
+		  
+		  [=](bon_r_doc* B) {
+			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
+			  
+			  auto root = bon_r_root(B);
+			  REQUIRE( root );
+			  
+			  struct f_i32_t { float f; int32_t i32; };
+			  f_i32_t f_i32 = {0,0};
+			  REQUIRE( bon_r_aggr_read_fmt(B, root,  &f_i32, sizeof(f_i32), "{fi32}", "-8", "0x12345678") );
+			  REQUIRE( f_i32.f == -8 );
+			  REQUIRE( f_i32.i32 == 0x12345678 );
+			  
+			  struct i64_d_t { int64_t i64; double d; };
+			  i64_d_t i64_d = {0,0};
+			  REQUIRE( bon_r_aggr_read_fmt(B, root,  &i64_d, sizeof(i64_d), "{i64d}", "-8", "0x12345678") );
+			  REQUIRE( i64_d.i64  == -8 );
+			  REQUIRE( i64_d.d    == 0x12345678 );
+		  }
+	);
+}
+
