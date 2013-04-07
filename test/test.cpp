@@ -26,10 +26,10 @@ using namespace std;
 
 
 // Checks a binary byte stream against code supplied values
-class Parser
+class Verifier
 {
 public:
-	Parser(const uint8_t* ptr, bon_size size) : m_ptr(ptr), m_size(size) { }
+	Verifier(const uint8_t* ptr, bon_size size) : m_ptr(ptr), m_size(size) { }
 	
 	bon_size size() const { return m_size; }
 	bool eof() const { return m_ix == m_size; }
@@ -145,7 +145,7 @@ void test_key_int(bon_r_doc* B, bon_value* root, string key, int64_t iv) {
 
 
 typedef std::function<void(bon_w_doc*)>  Writer;
-typedef std::function<void(Parser&)>     Verifyer;
+typedef std::function<void(Verifier&)>     Verifyer;
 typedef std::function<void(bon_r_doc*)>  Reader;
 
 
@@ -164,7 +164,7 @@ void test(Writer w, Verifyer v, Reader r)
 	{
 		//SECTION( "test", "checking the binary data" )
 		{
-			Parser p(vec.data, vec.size);
+			Verifier p(vec.data, vec.size);
 			v(p);
 			REQUIRE(p.eof());
 		}
@@ -275,7 +275,7 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 		  },
 		  
 		  
-		  [=](Parser& p) {
+		  [=](Verifier& p) {
 			  p( "BON0" );
 			  p( BON_CTRL_OBJ_BEGIN );
 			  
@@ -335,7 +335,7 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 			  REQUIRE ( bon_r_is_bool(B, true_val) );
 			  REQUIRE ( bon_r_bool(B, true_val) == BON_TRUE );
 			  
-			  test_key_int(B, root, "sevent",   7);
+			  test_key_int(B, root, "seven",   7);
 			  test_key_int(B, root, "neg_1",   -1);
 			  test_key_int(B, root, "42",      42);
 			  test_key_int(B, root, "-0x80",   -0x80);
@@ -375,7 +375,7 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
-		  [=](Parser& p) {
+		  [=](Verifier& p) {
 			  REQUIRE( p.size() == (size_t)16 );
 			  
 			  p( BON_CTRL_OBJ_BEGIN );
@@ -447,7 +447,7 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
-		  [=](Parser& p) {
+		  [=](Verifier& p) {
 			  p( BON_CTRL_BLOCK_BEGIN, 1, (int)block_1_vec.size);
 			  p( BON_CTRL_OBJ_BEGIN );
 			  p( BON_SHORT_STRING(4), "ref2",    0,  BON_SHORT_BLOCK(2) );
@@ -511,7 +511,7 @@ TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
 			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
 		  },
 		  
-		  [=](Parser& p) {
+		  [=](Verifier& p) {
 			  p( BON_CTRL_OBJ_BEGIN );
 			  
 			  p( BON_SHORT_STRING(4), "vecs", 0  );

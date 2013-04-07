@@ -214,7 +214,7 @@ Note that the struct declaration has the same basic layout as an object, but wit
 Arrays of structs is a very efficient way to encode homogenous elements of data (data in which each element are of the same type). Note that the array and struct elements must be of a fixed size, so they cannot contain strings, lists or objects - nor FixInt:s or true/false/nil.
 
 
-## Blocks (optional feature - not quite finished)
+## Blocks (optional feature )
 When reading a huge BON file, it may be inconvenient to have to parse the whole file just to access a part of it. To help with this issue, a BON file can optionally be structured into blocks.
 
 Each block is encoded with a unique id (an unsigned integer, up to 64 bits) and a size in bytes.
@@ -257,9 +257,7 @@ Here’s an example of a blocked BON file for storing user names and images:
 
 When the user now wants to access an image of Paul, the parser can completely skip over parsing the block for John.
 
-Blocks can refer to other blocks, but the references may not form cycles (so the structure is a DAG). To prevent such cycles, a block may only contain references to block with a strictly larger ID.
-
-Even when several block refers to the same block, the logical structure is still that of a tree. For instance, when transforming BON to JSON, a block referenced from several other blocks will be represented multiple times in the JSON document. Therefore, blocks can also be used as a form of compression.
+Blocks can refer to other blocks, but the references may not form cycles (so the structure is a directed acyclic graph). To prevent such cycles, a block may only contain references to block with a strictly _higher_ ID.
 
 Block sizes are excluding the BLOCK_BEGIN and BLOCK_END, and also excluding the VLQ:s encoding the id and block size. The size, in other words, is of the payload - the contained value. A block-size of 0 is reserved to mean "undefined size - parse to BLOCK_END".
 
@@ -267,8 +265,60 @@ BLOCK_END is only there as a sanity check.
 
 Block ID:s can be any unsigned integer (less than 2^64), but 0 is reserved for the root block.
 
+### Using blocks for compressions
+Even when several block refers to the same block, the logical structure is still that of a tree. For instance, when transforming BON to JSON, a block referenced from several other blocks will be represented multiple times in the JSON document. Therefore, blocks can also be used as a form of compression.
 
-## More about blocks
+An object key may also refer to a block, but in such cases the block MUST have been previously defined, and MUST be a string (it cannot be another block ref!). The following BON file demonstrates this:
+
+	BON0
+	BLOCK_BEGIN 1 0	  // block #1
+		"key_1"
+	BLOCK_END
+	
+	BLOCK_BEGIN 0 0	  // root block
+		OBJ_BEGIN
+		BLOCK_REF 1 "some value"  <- OK -  the key is reffering to previously defined block #1
+		BLOCK_REF 2 "value"       <- ERROR! A key cannot refer to a block #2 since it is not available at the time of parsing!
+		"key" BLOCK_REF 3         <- OK - a value may refer to a block not yet defined
+		OBJ_END
+	BLOCK_END
+	
+	BLOCK_BEGIN 2 0	  // block #2
+		"key_2"
+	BLOCK_END
+	BLOCK_BEGIN 3 0	  // block #3
+		"value_3"
+	BLOCK_END
+	
+####An example of compression using blocks
+Let say we have a lot of objects on the following pattern:
+
+	{ “state” : “open”,     “id” : 0 },
+	{ “state” : “closed”,   “id” : 1 },
+	{ “state” : “unknown”,  “id” : 2 }
+	…
+
+In a naïve encoding these will take up about 20-23 bytes each, most of that taken up by strings. But if we assign blocks 1-5 to the above strings we can make each object just six bytes:
+
+(`"state", "open", "id", "closed", "unknown"`), 
+
+	BON0
+	BLOCK_BEGIN 1 0 "state"    BLOCK_END
+	BLOCK_BEGIN 2 0 "id"       BLOCK_END
+	BLOCK_BEGIN 3 0 "open"     BLOCK_END
+	BLOCK_BEGIN 4 0 "closed"   BLOCK_END
+	BLOCK_BEGIN 5 0 "unknown"  BLOCK_END
+	BLOCK_BEGIN 0 0    // the root - must come AFTER the blocks containing the key strings (#1 and #2)
+	…
+	OBJ_BEGIN  REF_1 REF_3  REF_2 0  OBJ_END   // { “state” : “open”,     “id” : 0 }
+	OBJ_BEGIN  REF_1 REF_4  REF_2 1  OBJ_END   // { “state” : “closed”,   “id” : 1 }
+	OBJ_BEGIN  REF_1 REF_5  REF_2 2  OBJ_END   // { “state” : “unknown”,  “id” : 2 }
+	…
+	BLOCK_END
+
+Of course, this is optional for an encoder, and should not be attempted without good cause.
+
+### Using blocks to modify a BON file 
 One nice feature is to be able to append data to a .BON file without rewriting it from scratch. The way to implement that is to have the root block last in the BON file.
 
 	HEADER
@@ -282,7 +332,7 @@ To append a block of data:
 1. read and remove the root block (BLOCK #0)
 2. append the new data block
 3. ammend the root object with a reference to the new data block
-4. append BLOCK #0
+4. append the ammended root block (BLOCK #0)
 
 
 
@@ -310,10 +360,7 @@ The positions of the FixInt:s (negative and positive) have been chosen so that a
 
 The positions of the control blocks have been chosen to coincide with the ASCII letters, to make control codes easily findable in debug output. Also, this allows our header (which should be ASCII to work as magic file id) to be a normal control code like any other, making it orthogonal.
 
-We also optimize for small arrays, structs, strings and block refs. Block refs in particular is nice for to enable aggressive compression of common keys and values. For instance, if you have lot of object on the form
-`{ “state”: “open”, “id” : 0 }, { “state”: “closed”, “id” : 1}, { “state”: “unknown”, “id” : 2}`
-then naively these will take up about 20-25 bytes each. But if the encoder assign blocks 1-5 to the above strings (`"state", "open", "id", "closed", "unknown"`), we can make each object just six bytes:
- `OBJ_BEGIN REF_1 REF_2 REF_3 num OBJ_END` 
+We also optimize for small arrays, structs, strings and block refs. Block refs in particular is nice for to enable aggressive compression of common keys and values. See *Using blocks for compressions* for more info.
 
 ### Control byte ranges and meanings:
 

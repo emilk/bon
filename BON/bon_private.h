@@ -37,7 +37,8 @@ struct bon_type_array {
 typedef struct bon_type_struct bon_type_struct;
 struct bon_type_struct {
 	bon_size      size;
-	const char**  keys;   // array of utf8 strings
+	const char**  keys;   // array of utf8 strings, pointing to inside of the document,
+	                      // or to string literals supplied by the user
 	bon_type**    types;  // array of types
 };
 
@@ -71,7 +72,7 @@ struct bon_w_doc {
 
 
 
-typedef struct bon_kv         bon_kv;
+typedef struct bon_kv bon_kv;
 
 
 typedef struct {
@@ -159,8 +160,8 @@ struct bon_r_doc {
 };
 
 struct bon_kv {
-	bon_value key; // will be a string
-	bon_value val;
+	const char*  key;  // UTF8 - points to inside of document
+	bon_value    val;
 };
 
 

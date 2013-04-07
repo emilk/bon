@@ -228,7 +228,7 @@ bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 	}
 	++*fmt;
 	
-	const int MAX_OBJ_SIZE = 64; // FIXME: lazy
+	const int MAX_OBJ_SIZE = 64; // TODO: expand
 	
 	bon_type_struct* strct = ALLOC_TYPE(1, bon_type_struct);
 	strct->size   = 0;
@@ -580,7 +580,7 @@ const char* bon_err_str(bon_error err)
 		"BON_ERR_MISSING_LIST_END",
 		"BON_ERR_MISSING_OBJ_END",
 		"BON_ERR_BAD_CTRL",
-		"BON_ERR_KEY_NOT_STRING",
+		"BON_ERR_BAD_KEY",
 		"BON_ERR_BAD_AGGREGATE_TYPE",
 		"BON_ERR_BAD_TYPE",
 		"BON_ERR_STRING_NOT_ZERO_ENDED",
@@ -1379,7 +1379,7 @@ void parse_struct_type(bon_reader* br, bon_type* type, bon_size structSize)
 		bon_value key;
 		bon_r_value(br, &key);
 		if (key.type != BON_VALUE_STRING) {
-			br_set_err(br, BON_ERR_KEY_NOT_STRING);
+			br_set_err(br, BON_ERR_BAD_KEY);
 			return;
 		}
 		
@@ -1625,6 +1625,9 @@ void bon_r_list_values(bon_reader* br, bon_value_list* vals)
 }
 
 
+bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id);
+
+
 void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 {
 	memset(kvs, 0, sizeof(bon_kvs));
@@ -1639,13 +1642,34 @@ void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 		VECTOR_EXPAND(*kvs, bon_kv, 1)
 		
 		bon_kv* kv = kvs->data + kvs->size - 1;
-		bon_r_value(br, &kv->key);
-		br_assert(br, kv->key.type==BON_VALUE_STRING, BON_ERR_KEY_NOT_STRING);
+		
+		bon_value keyVal;
+		bon_r_value(br, &keyVal);
+		
+		const bon_value* key = &keyVal;
+		
+		if (key->type == BON_VALUE_BLOCK_REF) {
+			key = bon_r_load_block(br->B, key->u.blockRefId);
+			if (!key) {
+				br_set_err(br, BON_ERR_BAD_KEY);
+				return;
+			}
+		}
+		
+		// Check key is string without hidden zeros:
+		if (key->type       != BON_VALUE_STRING ||
+			 key->u.str.size != strlen(key->u.str.ptr)) 
+		{
+			br_set_err(br, BON_ERR_BAD_KEY);
+			return;
+		}
+		
+		kv->key = key->u.str.ptr;
 		bon_r_value(br, &kv->val);
 	}
 }
 
-void bon_r_header(bon_r_doc* B, bon_reader* br)
+void bon_r_header(bon_reader* br)
 {
 	if (peek(br) == BON_CTRL_HEADER)
 	{
@@ -1662,10 +1686,10 @@ void bon_r_header(bon_r_doc* B, bon_reader* br)
 	}
 }
 
-void bon_r_read_content(bon_r_doc* B, bon_reader* br)
+void bon_r_read_content(bon_reader* br)
 {
-	bon_r_blocks* blocks = &B->blocks;
-		
+	bon_r_blocks* blocks = &br->B->blocks;
+	
 	if (peek(br) == BON_CTRL_BLOCK_BEGIN)
 	{
 		// Blocked document
@@ -1713,19 +1737,20 @@ void bon_r_read_content(bon_r_doc* B, bon_reader* br)
 	}
 }
 
-void bon_r_footer(bon_r_doc* B, bon_reader* br)
+void bon_r_footer(bon_reader* br)
 {
 	br_assert(br, br->nbytes==0, BON_ERR_TRAILING_DATA);
 }
 
-void bon_r_read_doc(bon_r_doc* B, bon_reader* br)
+void bon_r_read_doc(bon_reader* br)
 {
+	bon_r_doc* B = br->B;
 	B->stats.bytes_file = br->nbytes;
-	bon_r_header(B, br);
+	bon_r_header(br);
 	if (br->error) return;
-	bon_r_read_content(B, br);
+	bon_r_read_content(br);
 	if (br->error) return;
-	bon_r_footer(B, br);
+	bon_r_footer(br);
 }
 	
 void bon_r_set_error(bon_r_doc* B, bon_error err)
@@ -1746,7 +1771,7 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes)
 	bon_reader br_v = { data, nbytes, BON_FALSE, B };
 	bon_reader* br = &br_v;
 	
-	bon_r_read_doc(B, br);
+	bon_r_read_doc(br);
 	
 	B->error = br->error;
 	return B;
@@ -1759,35 +1784,50 @@ void bon_r_close(bon_r_doc* B)
 }
 
 // Returns NULL on fail
-bon_value* bon_r_get_block(bon_r_doc* B, uint64_t id)
+bon_r_block* bon_r_find_block(bon_r_doc* B, uint64_t id)
 {
 	for (bon_size bi=0; bi<B->blocks.size; ++bi) {
 		bon_r_block* block = &B->blocks.data[bi];
 		if (block->id == id) {
-			if (!block->parsed) {
-				// Lazy parsing:
-				bon_reader br = { block->payload, block->payload_size, 0, B };
-				
-				bon_r_value(&br, &block->value);
-				
-				if (br.nbytes != 0) {
-					br_set_err(&br, BON_ERR_TRAILING_DATA);
-				}
-				if (br.error) {
-					if (!B->error) {
-						B->error = br.error;
-					}
-					return NULL;
-				}
-				
-				block->parsed = BON_TRUE;
-			}
-			
-			return &block->value;
+			return block;
 		}
 	}
-	
 	return NULL;
+}
+
+// Returns NULL on fail
+bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id)
+{
+	// TODO: only load blocks with ID:s lower than the id of the block currently being parsed.
+	
+	bon_r_block* block = bon_r_find_block(B, id);
+	
+	if (!block->parsed) {
+		// Lazy parsing:
+		bon_reader br = { block->payload, block->payload_size, 0, B };
+		
+		bon_r_value(&br, &block->value);
+		
+		if (br.nbytes != 0) {
+			br_set_err(&br, BON_ERR_TRAILING_DATA);
+		}
+		if (br.error) {
+			if (!B->error) {
+				B->error = br.error;
+			}
+			return NULL;
+		}
+		
+		block->parsed = BON_TRUE;
+	}
+	
+	return &block->value;
+}
+
+// Returns NULL on fail
+bon_value* bon_r_get_block(bon_r_doc* B, uint64_t id)
+{
+	return bon_r_load_block(B, id);
 }
 
 bon_value* bon_r_root(bon_r_doc* B)
@@ -1802,7 +1842,7 @@ bon_error bon_r_error(bon_r_doc* B)
 
 bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
 {
-	// TODO: detect infinite recursion (loops)
+	// TODO: detect infinite recursion (loops). Should be done at time of parsing!
 	while (B->error==0 &&
 			 val && val->type == BON_VALUE_BLOCK_REF)
 	{
@@ -2037,10 +2077,7 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 			
 			for (bon_size ix=0; ix<n; ++ix) {
 				bon_kv* kv = kvs->data + ix;
-				kv->key.type = BON_VALUE_STRING;
-				kv->key.u.str.ptr   = strct->keys[ix];
-				kv->key.u.str.size  = strlen((const char*)strct->keys[ix]); // HACK - embedded zero fail
-				
+				kv->key = strct->keys[ix];
 				bon_explode_aggr(B, &kv->val, strct->types[ix], br);
 			}
 			return BON_TRUE;
@@ -2154,10 +2191,8 @@ bon_value* bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key)
 		bon_kv* kv = &kvs->data[i];
 		
 		// The key should always be a string:
-		if (kv->key.type == BON_VALUE_STRING) {
-			if (memcmp(key, kv->key.u.str.ptr, kv->key.u.str.size) == 0) {
-				return &kv->val;
-			}
+		if (strcmp(key, kv->key) == 0) {
+			return &kv->val;
 		}
 	}
 	
@@ -2667,8 +2702,9 @@ void bon_print(FILE* out, bon_value* v, size_t indent)
 				for (bon_size i=0; i<size; ++i) {
 					bon_kv* kv = &kvs->data[i];
 					
-					bon_print(out, &kv->key, indent);
-					fprintf(out, ": ");
+					fprintf(out, "\"");
+					fprintf(out, "\"%s\": ", kv->key);
+					fprintf(out, "\": ");
 					bon_print(out, &kv->val, indent);
 					
 					if (i != size-1) {

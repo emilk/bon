@@ -49,7 +49,7 @@ typedef enum {
 	BON_ERR_MISSING_LIST_END,
 	BON_ERR_MISSING_OBJ_END,
 	BON_ERR_BAD_CTRL,
-	BON_ERR_KEY_NOT_STRING,
+	BON_ERR_BAD_KEY,
 	BON_ERR_BAD_AGGREGATE_TYPE,
 	BON_ERR_BAD_TYPE,
 	BON_ERR_STRING_NOT_ZERO_ENDED,
@@ -378,6 +378,7 @@ void         bon_w_array      (bon_w_doc* B, bon_size n_elem, bon_type_id type,
 
 
 typedef enum {
+	BON_VALUE_NONE       = 0,
 	BON_VALUE_NIL        = BON_CTRL_NIL,
 	BON_VALUE_BOOL       = BON_TYPE_BOOL,
 	BON_VALUE_UINT64     = BON_TYPE_UINT64,
@@ -387,7 +388,7 @@ typedef enum {
 	BON_VALUE_LIST       = BON_CTRL_LIST_BEGIN,
 	BON_VALUE_OBJ        = BON_CTRL_OBJ_BEGIN,
 	BON_VALUE_BLOCK_REF  = BON_CTRL_BLOCK_REF,
-	BON_VALUE_AGGREGATE,
+	BON_VALUE_AGGREGATE  = 255, // Won't conflict with any of the aboe
 } bon_value_type;
 
 
