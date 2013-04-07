@@ -274,8 +274,6 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type);
  */
 bon_type* bon_new_type_fmt(const char* fmt, ...);
 
-bon_size  bon_aggregate_payload_size(const bon_type* type);
-
 // Returns true if the two types are exactly equal
 bon_bool  bon_type_eq(const bon_type* a, const bon_type* b);
 

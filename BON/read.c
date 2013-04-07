@@ -1541,259 +1541,349 @@ bon_bool bw_write_uint_as_uint8(bon_writer* bw, uint64_t val) {
 	}
 }
 
+typedef enum {
+	SIGNED,
+	UNSIGNED
+} Signness;
 
-//------------------------------------------------------------------------------
+typedef enum {
+	LE,
+	BE
+} Endian;
 
-
-/*
- from and to aggregate (i.e. structs and array)
- */
-bon_bool br_read_aggregate(bon_r_doc* B, const bon_type* srcType, bon_reader* br,
-									const bon_type* dstType, bon_writer* bw)
+bon_bool bw_write_uint_bytes(bon_writer* bw, uint64_t val, bon_size nBytes,
+									  Signness signness, Endian endian)
 {
-	if (dstType->id == BON_TYPE_ARRAY &&
-		 srcType->id == BON_TYPE_ARRAY)
-	{
-		// array -> array
-		bon_type_array* srcArray = srcType->u.array;
-		bon_type_array* dstArray = dstType->u.array;
-		
-		if (srcArray->size != dstArray->size) {
-			return BON_FALSE;
+	// TODO: check if 'val' fits into 'nBytes' given 'signness'
+	
+	if (endian == LE) {
+		for (bon_size i=0; i<nBytes; ++i) {
+			bw_write_uint8(bw, val & 0xff);
+			val >>= 8;
 		}
 		
-		for (bon_size ai=0; ai<srcArray->size; ++ai) {
-			bon_bool win = br_read_aggregate(B, srcArray->type, br,
-														dstArray->type, bw);
-			
-			if (!win || B->error || br->error || bw->error) {
-				return BON_FALSE;
-			}
+		if (val != 0) {
+			fprintf(stderr, "Value did not fit into destination");
+			return BON_FALSE; // FIXME: Is this an error?
+		}
+		
+		return BON_TRUE;
+	} else {
+		for (bon_size i=0; i<nBytes; ++i) {
+			bon_size shift = 8 * (nBytes - i - 1);
+			bw_write_uint8(bw, (val >> shift) & 0xff);
 		}
 		
 		return BON_TRUE;
 	}
-	
-	if (dstType->id == BON_TYPE_STRUCT &&
-		 srcType->id == BON_TYPE_STRUCT)
-	{
-		// struct -> struct
-		bon_type_struct* srcStruct = srcType->u.strct;
-		bon_type_struct* dstStruct = dstType->u.strct;
-		
-		for (bon_size dst_ki=0; dst_ki<dstStruct->size; ++dst_ki) {
-			bon_kt* dst_kt = dstStruct->kts + dst_ki;
+}
+
+
+bon_bool bw_write_double_as(bon_writer* bw, double val, bon_type_id type);
+
+bon_bool bw_write_uint_as(bon_writer* bw, uint64_t val, bon_type_id type)
+{
+	switch (type) {
+		case BON_TYPE_SINT8:      return bw_write_uint_bytes(bw, val, 1, SIGNED,    LE);
+		case BON_TYPE_UINT8:      return bw_write_uint_bytes(bw, val, 1, UNSIGNED,  LE);
 			
-			bon_size src_byte_offset = 0;
-			bon_size src_ki;
-			for (src_ki=0; src_ki<srcStruct->size; ++src_ki) {
-				bon_kt* src_kt = srcStruct->kts + src_ki;
-				const bon_type*  srcValType = &src_kt->type;
-				const bon_size   srcValSize = bon_aggregate_payload_size(srcValType);
-				
-				if (strcmp(dst_kt->key, src_kt->key)==0) {
-					bon_reader br_val = {
-						br->data + src_byte_offset,
-						srcValSize,
-						br->error,
-						B,
-						BON_BAD_BLOCK_ID
-					};
-					
-					bon_bool win = br_read_aggregate(B, srcValType, &br_val,
-																&dst_kt->type, bw);
-					if (!win || B->error || br_val.error || bw->error) {
-						return BON_FALSE;
-					}
-					
-					break; // key found
-				}
-				
-				src_byte_offset += srcValSize;
-				if (src_byte_offset > br->nbytes) {
-					fprintf(stderr, "Something is seriously wrong\n");
-					return BON_FALSE;
-				}
-			}
+		case BON_TYPE_SINT16_LE:  return bw_write_uint_bytes(bw, val, 2, SIGNED,    LE);
+		case BON_TYPE_SINT16_BE:  return bw_write_uint_bytes(bw, val, 2, SIGNED,    BE);
+		case BON_TYPE_UINT16_LE:  return bw_write_uint_bytes(bw, val, 2, UNSIGNED,  LE);
+		case BON_TYPE_UINT16_BE:  return bw_write_uint_bytes(bw, val, 2, UNSIGNED,  BE);
 			
-			if (src_ki == srcStruct->size) {
-				fprintf(stderr, "Source lacked key \"%s\"\n", dst_kt->key);
-				return BON_FALSE;
-			}
-		}
-		
-		// Skip src struct:
-		br_skip(br, bon_aggregate_payload_size(srcType));
-		
-		return BON_TRUE; // All keys read
+		case BON_TYPE_SINT32_LE:  return bw_write_uint_bytes(bw, val, 4, SIGNED,    LE);
+		case BON_TYPE_SINT32_BE:  return bw_write_uint_bytes(bw, val, 4, SIGNED,    BE);
+		case BON_TYPE_UINT32_LE:  return bw_write_uint_bytes(bw, val, 4, UNSIGNED,  LE);
+		case BON_TYPE_UINT32_BE:  return bw_write_uint_bytes(bw, val, 4, UNSIGNED,  BE);
+			
+		case BON_TYPE_SINT64_LE:  return bw_write_uint_bytes(bw, val, 8, SIGNED,    LE);
+		case BON_TYPE_SINT64_BE:  return bw_write_uint_bytes(bw, val, 8, SIGNED,    BE);
+		case BON_TYPE_UINT64_LE:  return bw_write_uint_bytes(bw, val, 8, UNSIGNED,  LE);
+		case BON_TYPE_UINT64_BE:  return bw_write_uint_bytes(bw, val, 8, UNSIGNED,  BE);
+			
+		case BON_TYPE_FLOAT32_LE: case BON_TYPE_FLOAT32_BE:
+		case BON_TYPE_FLOAT64_LE: case BON_TYPE_FLOAT64_BE:
+			return bw_write_double_as(bw, (double)val, type);
+			
+		default:
+			return BON_FALSE;
+	}
+}
+
+bon_bool bw_write_sint_as(bon_writer* bw, int64_t val, bon_type_id type)
+{
+	if (val >= 0) {
+		return bw_write_uint_as(bw, (uint64_t)val, type);
 	}
 	
+	// TODO: all sint -> foo conversions
 	
-	switch (dstType->id) {
-		case BON_TYPE_UINT8: {
-			if (bw->nbytes < sizeof(uint8_t)) {
-				return BON_FALSE;
-			}
-			*(uint8_t*)bw->data = br_read_uint64(br, srcType->id);
-			bw_skip(bw, sizeof(uint8_t));
-			return BON_TRUE;
-		}
-			
-		case BON_TYPE_UINT32: {
-			if (bw->nbytes < sizeof(uint32_t)) {
-				return BON_FALSE;
-			}
-			*(uint32_t*)bw->data = br_read_uint64(br, srcType->id);
-			bw_skip(bw, sizeof(uint32_t));
-			return BON_TRUE;
-		}
-			
-			
-			// TODO: all cases
-			
+	return BON_FALSE;
+}
+
+bon_bool bw_write_double_as(bon_writer* bw, double val, bon_type_id type)
+{
+	switch (type) {
 		case BON_TYPE_FLOAT32: {
-			if (bw->nbytes < sizeof(float)) {
-				return BON_FALSE;
-			}
-			*(float*)bw->data = (float)br_read_double(br, srcType->id);
-			bw_skip(bw, sizeof(float));
-			return BON_TRUE;
+			float f = (float)val;
+			return bw_write_raw(bw, &f, sizeof(f));
 		}
 			
 		case BON_TYPE_FLOAT64: {
-			if (bw->nbytes < sizeof(double)) {
-				return BON_FALSE;
-			}
-			*(double*)bw->data = br_read_double(br, srcType->id);
-			bw_skip(bw, sizeof(double));
-			return BON_TRUE;
+			return bw_write_raw(bw, &val, sizeof(val));
 		}
 			
+		// TODO: all double -> foo conversions
 			
 		default:
-			fprintf(stderr, "br_read_aggregate: unknown type\n");
 			return BON_FALSE;
 	}
 }
 
 
-bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
-									const bon_type* dstType, bon_writer* bw)
+//------------------------------------------------------------------------------
+
+bon_bool translate_aggregate(bon_r_doc* B,
+									  const bon_type* srcType, bon_reader* br,
+									  const bon_type* dstType, bon_writer* bw);
+
+
+bon_bool translate_array(bon_r_doc* B,
+								 bon_type_array* srcArray, bon_reader* br,
+								 bon_type_array* dstArray, bon_writer* bw)
 {
-	switch (srcVal->type)
-	{
-		case BON_VALUE_NIL:
-			fprintf(stderr, "bon_r_aggr_read: nil\n");
-			return BON_FALSE; // There is no null-able type
-			
-		case BON_VALUE_BOOL:
-			if (dstType->id!=BON_TYPE_BOOL) {
-				fprintf(stderr, "bon_r_aggr_read: bool err\n");
-				return BON_FALSE;
-			}
-			return bw_write_uint8( bw, srcVal->u.boolean ? BON_TRUE : BON_FALSE );
-			
-		case BON_VALUE_UINT64: {
-			switch (dstType->id) {
-				case BON_TYPE_UINT8: {
-					return bw_write_uint_as_uint8( bw, srcVal->u.u64 );
-					// TODO: handle all these cases
-					
-				default:
-					fprintf(stderr, "Cannot convert from uint64 to %X\n", (int)dstType->id);
-					return BON_FALSE;
-				}
-			}
-			
-		case BON_VALUE_SINT64: {
-			switch (dstType->id) {
-				case BON_TYPE_UINT8:
-					return bw_write_uint8( bw, srcVal->u.s64 );
-					
-					// TODO: handle all these cases
-					
-				default:
-					fprintf(stderr, "Cannot convert from sint64\n");
-					return BON_FALSE;
-			}
-		}
-			
-			
-		case BON_VALUE_DOUBLE: {
-			switch (dstType->id) {
-					// TODO: handle all these cases
-					
-				default:
-					fprintf(stderr, "Cannot convert from double\n");
-					return BON_FALSE;
-			}
-		}
-			
-			
-		case BON_VALUE_STRING:
-			if (dstType->id != BON_TYPE_STRING) {
-				return BON_FALSE;
-			}
-			if (bw->nbytes != sizeof(const char*)) {
-				return BON_FALSE;
-			}
-			*(const char**)bw->data  = (const char*)srcVal->u.str.ptr;
-			return bw_skip(bw, sizeof(const char*));
-			
-			
-		case BON_VALUE_LIST: {
-			fprintf(stderr, "Cannot auto-convert to list\n");
+	if (srcArray->size != dstArray->size) {
+		return BON_FALSE;
+	}
+	
+	for (bon_size ai=0; ai<srcArray->size; ++ai) {
+		bon_bool win = translate_aggregate(B, srcArray->type, br,
+													  dstArray->type, bw);
+		
+		if (!win || B->error || br->error || bw->error) {
 			return BON_FALSE;
 		}
+	}
+	
+	return BON_TRUE;
+}
+
+
+bon_bool translate_struct(bon_r_doc* B,
+								  bon_type_struct* srcStruct, bon_reader* br,
+								  bon_type_struct* dstStruct, bon_writer* bw)
+{
+	for (bon_size dst_ki=0; dst_ki<dstStruct->size; ++dst_ki) {
+		bon_kt* dst_kt = dstStruct->kts + dst_ki;
+		
+		bon_size src_byte_offset = 0;
+		bon_size src_ki;
+		for (src_ki=0; src_ki<srcStruct->size; ++src_ki) {
+			bon_kt* src_kt = srcStruct->kts + src_ki;
+			const bon_type*  srcValType = &src_kt->type;
+			const bon_size   srcValSize = bon_aggregate_payload_size(srcValType);
 			
-		case BON_VALUE_AGGREGATE: {
-			const bon_value_agg* agg = &srcVal->u.agg;
-			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
-			bon_reader br = { agg->data, byteSize, 0, B, BON_BAD_BLOCK_ID };
-			bon_bool win = br_read_aggregate(B, &agg->type, &br, dstType, bw);
-			return win && br.error==0;
-		}
-			
-			
-		case BON_VALUE_OBJ: {
-			if (dstType->id != BON_TYPE_STRUCT) {
-				return BON_FALSE;
-			}
-			
-			// For every dst key, find that in src:
-			const bon_type_struct* strct = dstType->u.strct;
-			for (bon_size ki=0; ki<strct->size; ++ki) {
-				bon_kt* kt = strct->kts + ki;
-				const char* key  =  kt->key;
-				bon_value*  val  =  bon_r_get_key(B, srcVal, key);
+			if (strcmp(dst_kt->key, src_kt->key)==0) {
+				bon_reader br_val = {
+					br->data + src_byte_offset,
+					srcValSize,
+					br->error,
+					B,
+					BON_BAD_BLOCK_ID
+				};
 				
-				if (val == NULL) {
-					fprintf(stderr, "Failed to find key in src: \"%s\"\n", key);
+				bon_bool win = translate_aggregate(B, srcValType, &br_val,
+															  &dst_kt->type, bw);
+				
+				if (!win || B->error || br_val.error || bw->error) {
 					return BON_FALSE;
 				}
 				
-				const bon_type* kv_type = &kt->type;
-				
-				bon_size nByteInVal = bon_aggregate_payload_size(kv_type);
-				if (bw->nbytes < nByteInVal) {
-					return BON_FALSE;
-				}
-				bw_read_aggregate(B, val, kv_type, bw);
+				break; // key found
 			}
 			
-			return bw->nbytes == 0; // There should be none left
-		}
-			
-			
-		case BON_VALUE_BLOCK_REF: {
-			bon_value* val = bon_r_get_block(B, srcVal->u.blockRefId );
-			if (val) {
-				return bw_read_aggregate(B, val, dstType, bw);
-			} else {
-				fprintf(stderr, "Missing block, id %"PRIu64 "\n", srcVal->u.blockRefId );
+			src_byte_offset += srcValSize;
+			if (src_byte_offset > br->nbytes) {
+				fprintf(stderr, "Something is seriously wrong\n");
 				return BON_FALSE;
 			}
 		}
+		
+		if (src_ki == srcStruct->size) {
+			fprintf(stderr, "Source lacked key \"%s\"\n", dst_kt->key);
+			return BON_FALSE;
+		}
+	}
+	
+	// Skip src struct:
+	br_skip(br, bon_struct_payload_size(srcStruct));
+	
+	return BON_TRUE; // All keys read
+}
+
+
+/*
+ from and to aggregate (i.e. structs and array)
+ */
+bon_bool translate_aggregate(bon_r_doc* B,
+									  const bon_type* srcType, bon_reader* br,
+									  const bon_type* dstType, bon_writer* bw)
+{
+	if (bon_type_eq(srcType, dstType))
+	{
+		// Optimization
+		
+		bon_size size = bon_aggregate_payload_size(dstType);
+		if (br->nbytes != size || bw->nbytes < size) {
+			return BON_FALSE;
+		}
+		
+		memcpy(bw->data, br->data, size);
+		bw_skip(bw, size);
+		br_skip(br, size);
+		return BON_TRUE;
+	}
+	
+	if (dstType->id == BON_TYPE_ARRAY &&
+		 srcType->id == BON_TYPE_ARRAY)
+	{
+		return translate_array(B,
+									  srcType->u.array, br,
+									  dstType->u.array, bw);
+	}
+	
+	if (dstType->id == BON_TYPE_STRUCT &&
+		 srcType->id == BON_TYPE_STRUCT)
+	{
+		return translate_struct(B,
+										srcType->u.strct, br,
+										dstType->u.strct, bw);
+		
+	}
+	
+	switch (srcType->id) {
+		case BON_TYPE_SINT8:
+		case BON_TYPE_SINT16_LE:  case BON_TYPE_SINT16_BE:
+		case BON_TYPE_SINT32_LE:  case BON_TYPE_SINT32_BE:
+		case BON_TYPE_SINT64_LE:  case BON_TYPE_SINT64_BE: {
+			return bw_write_sint_as(bw, br_read_sint64(br, srcType->id), dstType->id);
+		}
+			
+		case BON_TYPE_UINT8:
+		case BON_TYPE_UINT16_LE:  case BON_TYPE_UINT16_BE:
+		case BON_TYPE_UINT32_LE:  case BON_TYPE_UINT32_BE:
+		case BON_TYPE_UINT64_LE:  case BON_TYPE_UINT64_BE: {
+			return bw_write_uint_as(bw, br_read_uint64(br, srcType->id), dstType->id);
+		}
+			
+		case BON_TYPE_FLOAT32_LE:  case BON_TYPE_FLOAT32_BE:
+		case BON_TYPE_FLOAT64_LE:  case BON_TYPE_FLOAT64_BE: {
+			return bw_write_double_as(bw, br_read_double(br, srcType->id), dstType->id);
+		}
+			
+			
+		default:
+			fprintf(stderr, "translate_aggregate: unknown type\n");
+			return BON_FALSE;
+	}
+}
+	
+	
+	bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
+										const bon_type* dstType, bon_writer* bw)
+	{
+		switch (srcVal->type)
+		{
+			case BON_VALUE_NIL:
+				fprintf(stderr, "bon_r_aggr_read: nil\n");
+				return BON_FALSE; // There is no null-able type
+				
+				
+			case BON_VALUE_BOOL:
+				if (dstType->id!=BON_TYPE_BOOL) {
+					fprintf(stderr, "bon_r_aggr_read: bool err\n");
+					return BON_FALSE;
+				}
+				return bw_write_uint8( bw, srcVal->u.boolean ? BON_TRUE : BON_FALSE );
+				
+				
+			case BON_VALUE_UINT64:
+				return bw_write_uint_as( bw, srcVal->u.u64, dstType->id );
+				
+				
+			case BON_VALUE_SINT64: {
+				return bw_write_sint_as( bw, srcVal->u.s64, dstType->id );
+				
+				
+			case BON_VALUE_DOUBLE:
+				return bw_write_double_as( bw, srcVal->u.dbl, dstType->id );
+				
+				
+			case BON_VALUE_STRING:
+				if (dstType->id != BON_TYPE_STRING) {
+					return BON_FALSE;
+				}
+				if (bw->nbytes != sizeof(const char*)) {
+					return BON_FALSE;
+				}
+				*(const char**)bw->data  = (const char*)srcVal->u.str.ptr;
+				return bw_skip(bw, sizeof(const char*));
+				
+				
+			case BON_VALUE_LIST: {
+				fprintf(stderr, "Cannot auto-convert to list\n");
+				return BON_FALSE;
+			}
+				
+			case BON_VALUE_AGGREGATE: {
+				const bon_value_agg* agg = &srcVal->u.agg;
+				bon_size byteSize = bon_aggregate_payload_size(&agg->type);
+				bon_reader br = { agg->data, byteSize, 0, B, BON_BAD_BLOCK_ID };
+				bon_bool win = translate_aggregate(B, &agg->type, &br, dstType, bw);
+				return win && br.error==0;
+			}
+				
+				
+			case BON_VALUE_OBJ: {
+				if (dstType->id != BON_TYPE_STRUCT) {
+					return BON_FALSE;
+				}
+				
+				// For every dst key, find that in src:
+				const bon_type_struct* strct = dstType->u.strct;
+				for (bon_size ki=0; ki<strct->size; ++ki) {
+					bon_kt* kt = strct->kts + ki;
+					const char* key  =  kt->key;
+					bon_value*  val  =  bon_r_get_key(B, srcVal, key);
+					
+					if (val == NULL) {
+						fprintf(stderr, "Failed to find key in src: \"%s\"\n", key);
+						return BON_FALSE;
+					}
+					
+					const bon_type* kv_type = &kt->type;
+					
+					bon_size nByteInVal = bon_aggregate_payload_size(kv_type);
+					if (bw->nbytes < nByteInVal) {
+						return BON_FALSE;
+					}
+					bw_read_aggregate(B, val, kv_type, bw);
+				}
+				
+				return bw->nbytes == 0; // There should be none left
+			}
+				
+				
+			case BON_VALUE_BLOCK_REF: {
+				bon_value* val = bon_r_get_block(B, srcVal->u.blockRefId );
+				if (val) {
+					return bw_read_aggregate(B, val, dstType, bw);
+				} else {
+					fprintf(stderr, "Missing block, id %"PRIu64 "\n", srcVal->u.blockRefId );
+					return BON_FALSE;
+				}
+			}
 		}
 	}
 }

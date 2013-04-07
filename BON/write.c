@@ -19,46 +19,6 @@
 //------------------------------------------------------------------------------
 
 
-uint64_t bon_type_size(bon_type_id t)
-{
-	switch (t)
-	{
-		case BON_TYPE_SINT8:
-		case BON_TYPE_UINT8:
-			return 1;
-			
-		case BON_TYPE_SINT16_LE:
-		case BON_TYPE_SINT16_BE:
-		case BON_TYPE_UINT16_LE:
-		case BON_TYPE_UINT16_BE:
-			return 2;
-			
-		case BON_TYPE_SINT32_LE:
-		case BON_TYPE_SINT32_BE:
-		case BON_TYPE_UINT32_LE:
-		case BON_TYPE_UINT32_BE:
-		case BON_TYPE_FLOAT32_LE:
-		case BON_TYPE_FLOAT32_BE:
-			return 4;
-			
-		case BON_TYPE_SINT64_LE:
-		case BON_TYPE_SINT64_BE:
-		case BON_TYPE_UINT64_LE:
-		case BON_TYPE_UINT64_BE:
-		case BON_TYPE_FLOAT64_LE:
-		case BON_TYPE_FLOAT64_BE:
-			return 8;
-			
-		default:
-			fprintf(stderr, "BON: bad type in 'bon_type_size'\n");
-			return 0;
-	}
-}
-
-
-//------------------------------------------------------------------------------
-
-
 bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes) {
 	bon_byte_vec* vec = (bon_byte_vec*)userData;
 	bon_size oldSize = vec->size;

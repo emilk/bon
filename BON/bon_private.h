@@ -227,10 +227,13 @@ void onError(const char* msg);
 
 bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap);
 
-void bon_free_type_insides(bon_type* t);
+bon_size  bon_aggregate_payload_size(const bon_type* type);
+bon_size  bon_struct_payload_size(const bon_type_struct* strct);
+
+void      bon_free_type_insides(bon_type* t);
 
 // Byte size of atomic types
-uint64_t bon_type_size(bon_type_id t);
+uint64_t  bon_type_size(bon_type_id t);
 
 // Returns NULL on fail
 bon_value* bon_r_get_block(bon_r_doc* B, bon_block_id block_id);

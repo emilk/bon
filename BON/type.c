@@ -240,6 +240,15 @@ bon_type* bon_new_type_fmt(const char* fmt, ...)
 	return type;
 }
 
+bon_size bon_struct_payload_size(const bon_type_struct* strct)
+{
+	bon_size sum = 0;
+	for (bon_size i=0; i<strct->size; ++i) {
+		sum += bon_aggregate_payload_size( &strct->kts[i].type );
+	}
+	return sum;
+}
+
 /* the size of the payload. */
 bon_size bon_aggregate_payload_size(const bon_type* type)
 {
@@ -249,12 +258,7 @@ bon_size bon_aggregate_payload_size(const bon_type* type)
 			bon_aggregate_payload_size(type->u.array->type);
 			
 		case BON_TYPE_STRUCT: {
-			bon_size sum = 0;
-			bon_type_struct* strct = type->u.strct;
-			for (bon_size i=0; i<strct->size; ++i) {
-				sum += bon_aggregate_payload_size( &strct->kts[i].type );
-			}
-			return sum;
+			return bon_struct_payload_size(type->u.strct);
 		}
 			
 		default:
@@ -287,3 +291,38 @@ bon_bool bon_type_eq(const bon_type* a, const bon_type* b)
 
 //------------------------------------------------------------------------------
 
+uint64_t bon_type_size(bon_type_id t)
+{
+	switch (t)
+	{
+		case BON_TYPE_SINT8:
+		case BON_TYPE_UINT8:
+			return 1;
+			
+		case BON_TYPE_SINT16_LE:
+		case BON_TYPE_SINT16_BE:
+		case BON_TYPE_UINT16_LE:
+		case BON_TYPE_UINT16_BE:
+			return 2;
+			
+		case BON_TYPE_SINT32_LE:
+		case BON_TYPE_SINT32_BE:
+		case BON_TYPE_UINT32_LE:
+		case BON_TYPE_UINT32_BE:
+		case BON_TYPE_FLOAT32_LE:
+		case BON_TYPE_FLOAT32_BE:
+			return 4;
+			
+		case BON_TYPE_SINT64_LE:
+		case BON_TYPE_SINT64_BE:
+		case BON_TYPE_UINT64_LE:
+		case BON_TYPE_UINT64_BE:
+		case BON_TYPE_FLOAT64_LE:
+		case BON_TYPE_FLOAT64_BE:
+			return 8;
+			
+		default:
+			fprintf(stderr, "BON: bad type in 'bon_type_size'\n");
+			return 0;
+	}
+}
