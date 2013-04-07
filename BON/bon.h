@@ -77,51 +77,13 @@ const char* bon_err_str(bon_error err);
 //------------------------------------------------------------------------------
 
 
-/* A code byte is divided into several ranges of values.
- This enum specifies those ranges.
- */
 typedef enum {
-	BON_SHORT_POS_INT_START     = 0,
-	BON_SHORT_POS_INT_COUNT     = 32,
-	
-	BON_SHORT_STRING_START      = 32,
-	BON_SHORT_STRING_COUNT      = 32,
-	
-	BON_SHORT_CODES_START       = 64,  // Control codes - see bon_ctrl
-	BON_SHORT_CODES_COUNT       = 64,
-	
-	BON_SHORT_BLOCK_START       = 128,
-	BON_SHORT_BLOCK_COUNT       = 64,
-	BON_SHORT_BLOCK_END         = BON_SHORT_BLOCK_START + BON_SHORT_BLOCK_COUNT,
-	
-	BON_SHORT_ARRAY_START       = BON_SHORT_BLOCK_END,
-	BON_SHORT_ARRAY_COUNT       = 16,
-	
-	BON_SHORT_BYTE_ARRAY_START  = BON_SHORT_ARRAY_START + BON_SHORT_ARRAY_COUNT,
-	BON_SHORT_BYTE_ARRAY_COUNT  = 16,
-	
-	BON_SHORT_STRUCT_START      = BON_SHORT_BYTE_ARRAY_START + BON_SHORT_BYTE_ARRAY_COUNT,
-	BON_SHORT_STRUCT_COUNT      = 16,
-	
-	BON_SHORT_NEG_INT_START     = BON_SHORT_STRUCT_START + BON_SHORT_STRUCT_COUNT,
-	BON_SHORT_NEG_INT_COUNT     = 16,
-	
-	BON_SHORT_AGGREGATES_START  = BON_SHORT_ARRAY_START
-} bon_compressed_ranges;
+	BON_FLAG_DEFAULT      =  0,
+	BON_FLAG_NO_COMPRESS  =  1 << 0  // Turn off compression of small integers, string, arrays etc
+} bon_flags;
 
-#ifdef DEBUG
-#  define BON_COMPRESS_(start, count, n)  (assert(n < count), (uint8_t)((start) + n))
-#else
-#  define BON_COMPRESS_(start, count, n)  (uint8_t)((start) + n)
-#endif
 
-#define BON_COMPRESS(prefix, n)  BON_COMPRESS_(prefix ## START, prefix ## COUNT, n)
 
-#define BON_SHORT_STRING(n)       BON_COMPRESS(BON_SHORT_STRING_,       n)
-#define BON_SHORT_BLOCK(n)        BON_COMPRESS(BON_SHORT_BLOCK_,        n)
-#define BON_SHORT_ARRAY(n)        BON_COMPRESS(BON_SHORT_ARRAY_,        n)
-#define BON_SHORT_BYTE_ARRAY(n)   BON_COMPRESS(BON_SHORT_BYTE_ARRAY_,   n)
-#define BON_SHORT_STRUCT(n)       BON_COMPRESS(BON_SHORT_STRUCT_,       n)
 
 //------------------------------------------------------------------------------
 
@@ -180,18 +142,11 @@ typedef enum {
 
 
 //------------------------------------------------------------------------------
-/*
- The general type system.
- This is used for reading and writing.
- For writing, the user may spec up a type and write it.
- For reading, the user may spec up a type and ask BON to read it.
- For reading, the user may inquire BON about the type of the next value.
- */
 
 typedef enum {
 	BON_TYPE_BOOL, // target: bon_bool
 	BON_TYPE_STRING  = BON_CTRL_STRING_VLQ,  // target: const char*
-
+	
 	
 	//BON_TYPE_OBJECT  = BON_CTRL_OBJ_BEGIN,
 	//BON_TYPE_LIST    = BON_CTRL_LIST_BEGIN,
@@ -233,19 +188,15 @@ typedef enum {
 	BON_TYPE_FLOAT64  = BON_CTRL_FLOAT64
 } bon_type_id;
 
-
 //------------------------------------------------------------------------------
 
-
-typedef enum {
-	BON_FLAG_DEFAULT      =  0,
-	BON_FLAG_NO_COMPRESS  =  1 << 0  // Turn off compression of small integers, string, arrays etc
-} bon_flags;
-
-
-//------------------------------------------------------------------------------
-
-
+/*
+ The general type system.
+ This is used for reading and writing.
+ For writing, the user may spec up a type and write it.
+ For reading, the user may spec up a type and ask BON to read it.
+ For reading, the user may inquire BON about the type of the next value.
+ */
 typedef struct bon_type bon_type;
 
 
@@ -316,7 +267,15 @@ bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
 
 /*
  Low-level API for outputting BON in a serial fashion.
- The order you call these are very important.
+ You must take care to create a correct BON file. In particular:
+ 
+ Match  bon_w_begin_obj    with  bon_w_end_obj
+ Match  bon_w_begin_list   with  bon_w_end_list
+ Match  bon_w_begin_block  with  bon_w_end_block  (or use bon_w_block)
+ 
+ Make sure bon_w_block_ref references a block with a larger block_id.
+ 
+ Interleave keys and values inside of calls to bon_w_begin_obj bon_w_end_obj
  */
 
 
@@ -341,19 +300,19 @@ void         bon_w_close_doc  (bon_w_doc* B);
 void         bon_w_header     (bon_w_doc* B);  // Should be the first thing written, if written at all.
 void         bon_w_footer     (bon_w_doc* B);  // Should be the last thing written, if written at all.
 
-void         bon_w_block_ref    (bon_w_doc* B, uint64_t block_id);
-void         bon_w_begin_block  (bon_w_doc* B, uint64_t block_id);  // open-ended
+void         bon_w_begin_block  (bon_w_doc* B, bon_block_id block_id);  // open-ended
 void         bon_w_end_block    (bon_w_doc* B);
-void         bon_w_block        (bon_w_doc* B, uint64_t block_id, const void* data, bon_size nbytes);
+void         bon_w_block        (bon_w_doc* B, bon_block_id block_id, const void* data, bon_size nbytes);
 
 
 // The different types of values:
-void         bon_w_block_ref   (bon_w_doc* B, uint64_t block_id);
 void         bon_w_begin_obj   (bon_w_doc* B);
 void         bon_w_end_obj     (bon_w_doc* B);
 void         bon_w_key         (bon_w_doc* B, const char* utf8, bon_size nbytes);  // you must write a value right after this
 void         bon_w_begin_list  (bon_w_doc* B);
 void         bon_w_end_list    (bon_w_doc* B);
+
+void         bon_w_block_ref  (bon_w_doc* B, bon_block_id id);
 
 void         bon_w_nil        (bon_w_doc* B);
 void         bon_w_bool       (bon_w_doc* B, bon_bool val);

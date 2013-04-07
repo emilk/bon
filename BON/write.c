@@ -205,7 +205,7 @@ void bon_w_footer(bon_w_doc* B)
 {
 }
 
-void bon_w_block_ref(bon_w_doc* B, uint64_t block_id)
+void bon_w_block_ref(bon_w_doc* B, bon_block_id block_id)
 {
 	if ((B->flags & BON_FLAG_NO_COMPRESS) == 0 && block_id < BON_SHORT_BLOCK_COUNT) {
 		bon_w_raw_uint8(B, BON_SHORT_BLOCK(block_id));
@@ -215,14 +215,14 @@ void bon_w_block_ref(bon_w_doc* B, uint64_t block_id)
 	}
 }
 
-void bon_w_begin_block_sized(bon_w_doc* B, uint64_t block_id, bon_size nbytes)
+void bon_w_begin_block_sized(bon_w_doc* B, bon_block_id block_id, bon_size nbytes)
 {
 	bon_w_raw_uint8(B, BON_CTRL_BLOCK_BEGIN);
 	bon_w_vlq(B, block_id);
 	bon_w_vlq(B, nbytes);
 }
 
-void bon_w_begin_block(bon_w_doc* B, uint64_t block_id)
+void bon_w_begin_block(bon_w_doc* B, bon_block_id block_id)
 {
 	bon_w_begin_block_sized(B, block_id, 0);
 }
@@ -232,7 +232,7 @@ void bon_w_end_block(bon_w_doc* B)
 	bon_w_raw_uint8(B, BON_CTRL_BLOCK_END);
 }
 
-void bon_w_block(bon_w_doc* B, uint64_t block_id, const void* data, bon_size nbytes)
+void bon_w_block(bon_w_doc* B, bon_block_id block_id, const void* data, bon_size nbytes)
 {
 	bon_w_begin_block_sized(B, block_id, nbytes);
 	bon_w_raw(B, data, nbytes);

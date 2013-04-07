@@ -33,6 +33,58 @@ typedef enum {
 } bon_value_type;
 
 
+
+//------------------------------------------------------------------------------
+
+
+/* A code byte is divided into several ranges of values.
+ This enum specifies those ranges.
+ */
+typedef enum {
+	BON_SHORT_POS_INT_START     = 0,
+	BON_SHORT_POS_INT_COUNT     = 32,
+	
+	BON_SHORT_STRING_START      = 32,
+	BON_SHORT_STRING_COUNT      = 32,
+	
+	BON_SHORT_CODES_START       = 64,  // Control codes - see bon_ctrl
+	BON_SHORT_CODES_COUNT       = 64,
+	
+	BON_SHORT_BLOCK_START       = 128,
+	BON_SHORT_BLOCK_COUNT       = 64,
+	BON_SHORT_BLOCK_END         = BON_SHORT_BLOCK_START + BON_SHORT_BLOCK_COUNT,
+	
+	BON_SHORT_ARRAY_START       = BON_SHORT_BLOCK_END,
+	BON_SHORT_ARRAY_COUNT       = 16,
+	
+	BON_SHORT_BYTE_ARRAY_START  = BON_SHORT_ARRAY_START + BON_SHORT_ARRAY_COUNT,
+	BON_SHORT_BYTE_ARRAY_COUNT  = 16,
+	
+	BON_SHORT_STRUCT_START      = BON_SHORT_BYTE_ARRAY_START + BON_SHORT_BYTE_ARRAY_COUNT,
+	BON_SHORT_STRUCT_COUNT      = 16,
+	
+	BON_SHORT_NEG_INT_START     = BON_SHORT_STRUCT_START + BON_SHORT_STRUCT_COUNT,
+	BON_SHORT_NEG_INT_COUNT     = 16,
+	
+	BON_SHORT_AGGREGATES_START  = BON_SHORT_ARRAY_START
+} bon_compressed_ranges;
+
+#ifdef DEBUG
+#  define BON_COMPRESS_(start, count, n)  (assert(n < count), (uint8_t)((start) + n))
+#else
+#  define BON_COMPRESS_(start, count, n)  (uint8_t)((start) + n)
+#endif
+
+#define BON_COMPRESS(prefix, n)  BON_COMPRESS_(prefix ## START, prefix ## COUNT, n)
+
+#define BON_SHORT_STRING(n)       BON_COMPRESS(BON_SHORT_STRING_,       n)
+#define BON_SHORT_BLOCK(n)        BON_COMPRESS(BON_SHORT_BLOCK_,        n)
+#define BON_SHORT_ARRAY(n)        BON_COMPRESS(BON_SHORT_ARRAY_,        n)
+#define BON_SHORT_BYTE_ARRAY(n)   BON_COMPRESS(BON_SHORT_BYTE_ARRAY_,   n)
+#define BON_SHORT_STRUCT(n)       BON_COMPRESS(BON_SHORT_STRUCT_,       n)
+
+
+
 //------------------------------------------------------------------------------
 // bon_type etc
 

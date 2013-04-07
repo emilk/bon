@@ -56,6 +56,31 @@ bon_bool bon_is_uint(uint8_t ctrl)
 	}
 }
 
+bon_bool bon_is_int(uint8_t ctrl)
+{
+	switch (ctrl) {
+		case BON_CTRL_SINT8:
+		case BON_CTRL_SINT16_LE:
+		case BON_CTRL_SINT16_BE:
+		case BON_CTRL_SINT32_LE:
+		case BON_CTRL_SINT32_BE:
+		case BON_CTRL_SINT64_LE:
+		case BON_CTRL_SINT64_BE:
+			
+		case BON_CTRL_UINT8:
+		case BON_CTRL_UINT16_LE:
+		case BON_CTRL_UINT16_BE:
+		case BON_CTRL_UINT32_LE:
+		case BON_CTRL_UINT32_BE:
+		case BON_CTRL_UINT64_LE:
+		case BON_CTRL_UINT64_BE:
+			return BON_TRUE;
+			
+		default:
+			return BON_FALSE;
+	}
+}
+
 bon_bool bon_is_float_double(uint8_t ctrl)
 {
 	switch (ctrl) {
@@ -1515,6 +1540,19 @@ bon_bool bw_write_raw(bon_writer* bw, const void* in, size_t n) {
 	}
 }
 
+// Write bytes in reversed order (i.e. reverse endian)
+bon_bool bw_write_raw_reversed(bon_writer* bw, const void* in, size_t n) {
+	if (bw->nbytes >= n) {
+		memcpy(bw->data, in, n);
+		bw->data   += n;
+		bw->nbytes -= n;
+		return BON_TRUE;
+	} else {
+		bw_set_err(bw, BON_ERR_TOO_SHORT);
+		return BON_FALSE;
+	}
+}
+
 bon_bool bw_write_uint8(bon_writer* bw, uint8_t val) {
 	return bw_write_raw(bw, &val, 1);
 }
@@ -1542,14 +1580,14 @@ bon_bool bw_write_uint_as_uint8(bon_writer* bw, uint64_t val) {
 }
 
 typedef enum {
-	SIGNED,
-	UNSIGNED
-} Signness;
-
-typedef enum {
 	LE,
 	BE
 } Endian;
+
+typedef enum {
+	SIGNED,
+	UNSIGNED
+} Signness;
 
 bon_bool bw_write_uint_bytes(bon_writer* bw, uint64_t val, bon_size nBytes,
 									  Signness signness, Endian endian)
@@ -1563,8 +1601,12 @@ bon_bool bw_write_uint_bytes(bon_writer* bw, uint64_t val, bon_size nBytes,
 		}
 		
 		if (val != 0) {
-			fprintf(stderr, "Value did not fit into destination");
-			return BON_FALSE; // FIXME: Is this an error?
+			if (signness == UNSIGNED) {
+				fprintf(stderr, "WARNING: Value did not fit into destination");
+				return BON_FALSE;
+			} else {
+				// These should be a lot of 0xff left
+			}
 		}
 		
 		return BON_TRUE;
@@ -1617,28 +1659,59 @@ bon_bool bw_write_sint_as(bon_writer* bw, int64_t val, bon_type_id type)
 		return bw_write_uint_as(bw, (uint64_t)val, type);
 	}
 	
-	// TODO: all sint -> foo conversions
-	
-	return BON_FALSE;
+	switch (type) {
+		case BON_TYPE_SINT8:      return bw_write_uint_bytes(bw, (uint64_t)val, 1, SIGNED,    LE);
+			
+		case BON_TYPE_SINT16_LE:  return bw_write_uint_bytes(bw, (uint64_t)val, 2, SIGNED,    LE);
+		case BON_TYPE_SINT16_BE:  return bw_write_uint_bytes(bw, (uint64_t)val, 2, SIGNED,    BE);
+			
+		case BON_TYPE_SINT32_LE:  return bw_write_uint_bytes(bw, (uint64_t)val, 4, SIGNED,    LE);
+		case BON_TYPE_SINT32_BE:  return bw_write_uint_bytes(bw, (uint64_t)val, 4, SIGNED,    BE);
+			
+		case BON_TYPE_SINT64_LE:  return bw_write_uint_bytes(bw, (uint64_t)val, 8, SIGNED,    LE);
+		case BON_TYPE_SINT64_BE:  return bw_write_uint_bytes(bw, (uint64_t)val, 8, SIGNED,    BE);
+			
+		case BON_TYPE_FLOAT32_LE: case BON_TYPE_FLOAT32_BE:
+		case BON_TYPE_FLOAT64_LE: case BON_TYPE_FLOAT64_BE:
+			return bw_write_double_as(bw, (double)val, type);
+			
+		default:
+			// Probably an unsigned destination (or a bool, string, ...)
+			return BON_FALSE;
+	}
 }
 
 bon_bool bw_write_double_as(bon_writer* bw, double val, bon_type_id type)
 {
-	switch (type) {
-		case BON_TYPE_FLOAT32: {
-			float f = (float)val;
-			return bw_write_raw(bw, &f, sizeof(f));
-		}
-			
-		case BON_TYPE_FLOAT64: {
-			return bw_write_raw(bw, &val, sizeof(val));
-		}
-			
-		// TODO: all double -> foo conversions
-			
-		default:
-			return BON_FALSE;
+	if (bon_is_int(type)) {
+		return bw_write_sint_as(bw, (int64_t)val, type);
 	}
+	
+	if (type == BON_TYPE_FLOAT32) {
+		float f = (float)val;
+		return bw_write_raw(bw, &f, sizeof(f));
+	}
+	
+	if (type == BON_TYPE_FLOAT64){
+		return bw_write_raw(bw, &val, sizeof(val));
+	}
+	
+	if (type == BON_TYPE_FLOAT32_LE ||
+		 type == BON_TYPE_FLOAT32_BE)
+	{
+		// non-native endian:
+		float f = (float)val;
+		return bw_write_raw_reversed(bw, &f, sizeof(f));
+	}
+	
+	if (type == BON_TYPE_FLOAT64_LE ||
+		 type == BON_TYPE_FLOAT64_BE)
+	{
+		// non-native endian:
+		return bw_write_raw_reversed(bw, &val, sizeof(val));
+	}
+	
+	return BON_FALSE;
 }
 
 
@@ -1788,102 +1861,102 @@ bon_bool translate_aggregate(bon_r_doc* B,
 			return BON_FALSE;
 	}
 }
-	
-	
-	bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
-										const bon_type* dstType, bon_writer* bw)
+
+
+bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
+									const bon_type* dstType, bon_writer* bw)
+{
+	switch (srcVal->type)
 	{
-		switch (srcVal->type)
-		{
-			case BON_VALUE_NIL:
-				fprintf(stderr, "bon_r_aggr_read: nil\n");
-				return BON_FALSE; // There is no null-able type
-				
-				
-			case BON_VALUE_BOOL:
-				if (dstType->id!=BON_TYPE_BOOL) {
-					fprintf(stderr, "bon_r_aggr_read: bool err\n");
-					return BON_FALSE;
-				}
-				return bw_write_uint8( bw, srcVal->u.boolean ? BON_TRUE : BON_FALSE );
-				
-				
-			case BON_VALUE_UINT64:
-				return bw_write_uint_as( bw, srcVal->u.u64, dstType->id );
-				
-				
-			case BON_VALUE_SINT64: {
-				return bw_write_sint_as( bw, srcVal->u.s64, dstType->id );
-				
-				
-			case BON_VALUE_DOUBLE:
-				return bw_write_double_as( bw, srcVal->u.dbl, dstType->id );
-				
-				
-			case BON_VALUE_STRING:
-				if (dstType->id != BON_TYPE_STRING) {
-					return BON_FALSE;
-				}
-				if (bw->nbytes != sizeof(const char*)) {
-					return BON_FALSE;
-				}
-				*(const char**)bw->data  = (const char*)srcVal->u.str.ptr;
-				return bw_skip(bw, sizeof(const char*));
-				
-				
-			case BON_VALUE_LIST: {
-				fprintf(stderr, "Cannot auto-convert to list\n");
+		case BON_VALUE_NIL:
+			fprintf(stderr, "bon_r_aggr_read: nil\n");
+			return BON_FALSE; // There is no null-able type
+			
+			
+		case BON_VALUE_BOOL:
+			if (dstType->id!=BON_TYPE_BOOL) {
+				fprintf(stderr, "bon_r_aggr_read: bool err\n");
 				return BON_FALSE;
 			}
-				
-			case BON_VALUE_AGGREGATE: {
-				const bon_value_agg* agg = &srcVal->u.agg;
-				bon_size byteSize = bon_aggregate_payload_size(&agg->type);
-				bon_reader br = { agg->data, byteSize, 0, B, BON_BAD_BLOCK_ID };
-				bon_bool win = translate_aggregate(B, &agg->type, &br, dstType, bw);
-				return win && br.error==0;
+			return bw_write_uint8( bw, srcVal->u.boolean ? BON_TRUE : BON_FALSE );
+			
+			
+		case BON_VALUE_UINT64:
+			return bw_write_uint_as( bw, srcVal->u.u64, dstType->id );
+			
+			
+		case BON_VALUE_SINT64: {
+			return bw_write_sint_as( bw, srcVal->u.s64, dstType->id );
+			
+			
+		case BON_VALUE_DOUBLE:
+			return bw_write_double_as( bw, srcVal->u.dbl, dstType->id );
+			
+			
+		case BON_VALUE_STRING:
+			if (dstType->id != BON_TYPE_STRING) {
+				return BON_FALSE;
 			}
+			if (bw->nbytes != sizeof(const char*)) {
+				return BON_FALSE;
+			}
+			*(const char**)bw->data  = (const char*)srcVal->u.str.ptr;
+			return bw_skip(bw, sizeof(const char*));
+			
+			
+		case BON_VALUE_LIST: {
+			fprintf(stderr, "Cannot auto-convert to list\n");
+			return BON_FALSE;
+		}
+			
+		case BON_VALUE_AGGREGATE: {
+			const bon_value_agg* agg = &srcVal->u.agg;
+			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
+			bon_reader br = { agg->data, byteSize, 0, B, BON_BAD_BLOCK_ID };
+			bon_bool win = translate_aggregate(B, &agg->type, &br, dstType, bw);
+			return win && br.error==0;
+		}
+			
+			
+		case BON_VALUE_OBJ: {
+			if (dstType->id != BON_TYPE_STRUCT) {
+				return BON_FALSE;
+			}
+			
+			// For every dst key, find that in src:
+			const bon_type_struct* strct = dstType->u.strct;
+			for (bon_size ki=0; ki<strct->size; ++ki) {
+				bon_kt* kt = strct->kts + ki;
+				const char* key  =  kt->key;
+				bon_value*  val  =  bon_r_get_key(B, srcVal, key);
 				
-				
-			case BON_VALUE_OBJ: {
-				if (dstType->id != BON_TYPE_STRUCT) {
+				if (val == NULL) {
+					fprintf(stderr, "Failed to find key in src: \"%s\"\n", key);
 					return BON_FALSE;
 				}
 				
-				// For every dst key, find that in src:
-				const bon_type_struct* strct = dstType->u.strct;
-				for (bon_size ki=0; ki<strct->size; ++ki) {
-					bon_kt* kt = strct->kts + ki;
-					const char* key  =  kt->key;
-					bon_value*  val  =  bon_r_get_key(B, srcVal, key);
-					
-					if (val == NULL) {
-						fprintf(stderr, "Failed to find key in src: \"%s\"\n", key);
-						return BON_FALSE;
-					}
-					
-					const bon_type* kv_type = &kt->type;
-					
-					bon_size nByteInVal = bon_aggregate_payload_size(kv_type);
-					if (bw->nbytes < nByteInVal) {
-						return BON_FALSE;
-					}
-					bw_read_aggregate(B, val, kv_type, bw);
-				}
+				const bon_type* kv_type = &kt->type;
 				
-				return bw->nbytes == 0; // There should be none left
-			}
-				
-				
-			case BON_VALUE_BLOCK_REF: {
-				bon_value* val = bon_r_get_block(B, srcVal->u.blockRefId );
-				if (val) {
-					return bw_read_aggregate(B, val, dstType, bw);
-				} else {
-					fprintf(stderr, "Missing block, id %"PRIu64 "\n", srcVal->u.blockRefId );
+				bon_size nByteInVal = bon_aggregate_payload_size(kv_type);
+				if (bw->nbytes < nByteInVal) {
 					return BON_FALSE;
 				}
+				bw_read_aggregate(B, val, kv_type, bw);
 			}
+			
+			return bw->nbytes == 0; // There should be none left
+		}
+			
+			
+		case BON_VALUE_BLOCK_REF: {
+			bon_value* val = bon_r_get_block(B, srcVal->u.blockRefId );
+			if (val) {
+				return bw_read_aggregate(B, val, dstType, bw);
+			} else {
+				fprintf(stderr, "Missing block, id %"PRIu64 "\n", srcVal->u.blockRefId );
+				return BON_FALSE;
+			}
+		}
 		}
 	}
 }

@@ -13,6 +13,7 @@
 
 extern "C" {
 #include "bon.h"
+#include "bon_private.h"
 }
 
 // File size (stat):
@@ -39,6 +40,8 @@ public:
 		
 		for (bon_size i=0; i<n; ++i) {
 			SCOPED_CAPTURE(" i: " << i);
+			SCOPED_CAPTURE("in: " << std::hex << (unsigned)m_ptr[m_ix + i]);
+			SCOPED_CAPTURE("v:  " << std::hex << (unsigned)data[i]);
 			REQUIRE( m_ptr[m_ix + i] == data[i] );
 		}
 		m_ix += n;
@@ -51,6 +54,8 @@ public:
 	void parse(uint8_t v) {
 		REQUIRE(m_ix < m_size);
 		SCOPED_CAPTURE("m_ix: " << m_ix);
+		SCOPED_CAPTURE("in: " << std::hex << (unsigned)m_ptr[m_ix]);
+		SCOPED_CAPTURE("v:  " << std::hex << (unsigned)v);
 		REQUIRE(m_ptr[m_ix] == v);
 		++m_ix;
 	}
@@ -471,7 +476,7 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 }
 
 
-TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
+TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 {
 	const int NVecs = 2;
 	
@@ -594,6 +599,128 @@ TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
 			  test_val_int(B, bon_r_list_elem(B, color, 1), 128);
 			  test_val_int(B, bon_r_list_elem(B, color, 2), 196);
 			  test_val_int(B, bon_r_list_elem(B, color, 3), 255);
+		  }
+		  );
+}
+
+
+
+
+TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON data" )
+{	
+	test(
+		  // Write
+		  [=](bon_w_doc* B) {
+			  int8_t    s8[]   =  { -8   };
+			  uint8_t   u8[]   =  { +8   };
+			  int16_t   s16[]  =  { -16  };
+			  uint16_t  u16[]  =  { +16  };
+			  int32_t   s32[]  =  { -32  };
+			  uint32_t  u32[]  =  { +32  };
+			  int64_t   s64[]  =  { -64  };
+			  uint64_t  u64[]  =  { +64  };
+			  float     fn[]   =  { -3.14f    };
+			  float     fp[]   =  { +3.14f    };
+			  double    dn[]   =  { -2.71828  };
+			  double    dp[]   =  { +2.71828  };
+			  
+			  bon_w_begin_obj( B );
+			  
+			  bon_w_key(B, "s8",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_SINT8,    s8,   sizeof(s8)   );
+			  bon_w_key(B, "u8",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_UINT8,    u8,   sizeof(u8)   );
+			  bon_w_key(B, "s16",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_SINT16,   s16,  sizeof(s16)  );
+			  bon_w_key(B, "u16",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_UINT16,   u16,  sizeof(u16)  );
+			  bon_w_key(B, "s64",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_SINT64,   s64,  sizeof(s64)  );
+			  bon_w_key(B, "u64",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_UINT64,   u64,  sizeof(u64)  );
+			  bon_w_key(B, "fn",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT32,  fn,   sizeof(fn)   );
+			  bon_w_key(B, "fp",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT32,  fp,   sizeof(fp)   );
+			  bon_w_key(B, "dn",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT64,  dn,   sizeof(dn)   );
+			  bon_w_key(B, "dp",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT64,  dp,   sizeof(dp)   );
+			  
+			  bon_w_end_obj( B );
+			  
+			  REQUIRE( bon_w_error(B) == BON_SUCCESS );
+		  },
+		  
+		  [=](Verifier& p) {
+			  p( BON_CTRL_OBJ_BEGIN );
+			  
+			  p( BON_SHORT_STRING(2), "s8",  0,  BON_SHORT_ARRAY(1), BON_CTRL_SINT8,    -8         );
+			  p( BON_SHORT_STRING(2), "u8",  0,  BON_SHORT_BYTE_ARRAY(1),               +8         );
+			  p( BON_SHORT_STRING(3), "s16", 0,  BON_SHORT_ARRAY(1), BON_CTRL_SINT16,  -16,  0xff  );
+			  p( BON_SHORT_STRING(3), "u16", 0,  BON_SHORT_ARRAY(1), BON_CTRL_UINT16,  +16,  0     );
+			  p( BON_SHORT_STRING(3), "s64", 0,  BON_SHORT_ARRAY(1), BON_CTRL_SINT64,  -64,  0xff, 0xff, 0xff,  0xff, 0xff, 0xff, 0xff  );
+			  p( BON_SHORT_STRING(3), "u64", 0,  BON_SHORT_ARRAY(1), BON_CTRL_UINT64,  +64,  0,    0,    0,     0,    0,    0,    0     );
+			  
+			  p( BON_SHORT_STRING(2), "fn",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT32,  -3.14f    );
+			  p( BON_SHORT_STRING(2), "fp",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT32,  +3.14f    );
+			  p( BON_SHORT_STRING(2), "dn",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT64,  -2.71828  );
+			  p( BON_SHORT_STRING(2), "dp",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT64,  +2.71828  );
+			  
+			  p( BON_CTRL_OBJ_END );
+		  },
+		  
+		  [=](bon_r_doc* B) {
+			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
+			  auto root = bon_r_root(B);
+			  REQUIRE( root );
+			  
+			  int8_t    s8[]   =  { 0 };
+			  uint64_t  u64[]  =  { 0 };
+			  float     f[]    =  { 0 };
+			  double    d[]    =  { 0 };
+			  
+			  // ------------------------------------------------
+			  // Converting to s8
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( *s8 == -8 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( *s8 == +16 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s64"), s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( *s8 == -64 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fn"),  s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( *s8 == -3 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dp"),  s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( *s8 == +2 );
+			  
+			  // ------------------------------------------------
+			  // Converting to u64
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u8"),  u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( *u64 == +8 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( *u64 == +16 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u64"), u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( *u64 == +64 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fp"),  u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( *u64 == +3 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dp"),  u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( *u64 == +2 );
+			  
+			  // ------------------------------------------------
+			  // Converting to float 32
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  f, sizeof(f), "[1f]") );
+			  REQUIRE( *f == -8 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), f, sizeof(f), "[1f]") );
+			  REQUIRE( *f == +16 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s64"), f, sizeof(f), "[1f]") );
+			  REQUIRE( *f == -64 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fp"),  f, sizeof(f), "[1f]") );
+			  REQUIRE( *f == +3.14f );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dn"),  f, sizeof(f), "[1f]") );
+			  REQUIRE( *f == -2.71828f );
+			  
+			  // ------------------------------------------------
+			  // Converting to double 64
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  d, sizeof(d), "[1d]") );
+			  REQUIRE( *d == -8 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), d, sizeof(d), "[1d]") );
+			  REQUIRE( *d == +16 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s64"), d, sizeof(d), "[1d]") );
+			  REQUIRE( *d == -64 );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fp"),  d, sizeof(d), "[1d]") );
+			  REQUIRE( *d == +3.14f );
+			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dn"),  d, sizeof(d), "[1d]") );
+			  REQUIRE( *d == -2.71828 );
 		  }
 		  );
 }
