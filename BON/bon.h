@@ -333,25 +333,25 @@ void         bon_w_set_error(bon_w_doc* B, bon_error err);
 bon_error    bon_w_error(bon_w_doc* B);
 
 // Top level structure
-bon_w_doc*   bon_w_new_doc                     (bon_w_writer_t, void* userData, bon_flags flags);
-void         bon_w_flush                       (bon_w_doc* B); 
-void         bon_w_close_doc                   (bon_w_doc* B);
-void         bon_w_header                (bon_w_doc* B);  // Should be the first thing written, if written at all.
-void         bon_w_footer                (bon_w_doc* B);  // Should be the last thing written, if written at all.
+bon_w_doc*   bon_w_new_doc    (bon_w_writer_t, void* userData, bon_flags flags);
+void         bon_w_flush      (bon_w_doc* B); 
+void         bon_w_close_doc  (bon_w_doc* B);
+void         bon_w_header     (bon_w_doc* B);  // Should be the first thing written, if written at all.
+void         bon_w_footer     (bon_w_doc* B);  // Should be the last thing written, if written at all.
 
-void         bon_w_block_ref(bon_w_doc* B, uint64_t block_id);
-void         bon_w_begin_block(bon_w_doc* B, uint64_t block_id);  // open-ended
-void         bon_w_end_block(bon_w_doc* B);
-void         bon_w_block                 (bon_w_doc* B, uint64_t block_id, const void* data, bon_size nbytes);
+void         bon_w_block_ref    (bon_w_doc* B, uint64_t block_id);
+void         bon_w_begin_block  (bon_w_doc* B, uint64_t block_id);  // open-ended
+void         bon_w_end_block    (bon_w_doc* B);
+void         bon_w_block        (bon_w_doc* B, uint64_t block_id, const void* data, bon_size nbytes);
 
 
 // The different types of values:
-void         bon_w_block_ref  (bon_w_doc* B, uint64_t block_id);
-void         bon_w_begin_obj        (bon_w_doc* B);
-void         bon_w_end_obj          (bon_w_doc* B);
-void         bon_w_key              (bon_w_doc* B, const char* utf8, bon_size nbytes);  // you must write a value right after this
-void         bon_w_begin_list       (bon_w_doc* B);
-void         bon_w_end_list         (bon_w_doc* B);
+void         bon_w_block_ref   (bon_w_doc* B, uint64_t block_id);
+void         bon_w_begin_obj   (bon_w_doc* B);
+void         bon_w_end_obj     (bon_w_doc* B);
+void         bon_w_key         (bon_w_doc* B, const char* utf8, bon_size nbytes);  // you must write a value right after this
+void         bon_w_begin_list  (bon_w_doc* B);
+void         bon_w_end_list    (bon_w_doc* B);
 
 void         bon_w_nil        (bon_w_doc* B);
 void         bon_w_bool       (bon_w_doc* B, bon_bool val);
@@ -379,42 +379,18 @@ void         bon_w_array      (bon_w_doc* B, bon_size n_elem, bon_type_id type,
 // BON bon_reader API
 
 
-typedef enum {
-	BON_VALUE_NONE       = 0,
-	BON_VALUE_NIL        = BON_CTRL_NIL,
-	BON_VALUE_BOOL       = BON_TYPE_BOOL,
-	BON_VALUE_UINT64     = BON_TYPE_UINT64,
-	BON_VALUE_SINT64     = BON_TYPE_SINT64,
-	BON_VALUE_DOUBLE     = BON_TYPE_FLOAT64,
-	BON_VALUE_STRING     = BON_TYPE_STRING,
-	BON_VALUE_LIST       = BON_CTRL_LIST_BEGIN,
-	BON_VALUE_OBJ        = BON_CTRL_OBJ_BEGIN,
-	BON_VALUE_BLOCK_REF  = BON_CTRL_BLOCK_REF,
-	BON_VALUE_AGGREGATE  = 255, // Won't conflict with any of the aboe
-} bon_value_type;
-
-
 typedef struct bon_value      bon_value;
 typedef struct bon_r_doc      bon_r_doc;
 
 
 //------------------------------------------------------------------------------
-// TODO: make this section private:
-
-// Returns NULL on fail
-bon_value* bon_r_get_block(bon_r_doc* B, uint64_t block_id);
-
-bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
-
-
-//------------------------------------------------------------------------------
 // Public API:
 
-// Will parse a BON file.
-bon_r_doc*        bon_r_open  (const uint8_t* data, bon_size nbytes);
-void              bon_r_close (bon_r_doc* B);
+// Will parse a BON file. use bon_r_error to query success.
+bon_r_doc*  bon_r_open  (const uint8_t* data, bon_size nbytes);
+void        bon_r_close (bon_r_doc* B);
 bon_value*  bon_r_root  (bon_r_doc* B);
-bon_error         bon_r_error (bon_r_doc* B);
+bon_error   bon_r_error (bon_r_doc* B);
 
 
 //------------------------------------------------------------------------------
@@ -441,6 +417,22 @@ bon_bool  bon_r_is_list    (bon_r_doc* B, bon_value* val);
 
 bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
 
+
+// The logical type of a bon value.
+typedef enum {
+	BON_LOGICAL_ERROR,  // If the given value was NULL
+	BON_LOGICAL_NIL,
+	BON_LOGICAL_BOOL,
+	BON_LOGICAL_UINT,
+	BON_LOGICAL_SINT,
+	BON_LOGICAL_DOUBLE,
+	BON_LOGICAL_STRING,
+	BON_LOGICAL_LIST,
+	BON_LOGICAL_OBJECT
+} bon_logical_type;
+
+bon_logical_type  bon_r_value_type(bon_r_doc* B, bon_value* val);
+
 //------------------------------------------------------------------------------
 // Reading values.
 
@@ -458,8 +450,15 @@ bon_size     bon_r_strlen(bon_r_doc* B, bon_value* val);
 const char*  bon_r_cstr  (bon_r_doc* B, bon_value* val);
 
 // Returns 0 if it is not a list.
-bon_size          bon_r_list_size(bon_r_doc* B, bon_value* list);
+bon_size    bon_r_list_size(bon_r_doc* B, bon_value* list);
 bon_value*  bon_r_list_elem(bon_r_doc* B, bon_value* list, bon_size ix);
+
+// Number of keys-value pairs in an object
+bon_size     bon_r_obj_size(bon_r_doc* B, bon_value* val);
+
+// Return NULL if 'val' is not an object, or ix is out of range.
+const char*  bon_r_obj_key  (bon_r_doc* B, bon_value* val, bon_size ix);
+bon_value*   bon_r_obj_value(bon_r_doc* B, bon_value* val, bon_size ix);
 
 // Returns NULL if 'val' is not an object or does not have the given key.
 bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);

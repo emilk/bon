@@ -1042,6 +1042,39 @@ bon_bool bon_r_is_object(bon_r_doc* B, bon_value* val)
 	return BON_FALSE;
 }
 
+
+bon_logical_type  bon_r_value_type(bon_r_doc* B, bon_value* val)
+{
+	val = bon_r_follow_refs(B, val);
+	if (!val) { return BON_LOGICAL_ERROR; }
+	
+	switch (val->type)
+	{
+		case BON_VALUE_NIL:     { return BON_LOGICAL_NIL; }
+		case BON_VALUE_BOOL:    { return BON_LOGICAL_BOOL; }
+		case BON_VALUE_UINT64:  { return BON_LOGICAL_UINT; }
+		case BON_VALUE_SINT64:  { return BON_LOGICAL_SINT; }         
+		case BON_VALUE_DOUBLE:  { return BON_LOGICAL_DOUBLE; }
+		case BON_VALUE_STRING:  { return BON_LOGICAL_STRING; }
+		case BON_VALUE_LIST:    { return BON_LOGICAL_LIST; }
+		case BON_VALUE_OBJ:     { return BON_LOGICAL_OBJECT; }
+			
+		case BON_VALUE_AGGREGATE: {
+			if (bon_r_is_list(B, val)) {
+				return BON_LOGICAL_LIST;
+			} else if (bon_r_is_object(B, val)) {
+				return BON_LOGICAL_OBJECT;
+			} else {
+				return BON_LOGICAL_ERROR;
+			}
+		}
+			
+		default: {
+			return BON_LOGICAL_ERROR;
+		}
+	}
+}
+
 //------------------------------------------------------------------------------
 
 bon_bool bon_r_bool(bon_r_doc* B, bon_value* val)
@@ -1261,15 +1294,24 @@ bon_bool bon_explode_aggr_inplace(bon_r_doc* B, bon_value* val)
 }
 
 
-bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size ix)
+bon_value* follow_and_explode(bon_r_doc* B, bon_value* val)
 {
 	val = bon_r_follow_refs(B, val);
-	if (!val) { return 0; }
 	
-	if (val->type == BON_VALUE_AGGREGATE) {
-		// If the user treats it like a list, then convert it into one.
-		bon_explode_aggr_inplace(B, val);
+	if (val && val->type == BON_VALUE_AGGREGATE) {
+		// If the user treats it like an object, convert it into one.
+		if (!bon_explode_aggr_inplace(B, val)) {
+			return NULL;
+		}
 	}
+	
+	return val;
+}
+
+bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size ix)
+{
+	val = follow_and_explode(B, val);
+	if (!val) { return NULL; }
 	
 	if (val->type == BON_VALUE_LIST)
 	{
@@ -1283,20 +1325,67 @@ bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size ix)
 }
 
 
-bon_value* bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key)
+// Number of keys-value pairs in an object
+bon_size bon_r_obj_size(bon_r_doc* B, bon_value* val)
 {
 	val = bon_r_follow_refs(B, val);
+	if (!val) { return 0; }
 	
-	if (!val) {
+	switch (val->type) {
+		case BON_VALUE_OBJ:
+			return val->u.obj.kvs.size;
+			
+		case BON_VALUE_AGGREGATE: {
+			const bon_value_agg* agg = &val->u.agg;
+			if (agg->type.id == BON_TYPE_STRUCT) {
+				return agg->type.u.strct->size;
+			} else {
+				return 0;
+			}
+		}
+			
+		default:
+			return 0;
+	}
+}
+
+// Return NULL if 'val' is not an object, or ix is out of range.
+const char* bon_r_obj_key(bon_r_doc* B, bon_value* val, bon_size ix)
+{
+	val = follow_and_explode(B, val);
+	
+	if (!val || val->type != BON_VALUE_OBJ) {
 		return NULL;
 	}
 	
-	if (val->type == BON_VALUE_AGGREGATE) {
-		// If the user treats it like an object, convert it into one.
-		if (!bon_explode_aggr_inplace(B, val)) {
-			return NULL;
-		}
+	bon_kvs* kvs = &val->u.obj.kvs;
+	if (ix < kvs->size) {
+		return kvs->data[ix].key;
+	} else {
+		return NULL;
 	}
+}
+
+bon_value* bon_r_obj_value(bon_r_doc* B, bon_value* val, bon_size ix)
+{
+	val = follow_and_explode(B, val);
+	
+	if (!val || val->type != BON_VALUE_OBJ) {
+		return NULL;
+	}
+	
+	bon_kvs* kvs = &val->u.obj.kvs;
+	if (ix < kvs->size) {
+		return &kvs->data[ix].val;
+	} else {
+		return NULL;
+	}
+}
+
+
+bon_value* bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key)
+{
+	val = follow_and_explode(B, val);
 	
 	if (!val || val->type != BON_VALUE_OBJ) {
 		return NULL;

@@ -9,15 +9,10 @@
 #include <stdio.h>
 #include "jansson.h"
 #include "bon.h"
-#include "bon_private.h"
 
 // File size (stat):
 #include <sys/stat.h>
 #include <sys/types.h>
-
-// For printf:ing int64
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
 
 
 uint8_t* readFile(size_t* out_size, const char* path)
@@ -59,147 +54,56 @@ json_t* uint64_2_json(uint64_t u64)
 	}
 }
 
-json_t* agg2json(const bon_type* aggType, bon_reader* br)
+json_t* bon2json(bon_r_doc* B, bon_value* v)
 {
-	bon_type_id id = aggType->id;
-	
-	switch (id) {
-		case BON_TYPE_ARRAY: {
-			bon_type_array* arr = aggType->u.array;
-			json_t* jarray = json_array();
-			for (uint64_t ti=0; ti<arr->size; ++ti) {
-				json_t* elem = agg2json(arr->type, br);
-				json_array_append_new( jarray, elem );
-			}
-			return jarray;
-		}
-			
-		case BON_TYPE_STRUCT: {
-			bon_type_struct* strct = aggType->u.strct;
-			json_t* jobj = json_object();
-			for (uint64_t ti=0; ti<strct->size; ++ti) {
-				const char* key  = strct->keys[ti];
-				json_t*     elem = agg2json(strct->types[ti], br);
-				json_object_set_new( jobj, key, elem );
-			}
-			return jobj;
-		}
-			
-			
-		case BON_TYPE_SINT8:
-		case BON_TYPE_SINT16_LE:  case BON_TYPE_SINT16_BE:
-		case BON_TYPE_SINT32_LE:  case BON_TYPE_SINT32_BE:
-		case BON_TYPE_SINT64_LE:  case BON_TYPE_SINT64_BE: {
-			int64_t s64 = br_read_sint64(br, id);
-			return json_integer( s64 );
-		}
-			
-			
-		case BON_TYPE_UINT8:
-		case BON_TYPE_UINT16_LE:  case BON_TYPE_UINT16_BE:
-		case BON_TYPE_UINT32_LE:  case BON_TYPE_UINT32_BE:
-		case BON_TYPE_UINT64_LE:  case BON_TYPE_UINT64_BE: {
-			return uint64_2_json( br_read_uint64(br, id) );
-		}
-			
-			
-		case BON_TYPE_FLOAT32_LE:  case BON_TYPE_FLOAT32_BE:
-		case BON_TYPE_FLOAT64_LE:  case BON_TYPE_FLOAT64_BE: {
-			double dbl = br_read_double(br, id);
-			return json_real(dbl);
-		}
-			
-			
-		default: {
-			fprintf(stderr, "Unknown aggregate type\n");
-			return NULL;
-		}
-	}
-	
-}
-
-
-json_t* bon2json(bon_r_doc* bon, bon_value* v)
-{
-	switch (v->type)
+	switch (bon_r_value_type(B, v))
 	{
-		case BON_VALUE_NIL:
+		case BON_LOGICAL_NIL:
 			return json_null();
 			
-		case BON_VALUE_BOOL:
-			return json_boolean( v->u.boolean );
+		case BON_LOGICAL_BOOL:
+			return json_boolean( bon_r_bool(B, v) );
 			
 			
-		case BON_VALUE_UINT64:
-			return uint64_2_json( v->u.u64 );
+		case BON_LOGICAL_UINT:
+			return uint64_2_json( bon_r_uint(B, v) );
 			
 			
-		case BON_VALUE_SINT64:
-			return json_integer( v->u.s64 );
+		case BON_LOGICAL_SINT:
+			return json_integer( bon_r_int(B, v) );
 			
 			
-		case BON_VALUE_DOUBLE:
-			return json_real( v->u.dbl );
+		case BON_LOGICAL_DOUBLE:
+			return json_real( bon_r_double(B, v) );
 			
 			
-		case BON_VALUE_STRING:
-			return json_string( (const char*)v->u.str.ptr );
+		case BON_LOGICAL_STRING:
+			return json_string( bon_r_cstr(B, v) );
 			
 			
-		case BON_VALUE_LIST: {
+		case BON_LOGICAL_LIST: {
 			json_t* jarray = json_array();
-			const bon_value_list* vals = &v->u.list;
-			bon_size size = vals->size;
-			for (bon_size i=0; i<size; ++i) {
-				json_t* elem = bon2json( bon, &vals->data[i] );
+			bon_size size = bon_r_list_size(B, v);
+			for (bon_size ix=0; ix<size; ++ix) {
+				json_t* elem = bon2json( B, bon_r_list_elem(B, v, ix) );
 				json_array_append_new( jarray, elem );
 			}
 			return jarray;
 		}
 			
-			
-		case BON_VALUE_AGGREGATE: {
-			size_t byteSize = bon_aggregate_payload_size(&v->u.agg.type);
-			bon_reader br = { v->u.agg.data, byteSize, 0, 0 };
-			json_t* val = agg2json(&v->u.agg.type, &br);
-			if (br.nbytes != 0) {
-				// We should have consumed all bytes.
-				fprintf(stderr, "Bad aggregate\n");
-				return NULL;
-			}
-			return val;
-		}
-			
-			
-		case BON_VALUE_OBJ: {
+		case BON_LOGICAL_OBJECT: {
 			json_t* jobj = json_object();
 			
-			const bon_kvs* kvs = &v->u.obj.kvs;
-			bon_size size = kvs->size;
+			bon_size size = bon_r_obj_size(B, v);
 			
-			for (bon_size i=0; i<size; ++i) {
-				bon_kv* kv = &kvs->data[i];
-				if (kv->key.type != BON_VALUE_STRING) {
-					fprintf(stderr, "BON object has non-string key\n");
-					continue;
-				}
-				
-				json_t* val = bon2json( bon, &kv->val );
-				json_object_set_new(jobj, (const char*)kv->key.u.str.ptr, val);
+			for (bon_size ix=0; ix<size; ++ix) {
+				const char*  bkey = bon_r_obj_key(B, v, ix);
+				bon_value*   bval = bon_r_obj_value(B, v, ix);
+				json_t* val = bon2json(B, bval);
+				json_object_set_new(jobj, bkey, val);
 			}
 			
 			return jobj;
-		}
-			
-			
-		case BON_VALUE_BLOCK_REF: {
-			bon_value* val = bon_r_get_block( bon, v->u.blockRefId );
-			if (val) {
-				return bon2json(bon, val);
-			} else {
-				fprintf(stderr, "Missing block, id %"PRIu64, v->u.blockRefId );
-				return NULL;
-			}
 		}
 			
 		default:
@@ -213,8 +117,17 @@ bon_bool handle_file(const char* path, size_t flags, FILE* out)
 	size_t size;
 	const uint8_t* data = readFile(&size, path);
 	
-	bon_r_doc* bon = bon_r_open(data, size);	
-	json_t* json = bon2json(bon, bon_r_root(bon));
+	if (!data) { return BON_FALSE; }
+	
+	bon_r_doc* B = bon_r_open(data, size);
+	
+	if (bon_r_error(B)) {
+		fprintf(stderr, "Faield to parse BON file: %s\n", bon_err_str(bon_r_error(B)));
+		bon_r_close(B);
+		return BON_FALSE;
+	}
+	
+	json_t* json = bon2json(B, bon_r_root(B));
 	
 	if (json) {
 		if (json_dumpf(json, out, flags) != 0) {
@@ -230,7 +143,7 @@ bon_bool handle_file(const char* path, size_t flags, FILE* out)
 		return BON_FALSE;
 	}
 	
-	bon_r_close(bon);
+	bon_r_close(B);
 }
 
 int main(int argc, const char * argv[])

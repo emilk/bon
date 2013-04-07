@@ -120,7 +120,7 @@ bon_bool open_file(const char* path) {
 				const bon_value_obj* o = &dir->u.obj;
 				for (bon_size ki=0; ki<o->kvs.size; ++ki) {
 					bon_kv* kv = &o->kvs.data[ki];
-					bon_print(stdout, &kv->key, 0);
+					printf("%s", kv->key);
 					printf("              ");
 					print_summary(&kv->val);
 					printf("\n");

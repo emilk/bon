@@ -11,10 +11,26 @@
 
 /*
  This is NOT part of the public API.
- Only include this file if you whant to poke around the internals of BON!
+ Only include this file if you want to poke around the internals of BON!
  HERE BE DRAGONS
- */
+*/
 
+
+//------------------------------------------------------------------------------
+
+typedef enum {
+	BON_VALUE_NONE       = 0,
+	BON_VALUE_NIL        = BON_CTRL_NIL,
+	BON_VALUE_BOOL       = BON_TYPE_BOOL,
+	BON_VALUE_UINT64     = BON_TYPE_UINT64,
+	BON_VALUE_SINT64     = BON_TYPE_SINT64,
+	BON_VALUE_DOUBLE     = BON_TYPE_FLOAT64,
+	BON_VALUE_STRING     = BON_TYPE_STRING,
+	BON_VALUE_LIST       = BON_CTRL_LIST_BEGIN,
+	BON_VALUE_OBJ        = BON_CTRL_OBJ_BEGIN,
+	BON_VALUE_BLOCK_REF  = BON_CTRL_BLOCK_REF,
+	BON_VALUE_AGGREGATE  = 255, // Won't conflict with any of the aboe
+} bon_value_type;
 
 
 //------------------------------------------------------------------------------
@@ -208,6 +224,11 @@ bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap);
 
 // Byte size of atomic types
 uint64_t bon_type_size(bon_type_id t);
+
+// Returns NULL on fail
+bon_value* bon_r_get_block(bon_r_doc* B, uint64_t block_id);
+
+bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
 
 //------------------------------------------------------------------------------
 

@@ -304,7 +304,7 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 		  [=](bon_r_doc* B) {
 			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
 			  
-			  auto root = bon_r_get_block(B, 0);
+			  auto root = bon_r_root(B);
 			  REQUIRE( root );
 			  
 			  auto test_key_val = [&](string key, string val_str) {
@@ -392,7 +392,7 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 		  [=](bon_r_doc* B) {
 			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
 			  
-			  auto root = bon_r_get_block(B, 0);
+			  auto root = bon_r_root(B);
 			  REQUIRE( root );
 			  
 			  auto lists = read_key(B,  root, "lists" );
@@ -461,7 +461,7 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 		  
 		  [=](bon_r_doc* B) {
 			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
-			  auto root = bon_r_get_block(B, 0);
+			  auto root = bon_r_root(B);
 			  REQUIRE( root );
 			  
 			  test_key_int(B, root, "ref2", 12);
@@ -537,7 +537,7 @@ TEST_CASE( "BON/parse", "Wirting and parsing aggregates" )
 		  
 		  [=](bon_r_doc* B) {
 			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
-			  auto root = bon_r_get_block(B, 0);
+			  auto root = bon_r_root(B);
 			  REQUIRE( root );
 			  
 			  // ------------------------------------------------
