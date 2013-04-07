@@ -21,11 +21,10 @@
 
 void onError(const char* msg)
 {
-	// breakpoint here
 	fprintf(stderr, "BON error: %s\n", msg);
 	
 #ifdef DEBUG
-	__asm__("int $3\n" : : );  // break debugger
+	__asm__("int $3\n" : : );  // breakpoint
 #endif
 }
 
@@ -45,7 +44,7 @@ const char* bon_err_str(bon_error err)
 		"BON_ERR_WRITE_ERROR",
 		"BON_ERR_BAD_AGGREGATE_SIZE",
 		
-		"BON_ERR_BAD_CRC"
+		"BON_ERR_BAD_CRC",
 		"BON_ERR_TOO_SHORT",
 		"BON_ERR_BAD_HEADER",
 		"BON_ERR_BAD_FOOTER",

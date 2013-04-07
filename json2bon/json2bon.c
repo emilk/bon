@@ -184,10 +184,10 @@ bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
 	bon_w_header(B);	
 	bon_bool success = write_json(json, B);
 	bon_w_footer(B);
-	if (bon_w_error(B)) {
+	
+	if (bon_w_close_doc(B) != BON_SUCCESS) {
 		success = BON_FALSE;
 	}
-	bon_w_close_doc(B);
 	
 	return success;
 }

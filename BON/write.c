@@ -21,117 +21,6 @@
 //------------------------------------------------------------------------------
 
 
-uint16_t swap_endian_uint16(uint16_t us)
-{
-	return (uint16_t)( (us >> 8) | (us << 8) );
-}
-
-uint32_t swap_endian_uint32(uint32_t ui)
-{
-	ui = (ui >> 24) |
-	((ui<<8) & 0x00FF0000) |
-	((ui>>8) & 0x0000FF00) |
-	(ui << 24);
-	return ui;
-}
-
-uint64_t swap_endian_uint64(uint64_t ull)
-{
-	ull = (ull >> 56) |
-	((ull<<40) & 0x00FF000000000000ULL) |
-	((ull<<24) & 0x0000FF0000000000ULL) |
-	((ull<<8 ) & 0x000000FF00000000ULL) |
-	((ull>>8 ) & 0x00000000FF000000ULL) |
-	((ull>>24) & 0x0000000000FF0000ULL) |
-	((ull>>40) & 0x000000000000FF00ULL) |
-	(ull << 56);
-	return ull;
-}
-
-#if __LITTLE_ENDIAN__
-
-uint16_t uint16_to_le(uint16_t v) {
-	return v;
-}
-
-uint32_t uint32_to_le(uint32_t v) {
-	return v;
-}
-
-uint64_t uint64_to_le(uint64_t v) {
-	return v;
-}
-
-
-uint16_t le_to_uint16(uint16_t v) {
-	return v;
-}
-
-uint32_t le_to_uint32(uint32_t v) {
-	return v;
-}
-
-uint64_t le_to_uint64(uint64_t v) {
-	return v;
-}
-
-uint16_t be_to_uint16(uint16_t v) {
-	return swap_endian_uint16( v );
-}
-
-uint32_t be_to_uint32(uint32_t v) {
-	return swap_endian_uint32( v );
-}
-
-uint64_t be_to_uint64(uint64_t v) {
-	return swap_endian_uint64( v );
-}
-
-#else
-
-uint16_t uint16_to_le(uint16_t v) {
-	return swap_endian_uint16( v );
-}
-
-uint32_t uint32_to_le(uint32_t v) {
-	return swap_endian_uint32( v );
-}
-
-uint64_t uint64_to_le(uint64_t v) {
-	return swap_endian_uint64( v );
-}
-
-
-uint16_t le_to_uint16(uint16_t v) {
-	return swap_endian_uint16( v );
-}
-
-uint32_t le_to_uint32(uint32_t v) {
-	return swap_endian_uint32( v );
-}
-
-uint64_t le_to_uint64(uint64_t v) {
-	return swap_endian_uint64( v );
-}
-
-uint16_t be_to_uint16(uint16_t v) {
-	return v;
-}
-
-uint32_t be_to_uint32(uint32_t v) {
-	return v;
-}
-
-uint64_t be_to_uint64(uint64_t v) {
-	return v;
-}
-
-#endif
-
-
-//------------------------------------------------------------------------------
-
-
 bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes) {
 	bon_byte_vec* vec = (bon_byte_vec*)userData;
 	bon_size oldSize = vec->size;
@@ -346,14 +235,16 @@ bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_w_flags flag
 	return B;
 }
 
-void bon_w_close_doc(bon_w_doc* B)
+bon_error bon_w_close_doc(bon_w_doc* B)
 {
 	if ((B->flags & BON_W_FLAG_SKIP_HEADER_FOOTER) == 0) {
 		bon_w_footer(B);
 	}
 	bon_w_flush(B);
+	bon_error err = B->error;
 	free(B->buff);
 	free(B);
+	return err;
 }
 
 void bon_w_block_ref(bon_w_doc* B, bon_block_id block_id)

@@ -486,7 +486,7 @@ Words in capitals are control byte values (atoms). Explanations within bracketed
 	document		::= header doc_contents footer
 	header	  		::= BON0
 	footer	  		::= FOOTER
-					  | FOOTER_CRC crc-32 FOOTER_CRC
+					  | FOOTER_CRC crc32_le FOOTER_CRC
 	doc_contents	::= value
 					  | block_doc
 	block_doc		::= block_decl+

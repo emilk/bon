@@ -170,8 +170,7 @@ void test(Writer w, Verifyer v, Reader r)
 	{
 		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
 		w(B);
-		REQUIRE( bon_w_error(B) == BON_SUCCESS );
-		bon_w_close_doc( B );
+		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
 	}
 	
 	if (v)
@@ -192,6 +191,7 @@ void test(Writer w, Verifyer v, Reader r)
 		{
 			bon_r_doc* B = bon_r_open(vec.data, vec.size, BON_R_FLAG_DEFAULT);
 			r(B);
+			REQUIRE( bon_r_error(B) == BON_SUCCESS );
 			bon_r_close(B);
 		}
 	}
@@ -430,8 +430,7 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 	bon_w_key(block_1, "ref2", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 2);
 	bon_w_key(block_1, "ref1337", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 1337);
 	bon_w_end_obj(block_1);
-	REQUIRE( bon_w_error(block_1) == 0 );
-	bon_w_close_doc(block_1);
+	REQUIRE( bon_w_close_doc(block_1) == BON_SUCCESS );
 	
 	
 	
@@ -686,15 +685,15 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  //------------------------------------------------------------------------------
 			  // Converting to u64
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u8"),  u64, sizeof(u64), "[1u64]") );
-			  REQUIRE( *u64 == +8 );
+			  REQUIRE( (int)*u64 == +8 );
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), u64, sizeof(u64), "[1u64]") );
-			  REQUIRE( *u64 == +16 );
+			  REQUIRE( (int)*u64 == +16 );
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u64"), u64, sizeof(u64), "[1u64]") );
-			  REQUIRE( *u64 == +64 );
+			  REQUIRE( (int)*u64 == +64 );
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fp"),  u64, sizeof(u64), "[1u64]") );
-			  REQUIRE( *u64 == +3 );
+			  REQUIRE( (int)*u64 == +3 );
 			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dp"),  u64, sizeof(u64), "[1u64]") );
-			  REQUIRE( *u64 == +2 );
+			  REQUIRE( (int)*u64 == +2 );
 			  
 			  //------------------------------------------------------------------------------
 			  // Converting to float 32
@@ -770,3 +769,59 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 	);
 }
 
+
+TEST_CASE( "BON/crc/short/pass", "Test of CRC checking" )
+{
+	bon_byte_vec vec = {0,0,0};
+	
+	{
+		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_CRC);
+		bon_w_begin_obj(B);
+		bon_w_end_obj(B);
+		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+	}
+	
+	{
+		Verifier p(vec.data, vec.size);
+		p( "BON0", BON_CTRL_OBJ_BEGIN, BON_CTRL_OBJ_END );
+		p( BON_CTRL_FOOTER_CRC, 0x7E, 0xA2, 0x2E, 0x94, BON_CTRL_FOOTER_CRC);
+		REQUIRE(p.eof());
+	}
+	
+	{
+		bon_r_doc* B = bon_r_open(vec.data, vec.size, BON_R_FLAG_REQUIRE_CRC);
+		auto root = bon_r_root(B);
+		REQUIRE( root );
+		REQUIRE( bon_r_is_object(B, root) );
+		REQUIRE( bon_r_obj_size(B, root) == 0);
+		REQUIRE( bon_r_error(B) == BON_SUCCESS );
+		bon_r_close(B);
+	}
+}
+
+
+TEST_CASE( "BON/crc/short/fail", "Test of CRC checking" )
+{
+	bon_byte_vec vec = {0,0,0};
+	
+	{
+		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_CRC);
+		bon_w_begin_obj(B);
+		bon_w_end_obj(B);
+		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+	}
+	
+	{
+		Verifier p(vec.data, vec.size);
+		p( "BON0", BON_CTRL_OBJ_BEGIN, BON_CTRL_OBJ_END );
+		p( BON_CTRL_FOOTER_CRC, 0x7E, 0xA2, 0x2E, 0x94, BON_CTRL_FOOTER_CRC);
+		REQUIRE(p.eof());
+		vec.data[5] = 0; // Malicious tampering!
+	}
+	
+	{
+		bon_r_doc* B = bon_r_open(vec.data, vec.size, BON_R_FLAG_REQUIRE_CRC);
+		REQUIRE( bon_r_error(B) == BON_ERR_BAD_CRC );
+		bon_r_close(B);
+	}
+}

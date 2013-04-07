@@ -8,6 +8,7 @@
 
 #include "bon.h"
 #include "bon_private.h"
+#include "crc32.h"
 #include <assert.h>
 #include <stdarg.h>       // va_list, va_start, va_arg, va_end
 #include <stdlib.h>       // malloc, free etc
@@ -18,6 +19,117 @@
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
+
+
+//------------------------------------------------------------------------------
+
+
+uint16_t swap_endian_uint16(uint16_t us)
+{
+	return (uint16_t)( (us >> 8) | (us << 8) );
+}
+
+uint32_t swap_endian_uint32(uint32_t ui)
+{
+	ui = (ui >> 24) |
+	((ui<<8) & 0x00FF0000) |
+	((ui>>8) & 0x0000FF00) |
+	(ui << 24);
+	return ui;
+}
+
+uint64_t swap_endian_uint64(uint64_t ull)
+{
+	ull = (ull >> 56) |
+	((ull<<40) & 0x00FF000000000000ULL) |
+	((ull<<24) & 0x0000FF0000000000ULL) |
+	((ull<<8 ) & 0x000000FF00000000ULL) |
+	((ull>>8 ) & 0x00000000FF000000ULL) |
+	((ull>>24) & 0x0000000000FF0000ULL) |
+	((ull>>40) & 0x000000000000FF00ULL) |
+	(ull << 56);
+	return ull;
+}
+
+#if __LITTLE_ENDIAN__
+
+uint16_t uint16_to_le(uint16_t v) {
+	return v;
+}
+
+uint32_t uint32_to_le(uint32_t v) {
+	return v;
+}
+
+uint64_t uint64_to_le(uint64_t v) {
+	return v;
+}
+
+
+uint16_t le_to_uint16(uint16_t v) {
+	return v;
+}
+
+uint32_t le_to_uint32(uint32_t v) {
+	return v;
+}
+
+uint64_t le_to_uint64(uint64_t v) {
+	return v;
+}
+
+uint16_t be_to_uint16(uint16_t v) {
+	return swap_endian_uint16( v );
+}
+
+uint32_t be_to_uint32(uint32_t v) {
+	return swap_endian_uint32( v );
+}
+
+uint64_t be_to_uint64(uint64_t v) {
+	return swap_endian_uint64( v );
+}
+
+#else
+
+uint16_t uint16_to_le(uint16_t v) {
+	return swap_endian_uint16( v );
+}
+
+uint32_t uint32_to_le(uint32_t v) {
+	return swap_endian_uint32( v );
+}
+
+uint64_t uint64_to_le(uint64_t v) {
+	return swap_endian_uint64( v );
+}
+
+
+uint16_t le_to_uint16(uint16_t v) {
+	return swap_endian_uint16( v );
+}
+
+uint32_t le_to_uint32(uint32_t v) {
+	return swap_endian_uint32( v );
+}
+
+uint64_t le_to_uint64(uint64_t v) {
+	return swap_endian_uint64( v );
+}
+
+uint16_t be_to_uint16(uint16_t v) {
+	return v;
+}
+
+uint32_t be_to_uint32(uint32_t v) {
+	return v;
+}
+
+uint64_t be_to_uint64(uint64_t v) {
+	return v;
+}
+
+#endif
 
 //------------------------------------------------------------------------------
 
@@ -830,6 +942,38 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes, bon_r_flags flags)
 	
 	bon_r_doc* B = BON_ALLOC_TYPE(1, bon_r_doc);
 	B->flags = flags;
+	
+	if (B->flags & BON_R_FLAG_REQUIRE_CRC)
+	{
+		/*
+		 The last six bytes of the file should be:
+		 
+		 BON_CTRL_FOOTER_CRC
+		 crc32_le
+		 BON_CTRL_FOOTER_CRC
+		 
+		 and the crc covers everything except these six bytes.
+		 */
+		if (nbytes < 6 ||
+			 data[nbytes-1] != BON_CTRL_FOOTER_CRC ||
+			 data[nbytes-6] != BON_CTRL_FOOTER_CRC)
+		{
+			bon_r_set_error(B, BON_ERR_BAD_CRC);
+			return B;
+		}
+		else
+		{
+			uint32_t crc_calced  =  crc_calc(data, nbytes-6);
+			uint32_t crc_read_le;
+			memcpy(&crc_read_le, data + nbytes - 5, 4);
+			uint32_t crc_read = le_to_uint32(crc_read_le);
+			
+			if (crc_calced != crc_read) {
+				bon_r_set_error(B, BON_ERR_BAD_CRC);
+				return B;
+			}
+		}
+	}
 	
 	bon_reader br_v = { data, nbytes, B, BON_BAD_BLOCK_ID, 0 };
 	bon_reader* br = &br_v;

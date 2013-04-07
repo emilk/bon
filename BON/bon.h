@@ -289,7 +289,9 @@ typedef enum {
 // Top level structure
 bon_w_doc*   bon_w_new_doc    (bon_w_writer_t, void* userData, bon_w_flags flags);
 void         bon_w_flush      (bon_w_doc* B);  // Flush writes to the writer
-void         bon_w_close_doc  (bon_w_doc* B);
+
+// Writes footer and flushes. Returns final error (if any)
+bon_error    bon_w_close_doc  (bon_w_doc* B);
 
 void         bon_w_set_error  (bon_w_doc* B, bon_error err);
 bon_error    bon_w_error      (bon_w_doc* B);

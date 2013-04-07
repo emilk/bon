@@ -296,6 +296,10 @@ bon_value* bon_r_get_block(bon_r_doc* B, bon_block_id block_id);
 
 bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
 
+// Endianness conversion (used for crc32)
+uint32_t le_to_uint32(uint32_t v);
+uint32_t uint32_to_le(uint32_t v);
+
 //------------------------------------------------------------------------------
 
 
