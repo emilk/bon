@@ -66,6 +66,9 @@ typedef enum {
 } bon_error;
 
 
+// Plain text versions of the above
+const char* bon_err_str(bon_error err);
+
 
 //------------------------------------------------------------------------------
 
@@ -248,7 +251,6 @@ void      bon_free_type(bon_type* t);
 bon_type* bon_new_type_simple(bon_type_id id);
 bon_type* bon_new_type_simple_array(bon_size n, bon_type_id id);
 bon_type* bon_new_type_array(bon_size n, bon_type* type);
-bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types);
 
 /*
  struct Vert { float pos[3]; uint8_t color[4]; }

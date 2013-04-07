@@ -20,7 +20,8 @@
 //------------------------------------------------------------------------------
 // bon_type etc
 
-typedef struct bon_type_array bon_type_array;
+typedef struct bon_type_array  bon_type_array;
+typedef struct bon_kt          bon_kt;
 
 struct bon_type_array {
 	bon_size   size;
@@ -36,10 +37,8 @@ struct bon_type_array {
 
 typedef struct bon_type_struct bon_type_struct;
 struct bon_type_struct {
-	bon_size      size;
-	const char**  keys;   // array of utf8 strings, pointing to inside of the document,
-	                      // or to string literals supplied by the user
-	bon_type**    types;  // array of types
+	bon_size  size;  // size of 'kts'
+	bon_kt*   kts;   // Key-type map
 };
 
 struct bon_type {
@@ -50,6 +49,18 @@ struct bon_type {
 		bon_type_array*  array;
 		bon_type_struct* strct;
 	} u;
+};
+
+
+// key-type pair
+struct bon_kt {
+	/*
+	 Key is in UTF8.
+	 It either points to inside of a read BON document
+	 or to a string literal supplied by the user
+	 */
+	const char*  key;
+	bon_type     type;
 };
 
 
@@ -187,6 +198,33 @@ uint64_t br_read_uint64(bon_reader* br, bon_type_id t);
 /* Read a simple value denoted by 't', and interpret is as a double. */
 double br_read_double(bon_reader* br, bon_type_id t);
 
+
 //------------------------------------------------------------------------------
+// Things common to bon.c, write.c, read.c:
+
+void onError(const char* msg);
+
+bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap);
+
+// Byte size of atomic types
+uint64_t bon_type_size(bon_type_id t);
+
+//------------------------------------------------------------------------------
+
+
+#define BON_ALLOC_TYPE(n, type)  (type*)calloc(n, sizeof(type))
+
+#define BON_VECTOR_EXPAND(vec, Type, amnt)                                 \
+/**/  (vec).size += amnt;                                                  \
+/**/  if ((vec).size > (vec).cap) {                                        \
+/**/      size_t newCap = ((vec).size + 2) + (vec).size/2;                 \
+/**/      (vec).data = (Type*)realloc((vec).data, newCap * sizeof(Type));  \
+/**/      (vec).cap  = newCap;                                             \
+/**/  }
+
+
+
+//------------------------------------------------------------------------------
+
 
 #endif

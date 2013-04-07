@@ -139,7 +139,6 @@ void test_key_int(bon_r_doc* B, bon_value* root, string key, int64_t iv) {
 	CAPTURE( iv );
 	
 	auto bv = read_key(B, root, key);
-	bv = bon_r_follow_refs(B, bv); // FIXME
 	test_val_int(B, bv, iv);
 };
 

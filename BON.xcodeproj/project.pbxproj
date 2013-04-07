@@ -11,6 +11,18 @@
 		8067429F16BB36970029D4E1 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 8067429E16BB36970029D4E1 /* main.c */; };
 		806742A116BB36970029D4E1 /* BON.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 806742A016BB36970029D4E1 /* BON.1 */; };
 		806742A916BB7C8A0029D4E1 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
+		8096DDC9171185F400F0BFCA /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
+		8096DDCA171185F400F0BFCA /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
+		8096DDCB171185F400F0BFCA /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
+		8096DDCC171185F400F0BFCA /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
+		8096DDCD171185F400F0BFCA /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
+		8096DDCE171185F400F0BFCA /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
+		8096DDCF171185F400F0BFCA /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
+		8096DDD0171185F400F0BFCA /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
+		8096DDD1171185F400F0BFCA /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
+		8096DDD2171185F400F0BFCA /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
+		8096DDD3171185F400F0BFCA /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
+		8096DDD4171185F400F0BFCA /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
 		809FA66616BFE33D00A465A0 /* json2bon.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 809FA66516BFE33D00A465A0 /* json2bon.1 */; };
 		809FA68016BFE5B800A465A0 /* dump.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67016BFE5B800A465A0 /* dump.c */; };
 		809FA68116BFE5B800A465A0 /* dump.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67016BFE5B800A465A0 /* dump.c */; };
@@ -99,8 +111,11 @@
 		8067429B16BB36970029D4E1 /* BON */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = BON; path = bon; sourceTree = BUILT_PRODUCTS_DIR; };
 		8067429E16BB36970029D4E1 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		806742A016BB36970029D4E1 /* BON.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = BON.1; sourceTree = "<group>"; };
-		806742A716BB36A70029D4E1 /* bon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = bon.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		806742A716BB36A70029D4E1 /* bon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = bon.h; sourceTree = "<group>"; };
 		806742A816BB7C8A0029D4E1 /* bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = bon.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		8096DDC6171185F400F0BFCA /* read.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = read.c; sourceTree = "<group>"; };
+		8096DDC7171185F400F0BFCA /* type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = type.c; sourceTree = "<group>"; };
+		8096DDC8171185F400F0BFCA /* write.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = write.c; sourceTree = "<group>"; };
 		809FA66116BFE33D00A465A0 /* json2bon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = json2bon; sourceTree = BUILT_PRODUCTS_DIR; };
 		809FA66516BFE33D00A465A0 /* json2bon.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = json2bon.1; sourceTree = "<group>"; };
 		809FA67016BFE5B800A465A0 /* dump.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dump.c; sourceTree = "<group>"; };
@@ -187,11 +202,14 @@
 		8067429D16BB36970029D4E1 /* BON */ = {
 			isa = PBXGroup;
 			children = (
-				8067429E16BB36970029D4E1 /* main.c */,
 				806742A016BB36970029D4E1 /* BON.1 */,
-				806742A716BB36A70029D4E1 /* bon.h */,
 				806742A816BB7C8A0029D4E1 /* bon.c */,
+				806742A716BB36A70029D4E1 /* bon.h */,
 				80E9B2F8171046C20095BC59 /* bon_private.h */,
+				8067429E16BB36970029D4E1 /* main.c */,
+				8096DDC6171185F400F0BFCA /* read.c */,
+				8096DDC7171185F400F0BFCA /* type.c */,
+				8096DDC8171185F400F0BFCA /* write.c */,
 			);
 			path = BON;
 			sourceTree = "<group>";
@@ -364,6 +382,9 @@
 				809FA68E16BFE5B800A465A0 /* strconv.c in Sources */,
 				809FA69016BFE5B800A465A0 /* utf.c in Sources */,
 				809FA69216BFE5B800A465A0 /* value.c in Sources */,
+				8096DDC9171185F400F0BFCA /* read.c in Sources */,
+				8096DDCD171185F400F0BFCA /* type.c in Sources */,
+				8096DDD1171185F400F0BFCA /* write.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -383,6 +404,9 @@
 				809FA69316BFE5B800A465A0 /* value.c in Sources */,
 				809FA69516BFEB4F00A465A0 /* bon.c in Sources */,
 				80073EFB16E94EEA007518B0 /* json2bon.c in Sources */,
+				8096DDCA171185F400F0BFCA /* read.c in Sources */,
+				8096DDCE171185F400F0BFCA /* type.c in Sources */,
+				8096DDD2171185F400F0BFCA /* write.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -402,6 +426,9 @@
 				809FA6AC16BFF82500A465A0 /* value.c in Sources */,
 				809FA6AD16BFF82900A465A0 /* bon.c in Sources */,
 				809FA69D16BFED7A00A465A0 /* bon2json.c in Sources */,
+				8096DDCB171185F400F0BFCA /* read.c in Sources */,
+				8096DDCF171185F400F0BFCA /* type.c in Sources */,
+				8096DDD3171185F400F0BFCA /* write.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +438,9 @@
 			files = (
 				80D9FC9A170ED401005DBF0D /* test.cpp in Sources */,
 				80D9FCA1170ED914005DBF0D /* bon.c in Sources */,
+				8096DDCC171185F400F0BFCA /* read.c in Sources */,
+				8096DDD0171185F400F0BFCA /* type.c in Sources */,
+				8096DDD4171185F400F0BFCA /* write.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
