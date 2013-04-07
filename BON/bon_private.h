@@ -143,7 +143,7 @@ typedef union {
 	bon_value_list  list;
 	bon_value_obj   obj;
 	bon_value_agg   agg;
-	uint64_t        blockRefId;
+	bon_block_id    blockRefId;
 } bon_value_union;
 
 
@@ -168,7 +168,7 @@ typedef struct {
 
 
 typedef struct {
-	bon_size        id;              // Id of block
+	bon_block_id    id;              // Id of block
 	const uint8_t*  payload;         // Pointer into document to payload start
 	bon_size        payload_size;    // Byte size of payload. 0 means unknown.
 	bon_value       value;           // value, if 'parsed' is true.
@@ -205,7 +205,8 @@ typedef struct {
 	const uint8_t*  data;
 	bon_size        nbytes;
 	bon_error       error;
-	bon_r_doc*      B;     // For stats. May be null.
+	bon_r_doc*      B;
+	bon_block_id    block_id;  // Current block being read, or BON_BAD_BLOCK_ID.
 } bon_reader;
 
 
@@ -232,7 +233,7 @@ void bon_free_type_insides(bon_type* t);
 uint64_t bon_type_size(bon_type_id t);
 
 // Returns NULL on fail
-bon_value* bon_r_get_block(bon_r_doc* B, uint64_t block_id);
+bon_value* bon_r_get_block(bon_r_doc* B, bon_block_id block_id);
 
 bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
 

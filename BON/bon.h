@@ -31,6 +31,9 @@ typedef char bon_bool;
 typedef uint64_t bon_size;
 #define BON_ZERO_ENDED (bon_size)(-1)  // Valid as argument of string size
 
+typedef uint64_t bon_block_id;
+#define BON_BAD_BLOCK_ID (bon_block_id)(-1)
+
 
 //------------------------------------------------------------------------------
 
@@ -57,6 +60,7 @@ typedef enum {
 	
 	BON_ERR_TRAILING_DATA,  // Data trailing the document
 	BON_ERR_BAD_BLOCK,
+	BON_ERR_BAD_BLOCK_REF,  // Referring a block with an ID smaller or equal to own
 	
 	// bw_read_aggregate etc:
 	BON_ERR_NARROWING,

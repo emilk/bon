@@ -64,6 +64,7 @@ const char* bon_err_str(bon_error err)
 		
 		"BON_ERR_TRAILING_DATA",
 		"BON_ERR_BAD_BLOCK",
+		"BON_ERR_BAD_BLOCK_REF",
 		
 		"BON_ERR_NARROWING",
 		"BON_ERR_NULL_OBJ",
@@ -207,7 +208,7 @@ void bon_print(FILE* out, bon_value* v, size_t indent)
 			
 		case BON_VALUE_AGGREGATE: {
 			bon_size byteSize = bon_aggregate_payload_size(&v->u.agg.type);
-			bon_reader br = { v->u.agg.data, byteSize, 0, 0 };
+			bon_reader br = { v->u.agg.data, byteSize, 0, 0, BON_BAD_BLOCK_ID };
 			bon_print_aggr(out, &v->u.agg.type, &br);
 			if (br.nbytes!=0) {
 				fprintf(stderr, "Bad aggregate\n");

@@ -64,12 +64,12 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type) {
 #if 0
 bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types) {
 	
-	bon_type* t        = calloc(1, sizeof(bon_type));
-	t->id              = BON_TYPE_STRUCT;
-	t->u.strct         = calloc(1, sizeof(bon_type_struct));
-	t->u.strct->size   = n;
-	t->u.strct->keys   = names;  // TODO: copy
-	t->u.strct->types  = types;  // TODO: copy
+	bon_type* t        =  calloc(1, sizeof(bon_type));
+	t->id              =  BON_TYPE_STRUCT;
+	t->u.strct         =  calloc(1, sizeof(bon_type_struct));
+	t->u.strct->size   =  n;
+	t->u.strct->keys   =  names;  // TODO: copy
+	t->u.strct->types  =  types;  // TODO: copy
 	return t;
 }
 #endif

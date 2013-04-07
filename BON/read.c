@@ -597,6 +597,7 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 		case BON_CTRL_BLOCK_REF:
 			val->type = BON_VALUE_BLOCK_REF;
 			val->u.blockRefId = br_read_vlq(br);
+			br_assert(br, val->u.blockRefId > br->block_id, BON_ERR_BAD_BLOCK_REF);
 			break;
 			
 			
@@ -706,6 +707,7 @@ void bon_r_value(bon_reader* br, bon_value* val)
 	{
 		val->type          = BON_VALUE_BLOCK_REF;
 		val->u.blockRefId  = ctrl - BON_SHORT_BLOCK_START;
+		br_assert(br, val->u.blockRefId > br->block_id, BON_ERR_BAD_BLOCK_REF);
 	}
 	else if (ctrl  >=  BON_SHORT_CODES_START)
 	{
@@ -828,7 +830,19 @@ void bon_r_read_content(bon_reader* br)
 			
 			if (block->payload_size == 0) {
 				// Unspecified size - forced parse:
-				bon_r_value(br, &block->value);
+				
+				bon_reader block_br = {
+					br->data,
+					br->nbytes,
+					br->error,
+					br->B,
+					block->id
+				};
+				bon_r_value(&block_br, &block->value);
+				bon_size nRead = br->nbytes - block_br.nbytes;
+				block->payload_size = nRead;
+				br_skip(br, nRead);
+				
 				block->parsed = BON_TRUE;
 			} else {
 				// postpone parsing block
@@ -885,7 +899,7 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes)
 	
 	bon_r_doc* B = BON_ALLOC_TYPE(1, bon_r_doc);
 	
-	bon_reader br_v = { data, nbytes, BON_FALSE, B };
+	bon_reader br_v = { data, nbytes, BON_FALSE, B, BON_BAD_BLOCK_ID };
 	bon_reader* br = &br_v;
 	
 	bon_r_read_doc(br);
@@ -950,13 +964,11 @@ bon_r_block* bon_r_find_block(bon_r_doc* B, uint64_t id)
 // Returns NULL on fail
 bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id)
 {
-	// TODO: only load blocks with ID:s lower than the id of the block currently being parsed.
-	
 	bon_r_block* block = bon_r_find_block(B, id);
 	
 	if (!block->parsed) {
 		// Lazy parsing:
-		bon_reader br = { block->payload, block->payload_size, 0, B };
+		bon_reader br = { block->payload, block->payload_size, 0, B, id };
 		
 		bon_r_value(&br, &block->value);
 		
@@ -977,7 +989,7 @@ bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id)
 }
 
 // Returns NULL on fail
-bon_value* bon_r_get_block(bon_r_doc* B, uint64_t id)
+bon_value* bon_r_get_block(bon_r_doc* B, bon_block_id id)
 {
 	return bon_r_load_block(B, id);
 }
@@ -994,7 +1006,9 @@ bon_error bon_r_error(bon_r_doc* B)
 
 bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
 {
-	// TODO: detect infinite recursion (loops). Should be done at time of parsing!
+	/* We should be protected from infinite recursion here,
+	 since we check all blockRefId on reading,
+	 ensuring they only point to blocks with higher ID:s. */
 	while (B->error==0 &&
 			 val && val->type == BON_VALUE_BLOCK_REF)
 	{
@@ -1312,7 +1326,13 @@ bon_bool bon_explode_aggr_inplace(bon_r_doc* B, bon_value* val)
 	}
 	
 	bon_value_agg* agg = &val->u.agg;
-	bon_reader br = { agg->data, bon_aggregate_payload_size(&agg->type), 0, B };
+	bon_reader     br  = {
+		agg->data,
+		bon_aggregate_payload_size(&agg->type),
+		0,
+		B,
+		BON_BAD_BLOCK_ID
+	};
 	
 	bon_value tmp;
 	if (!bon_explode_aggr( B, &tmp, &agg->type, &br )) {
@@ -1576,7 +1596,8 @@ bon_bool br_read_aggregate(bon_r_doc* B, const bon_type* srcType, bon_reader* br
 						br->data + src_byte_offset,
 						srcValSize,
 						br->error,
-						0
+						B,
+						BON_BAD_BLOCK_ID
 					};
 					
 					bon_bool win = br_read_aggregate(B, srcValType, &br_val,
@@ -1728,7 +1749,7 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 		case BON_VALUE_AGGREGATE: {
 			const bon_value_agg* agg = &srcVal->u.agg;
 			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
-			bon_reader br = { agg->data, byteSize, 0, 0 };
+			bon_reader br = { agg->data, byteSize, 0, B, BON_BAD_BLOCK_ID };
 			bon_bool win = br_read_aggregate(B, &agg->type, &br, dstType, bw);
 			return win && br.error==0;
 		}
