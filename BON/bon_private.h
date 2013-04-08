@@ -310,8 +310,8 @@ uint32_t uint32_to_le(uint32_t v);
 /**/  if ((vec).size > (vec).cap) {                                        \
 /**/      size_t newCap = ((vec).size + 2) + (vec).size/2;                 \
 /**/      (vec).data = (Type*)realloc((vec).data, newCap * sizeof(Type));  \
-/**/      memset((Type*)((vec).data) + (vec).cap, 0,                       \
-/**/             (newCap - (vec).cap)*sizeof(Type));                       \
+/**/      /*memset((Type*)((vec).data) + (vec).cap, 0,*/                       \
+/**/      /*       (newCap - (vec).cap)*sizeof(Type));*/                       \
 /**/      (vec).cap  = newCap;                                             \
 /**/  }
 

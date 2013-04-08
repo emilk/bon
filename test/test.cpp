@@ -24,6 +24,10 @@ extern "C" {
 #include <functional>
 
 
+// For benching:
+#include <msgpack.hpp>
+
+
 using namespace std;
 
 
@@ -843,4 +847,140 @@ TEST_CASE( "BON/crc/short/fail", "Test of CRC checking" )
 		REQUIRE( bon_r_error(B) == BON_ERR_BAD_CRC );
 		bon_r_close(B);
 	}
+}
+
+
+//------------------------------------------------------------------------------
+
+
+template<typename Fun>
+void time(const Fun& fun)
+{
+	using namespace std::chrono;
+	
+	typedef std::chrono::high_resolution_clock Clock;
+	Clock::time_point start = Clock::now();
+	
+	fun();
+	
+	Clock::time_point stop = Clock::now();
+	
+	auto ms = duration_cast<milliseconds>(stop - start).count();
+	
+	std::cout << ms << " ms" << std::endl;
+}
+
+#if DEBUG
+const int NFloats = 16 * 1024;
+#else
+const int NFloats = 16 * 1024*1024;
+#endif
+
+void run_float_benchmark(bool packed)
+{	
+	const std::vector<float> src(NFloats, 3.14f);
+	std::vector<float> dst(NFloats, 0.0f);
+	
+	bon_byte_vec vec = {0,0,0};
+	
+	printf("Writing...\n");
+	time([&]() {
+		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
+		bon_w_begin_obj(B);
+		bon_w_key(B, "list");
+		if (packed) {
+			bon_w_array(B, NFloats, BON_TYPE_FLOAT32, src.data(), sizeof(float)*NFloats);
+		} else {
+			bon_w_begin_list(B);
+			for (auto f : src) {
+				bon_w_float(B, f);
+			}
+			bon_w_end_list(B);
+		}
+		bon_w_end_obj(B);
+		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+	});
+	
+	bon_r_doc* B;
+	bon_value* root;
+	bon_value* list;
+	
+	printf("Parsing...\n");
+	time([&]() {
+		B = bon_r_open(vec.data, vec.size, BON_R_FLAG_DEFAULT);
+		root = bon_r_root(B);
+		list = bon_r_get_key(B, root, "list");
+	});
+	
+	printf("Copying...\n");
+	time([&]() {
+		auto win = bon_r_aggr_read_fmt(B, list, dst.data(), sizeof(float)*NFloats, "[#f]", NFloats);
+		REQUIRE( win );
+		REQUIRE( dst[1] == 3.14f );
+	});
+	
+	bon_r_close(B);
+	
+	printf("Used %d MB\n", (int)std::round((float)vec.size / 1024 / 1024));
+	
+	free(vec.data);
+}
+
+// So profiler separates them:
+void run_float_benchmark_packed()
+{
+	run_float_benchmark(true);
+}
+
+void run_float_benchmark_exploded()
+{
+	run_float_benchmark(false);
+}
+
+void float_bench_msgpack()
+{
+	const std::vector<float> src(NFloats, 3.14f);
+	std::vector<float> dst;
+	dst.reserve(NFloats); // To make it fair
+	
+	msgpack::sbuffer buffer;  // simple buffer
+	
+	printf("Writing...\n");
+	time([&]() {
+		msgpack::pack(&buffer, src);
+	});
+		
+	msgpack::unpacked msg;
+	msgpack_object mobj;
+	
+	printf("Parsing...\n");
+	time([&]() {
+		msgpack::unpack(&msg, buffer.data(), buffer.size());
+		mobj = msg.get();
+	});
+	msgpack::object obj = mobj;
+	
+	printf("Copying...\n");
+	time([&]() {
+		obj.convert(&dst);
+		REQUIRE( dst[1] == 3.14f );
+	});
+}
+
+
+TEST_CASE( "BON/bench", "Benching writing and reading of packed values vs" )
+{
+	printf("Benchmark - packed vs 'exploded', writing and reading of %d floats\n", NFloats);
+	
+	printf("\n");
+	printf("bon packed\n");	
+	run_float_benchmark_packed();
+	
+	printf("\n");
+	printf("bon exploded:\n");
+	run_float_benchmark_exploded();
+	
+	printf("\n");
+	printf("msgpack:\n");
+	float_bench_msgpack();
 }

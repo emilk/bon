@@ -17,7 +17,6 @@
 #include <string.h>       // memcpy, memset
 
 
-
 //------------------------------------------------------------------------------
 
 
@@ -29,6 +28,7 @@ bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes) {
 		memcpy(vec->data + oldSize, data, nbytes);
 		return BON_TRUE;
 	} else {
+		// Alloc fail
 		return BON_FALSE;
 	}
 }
@@ -385,6 +385,14 @@ void bon_w_sint64(bon_w_doc* B, int64_t val) {
 
 void bon_w_float(bon_w_doc* B, float val)
 {
+#if 1
+	int64_t ival = (int64_t)val;
+	if (val == (float)ival) {
+		bon_w_sint64(B, ival);
+		return;
+	}
+#endif
+	
 	bon_w_raw_uint8(B, BON_CTRL_FLOAT32);
 	bon_w_raw(B, &val, 4);
 }
