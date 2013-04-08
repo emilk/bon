@@ -42,7 +42,7 @@ typedef enum {
 	
 	// Write errors
 	BON_ERR_WRITE_ERROR,        // Writer refused
-	BON_ERR_BAD_AGGREGATE_SIZE, // bon_w_aggr got data of the wrong size
+	BON_ERR_BAD_AGGREGATE_SIZE, // bon_w_pack got data of the wrong size
 	
 	// Read errors:
 	BON_ERR_BAD_CRC,     // Missing or wrong
@@ -326,15 +326,15 @@ void         bon_w_double     (bon_w_doc* B, double val);
 
 // Writing coherent data
 // nbytes == number of bytes implied by 'type', but required for extra safety
-void         bon_w_aggr    (bon_w_doc* B, const void* data, bon_size nbytes,
+void         bon_w_pack    (bon_w_doc* B, const void* data, bon_size nbytes,
 								    bon_type* type);
 
-void         bon_w_aggr_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
+void         bon_w_pack_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
 								    const char* fmt, ...);
 
 // Helper:
-void         bon_w_array(bon_w_doc* B, bon_size n_elem, bon_type_id type,
-                         const void* data, bon_size nbytes);
+void         bon_w_pack_array(bon_w_doc* B, bon_size n_elem, bon_type_id type,
+                              const void* data, bon_size nbytes);
 
 
 
@@ -440,44 +440,45 @@ bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
  Can read to:      BON_BOOL, const char*, ints, floats, structs
  Can NOT read to:  lists
  
- If the type is a perfect match, bon_r_aggr_read may do a simple memcpy.
+ If the type is a perfect match, bon_r_unpack may do a simple memcpy.
  If not, it will try to convert the values (double->int etc).
  
  return BON_FALSE if there is a mismatch in types,
  array sizes or any missing object keys.
  */
-bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
+bon_bool bon_r_unpack(bon_r_doc* B, bon_value* srcVal,
                          void* dst, bon_size nbytes,
                          const bon_type* dstType);
 
 // Convenience:
-bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
-                             void* dst, bon_size nbytes, const char* fmt, ...);
+bon_bool bon_r_unpack_fmt(bon_r_doc* B, bon_value* srcVal,
+                          void* dst, bon_size nbytes, const char* fmt, ...);
 
 /*
- bon_r_aggr_ptr_fmt is by far the fastest way to read data, but it only works if the format is EXACTLY right. If it is, bon_r_aggr_ptr_fmt returns a pointer to the data. Else, NULL.
+ bon_r_unpack_ptr_fmt is by far the fastest way to read data, but it only works if the format is EXACTLY right. If it is, bon_r_unpack_ptr_fmt returns a pointer to the data. Else, NULL.
  
- Even if bon_r_raw_fmt returns NULL, bon_r_aggr_read_fmt may work with the same arguments.
- This is because bon_r_aggr_read_fmt can do value conversions, ignore extra keys in objects etc.
+ Even if bon_r_raw_fmt returns NULL, bon_r_unpack_fmt may work with the same arguments.
+ This is because bon_r_unpack_fmt can do value conversions, ignore extra keys in objects etc.
  
  Examples:
  
  const int n = bon_r_list_size(B, val)
- const float* src = bon_r_raw_fmt(B, val, n * sizeof(float), "[#f]", n);
+ const float* src = bon_r_unpack_ptr_fmt(B, val, n * sizeof(float), "[#f]", n);
  
  struct Vert { float pos[3]; uint8_t color[4]; }
  const int n = bon_r_list_size(B, val)
- const Vert* verts = bon_r_raw_fmt(B, val, n * sizeof(Vert), "[#{[3f][4u8]}]", n, "pos", "color");
+ const Vert* verts = bon_r_unpack_ptr_fmt(B, val, n * sizeof(Vert),
+                                          "[#{[3f][4u8]}]", n, "pos", "color");
  
  */
-const void* bon_r_aggr_ptr    (bon_r_doc* B, bon_value* srcVal,
-										 bon_size nbytes, const bon_type* dstType);
-const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* srcVal,
-										 bon_size nbytes, const char* fmt, ...);
+const void* bon_r_unpack_ptr    (bon_r_doc* B, bon_value* srcVal,
+										   bon_size nbytes, const bon_type* dstType);
+const void* bon_r_unpack_ptr_fmt(bon_r_doc* B, bon_value* srcVal,
+										   bon_size nbytes, const char* fmt, ...);
 
 // Quick access to a pointer e.g. pointer of bytes or floats
-const void* bon_r_array_ptr(bon_r_doc* B, bon_value* srcVal,
-									 bon_size nelem, bon_type_id type);
+const void* bon_r_unpack_array(bon_r_doc* B, bon_value* srcVal,
+									    bon_size nelem, bon_type_id type);
 
 
 //------------------------------------------------------------------------------

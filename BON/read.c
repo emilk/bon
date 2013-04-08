@@ -581,7 +581,7 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 	}
 }
 
-void bon_r_aggr_value(bon_reader* br, bon_value* val)
+void bon_r_unpack_value(bon_reader* br, bon_value* val)
 {
 	val->type = BON_VALUE_AGGREGATE;
 	bon_type* type = &val->u.agg.type;
@@ -703,7 +703,7 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 		case BON_CTRL_TUPLE_VLQ:
 		case BON_CTRL_STRUCT_VLQ: {
 			br_putback(br);
-			bon_r_aggr_value(br, val);
+			bon_r_unpack_value(br, val);
 		} break;
 			
 			
@@ -729,7 +729,7 @@ void bon_r_value(bon_reader* br, bon_value* val)
 	else if (ctrl >= BON_SHORT_AGGREGATES_START)
 	{
 		br_putback(br);
-		bon_r_aggr_value(br, val);
+		bon_r_unpack_value(br, val);
 	}
 	else if (ctrl  >=  BON_SHORT_BLOCK_START)
 	{
@@ -2091,13 +2091,13 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 						
 			
 		case BON_VALUE_NIL:
-			fprintf(stderr, "bon_r_aggr_read: nil\n");
+			fprintf(stderr, "bon_r_unpack: nil\n");
 			return BON_FALSE; // There is no null-able type
 			
 			
 		case BON_VALUE_BOOL:
 			if (dstType->id!=BON_TYPE_BOOL) {
-				fprintf(stderr, "bon_r_aggr_read: bool err\n");
+				fprintf(stderr, "bon_r_unpack: bool err\n");
 				return BON_FALSE;
 			}
 			return bw_write_uint8( bw, srcVal->u.boolean ? BON_TRUE : BON_FALSE );
@@ -2116,17 +2116,17 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 			
 			
 		default:
-			fprintf(stderr, "bon_r_aggr_read: unknown type: 0x%0X\n", srcVal->type);
+			fprintf(stderr, "bon_r_unpack: unknown type: 0x%0X\n", srcVal->type);
 			return BON_FALSE;
 		}
 	}
 }
 
-bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
+bon_bool bon_r_unpack(bon_r_doc* B, bon_value* srcVal,
 								 void* dst, bon_size nbytes,
 								 const bon_type* dstType)
 {
-	const void* src = bon_r_aggr_ptr(B, srcVal, nbytes, dstType);
+	const void* src = bon_r_unpack_ptr(B, srcVal, nbytes, dstType);
 	
 	if (src) {
 		// Perfectly matching types
@@ -2146,7 +2146,7 @@ bon_bool bon_r_aggr_read(bon_r_doc* B, bon_value* srcVal,
 }
 
 // Convenience:
-bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
+bon_bool bon_r_unpack_fmt(bon_r_doc* B, bon_value* srcVal,
 									  void* dst, bon_size nbytes,
 									  const char* fmt, ...)
 {
@@ -2158,13 +2158,13 @@ bon_bool bon_r_aggr_read_fmt(bon_r_doc* B, bon_value* srcVal,
 	if (!type) {
 		return BON_FALSE;
 	}
-	bon_bool win = bon_r_aggr_read(B, srcVal, dst, nbytes, type);
+	bon_bool win = bon_r_unpack(B, srcVal, dst, nbytes, type);
 	bon_free_type(type);
 	
 	return win;
 }
 
-const void* bon_r_aggr_ptr(bon_r_doc* B, bon_value* val,
+const void* bon_r_unpack_ptr(bon_r_doc* B, bon_value* val,
 									bon_size nbytes, const bon_type* dstType)
 {
 	val = bon_r_follow_refs(B, val);
@@ -2183,7 +2183,7 @@ const void* bon_r_aggr_ptr(bon_r_doc* B, bon_value* val,
 	return val->u.agg.data;
 }
 
-const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* val,
+const void* bon_r_unpack_ptr_fmt(bon_r_doc* B, bon_value* val,
 										 bon_size nbytes, const char* fmt, ...)
 {
 	va_list ap;
@@ -2195,7 +2195,7 @@ const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* val,
 		return BON_FALSE;
 	}
 	
-	const void* ptr = bon_r_aggr_ptr(B, val, nbytes, type);
+	const void* ptr = bon_r_unpack_ptr(B, val, nbytes, type);
 	bon_free_type(type);
 	
 	return ptr;
@@ -2203,7 +2203,7 @@ const void* bon_r_aggr_ptr_fmt(bon_r_doc* B, bon_value* val,
 
 
 // Quick access to a pointer e.g. pointer of bytes or floats
-const void* bon_r_array_ptr(bon_r_doc* B, bon_value* val,
+const void* bon_r_unpack_array(bon_r_doc* B, bon_value* val,
 									 bon_size nelem, bon_type_id type)
 {
 	val = bon_r_follow_refs(B, val);

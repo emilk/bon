@@ -527,7 +527,7 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 			  bon_w_begin_obj(B);
 			  
 			  bon_w_key(B, "vecs");
-			  bon_w_aggr_fmt(B, inVecs, sizeof(inVecs),
+			  bon_w_pack_fmt(B, inVecs, sizeof(inVecs),
 								  "[#{[3d][3f][4u8]}]", (bon_size)NVecs, "pos", "normal", "color");
 			  
 			  bon_w_end_obj(B);
@@ -573,7 +573,7 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 			  // Read using aggregate API:
 			  
 			  {
-				  auto vertPtr = (const InVert*)bon_r_aggr_ptr_fmt(B, vecs, 2*sizeof(InVert),
+				  auto vertPtr = (const InVert*)bon_r_unpack_ptr_fmt(B, vecs, 2*sizeof(InVert),
 																					"[#{[3d][3f][4u8]}]", (bon_size)NVecs,
 																					"pos", "normal", "color");
 				  REQUIRE( vertPtr );
@@ -590,7 +590,7 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 				  
 				  OutVert outVerts[NVecs];
 				  
-				  bool win = bon_r_aggr_read_fmt(B, vecs, outVerts, sizeof(outVerts),
+				  bool win = bon_r_unpack_fmt(B, vecs, outVerts, sizeof(outVerts),
 															"[2{[4u8][3f]}]", "color", "pos");
 				  REQUIRE( win );
 				  REQUIRE( outVerts[0].color[0]  == 255  );
@@ -645,16 +645,16 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  
 			  bon_w_begin_obj( B );
 			  
-			  bon_w_key(B, "s8");   bon_w_array(B, 1, BON_TYPE_SINT8,    s8,   sizeof(s8)   );
-			  bon_w_key(B, "u8");   bon_w_array(B, 1, BON_TYPE_UINT8,    u8,   sizeof(u8)   );
-			  bon_w_key(B, "s16");  bon_w_array(B, 1, BON_TYPE_SINT16,   s16,  sizeof(s16)  );
-			  bon_w_key(B, "u16");  bon_w_array(B, 1, BON_TYPE_UINT16,   u16,  sizeof(u16)  );
-			  bon_w_key(B, "s64");  bon_w_array(B, 1, BON_TYPE_SINT64,   s64,  sizeof(s64)  );
-			  bon_w_key(B, "u64");  bon_w_array(B, 1, BON_TYPE_UINT64,   u64,  sizeof(u64)  );
-			  bon_w_key(B, "fn");   bon_w_array(B, 1, BON_TYPE_FLOAT32,  fn,   sizeof(fn)   );
-			  bon_w_key(B, "fp");   bon_w_array(B, 1, BON_TYPE_FLOAT32,  fp,   sizeof(fp)   );
-			  bon_w_key(B, "dn");   bon_w_array(B, 1, BON_TYPE_FLOAT64,  dn,   sizeof(dn)   );
-			  bon_w_key(B, "dp");   bon_w_array(B, 1, BON_TYPE_FLOAT64,  dp,   sizeof(dp)   );
+			  bon_w_key(B, "s8");   bon_w_pack_array(B, 1, BON_TYPE_SINT8,    s8,   sizeof(s8)   );
+			  bon_w_key(B, "u8");   bon_w_pack_array(B, 1, BON_TYPE_UINT8,    u8,   sizeof(u8)   );
+			  bon_w_key(B, "s16");  bon_w_pack_array(B, 1, BON_TYPE_SINT16,   s16,  sizeof(s16)  );
+			  bon_w_key(B, "u16");  bon_w_pack_array(B, 1, BON_TYPE_UINT16,   u16,  sizeof(u16)  );
+			  bon_w_key(B, "s64");  bon_w_pack_array(B, 1, BON_TYPE_SINT64,   s64,  sizeof(s64)  );
+			  bon_w_key(B, "u64");  bon_w_pack_array(B, 1, BON_TYPE_UINT64,   u64,  sizeof(u64)  );
+			  bon_w_key(B, "fn");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT32,  fn,   sizeof(fn)   );
+			  bon_w_key(B, "fp");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT32,  fp,   sizeof(fp)   );
+			  bon_w_key(B, "dn");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT64,  dn,   sizeof(dn)   );
+			  bon_w_key(B, "dp");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT64,  dp,   sizeof(dp)   );
 			  
 			  bon_w_end_obj( B );
 		  },
@@ -691,54 +691,54 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  
 			  //------------------------------------------------------------------------------
 			  // Converting to s8
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "s8"),  s8, sizeof(s8), "[1i8]") );
 			  REQUIRE( *s8 == -8 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "u16"), s8, sizeof(s8), "[1i8]") );
 			  REQUIRE( *s8 == +16 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s64"), s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "s64"), s8, sizeof(s8), "[1i8]") );
 			  REQUIRE( *s8 == -64 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fn"),  s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "fn"),  s8, sizeof(s8), "[1i8]") );
 			  REQUIRE( *s8 == -3 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dp"),  s8, sizeof(s8), "[1i8]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "dp"),  s8, sizeof(s8), "[1i8]") );
 			  REQUIRE( *s8 == +2 );
 			  
 			  //------------------------------------------------------------------------------
 			  // Converting to u64
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u8"),  u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "u8"),  u64, sizeof(u64), "[1u64]") );
 			  REQUIRE( (int)*u64 == +8 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "u16"), u64, sizeof(u64), "[1u64]") );
 			  REQUIRE( (int)*u64 == +16 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u64"), u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "u64"), u64, sizeof(u64), "[1u64]") );
 			  REQUIRE( (int)*u64 == +64 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fp"),  u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "fp"),  u64, sizeof(u64), "[1u64]") );
 			  REQUIRE( (int)*u64 == +3 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dp"),  u64, sizeof(u64), "[1u64]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "dp"),  u64, sizeof(u64), "[1u64]") );
 			  REQUIRE( (int)*u64 == +2 );
 			  
 			  //------------------------------------------------------------------------------
 			  // Converting to float 32
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  f, sizeof(f), "[1f]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "s8"),  f, sizeof(f), "[1f]") );
 			  REQUIRE( *f == -8 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), f, sizeof(f), "[1f]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "u16"), f, sizeof(f), "[1f]") );
 			  REQUIRE( *f == +16 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s64"), f, sizeof(f), "[1f]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "s64"), f, sizeof(f), "[1f]") );
 			  REQUIRE( *f == -64 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fp"),  f, sizeof(f), "[1f]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "fp"),  f, sizeof(f), "[1f]") );
 			  REQUIRE( *f == +3.14f );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dn"),  f, sizeof(f), "[1f]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "dn"),  f, sizeof(f), "[1f]") );
 			  REQUIRE( *f == -2.71828f );
 			  
 			  //------------------------------------------------------------------------------
 			  // Converting to double 64
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s8"),  d, sizeof(d), "[1d]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "s8"),  d, sizeof(d), "[1d]") );
 			  REQUIRE( *d == -8 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "u16"), d, sizeof(d), "[1d]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "u16"), d, sizeof(d), "[1d]") );
 			  REQUIRE( *d == +16 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "s64"), d, sizeof(d), "[1d]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "s64"), d, sizeof(d), "[1d]") );
 			  REQUIRE( *d == -64 );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "fp"),  d, sizeof(d), "[1d]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "fp"),  d, sizeof(d), "[1d]") );
 			  REQUIRE( *d == +3.14f );
-			  REQUIRE( bon_r_aggr_read_fmt(B, read_key(B, root, "dn"),  d, sizeof(d), "[1d]") );
+			  REQUIRE( bon_r_unpack_fmt(B, read_key(B, root, "dn"),  d, sizeof(d), "[1d]") );
 			  REQUIRE( *d == -2.71828 );
 		  }
 		  );
@@ -777,13 +777,13 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  
 			  struct f_i32_t { float f; int32_t i32; };
 			  f_i32_t f_i32 = {0,0};
-			  REQUIRE( bon_r_aggr_read_fmt(B, root,  &f_i32, sizeof(f_i32), "{fi32}", "-8", "0x12345678") );
+			  REQUIRE( bon_r_unpack_fmt(B, root,  &f_i32, sizeof(f_i32), "{fi32}", "-8", "0x12345678") );
 			  REQUIRE( f_i32.f == -8 );
 			  REQUIRE( f_i32.i32 == 0x12345678 );
 			  
 			  struct i64_d_t { int64_t i64; double d; };
 			  i64_d_t i64_d = {0,0};
-			  REQUIRE( bon_r_aggr_read_fmt(B, root,  &i64_d, sizeof(i64_d), "{i64d}", "-8", "0x12345678") );
+			  REQUIRE( bon_r_unpack_fmt(B, root,  &i64_d, sizeof(i64_d), "{i64d}", "-8", "0x12345678") );
 			  REQUIRE( i64_d.i64  == -8 );
 			  REQUIRE( i64_d.d    == 0x12345678 );
 		  }
@@ -871,15 +871,16 @@ void time(const Fun& fun)
 }
 
 #if DEBUG
-const int NFloats = 16 * 1024;
+const int NUM_VALS = 16 * 1024;
 #else
-const int NFloats = 16 * 1024*1024;
+const int NUM_VALS = 16 * 1024*1024;
 #endif
 
+template<class SrcType, class DstType>
 void run_float_benchmark(bool packed)
 {	
-	const std::vector<float> src(NFloats, 3.14f);
-	std::vector<float> dst(NFloats, 0.0f);
+	const std::vector<SrcType> src(NUM_VALS, 3.14f);
+	std::vector<DstType> dst(NUM_VALS, 0.0f);
 	
 	bon_byte_vec vec = {0,0,0};
 	
@@ -889,7 +890,7 @@ void run_float_benchmark(bool packed)
 		bon_w_begin_obj(B);
 		bon_w_key(B, "list");
 		if (packed) {
-			bon_w_array(B, NFloats, BON_TYPE_FLOAT32, src.data(), sizeof(float)*NFloats);
+			bon_w_pack_array(B, NUM_VALS, BON_TYPE_FLOAT32, src.data(), sizeof(SrcType)*NUM_VALS);
 		} else {
 			bon_w_begin_list(B);
 			for (auto f : src) {
@@ -914,7 +915,25 @@ void run_float_benchmark(bool packed)
 	
 	printf("Copying...\n");
 	time([&]() {
-		auto win = bon_r_aggr_read_fmt(B, list, dst.data(), sizeof(float)*NFloats, "[#f]", NFloats);
+		bool win;
+		if (true) {
+			if (std::is_same<DstType, float>::value) {
+				win = bon_r_unpack_fmt(B, list, dst.data(), sizeof(DstType)*NUM_VALS, "[#f]", NUM_VALS);
+			} else if (std::is_same<DstType, double>::value) {
+				win = bon_r_unpack_fmt(B, list, dst.data(), sizeof(DstType)*NUM_VALS, "[#d]", NUM_VALS);
+			} else {
+			}
+		} else {
+			for (bon_size ix = 0; ix < NUM_VALS; ++ix) {
+				bon_value* elem = bon_r_list_elem(B, list, ix);
+				if (!elem) {
+					win = false;
+					break;
+				}
+				dst[ix] = bon_r_float(B, elem);
+			}
+			win = true;
+		}
 		REQUIRE( win );
 		REQUIRE( dst[1] == 3.14f );
 	});
@@ -926,22 +945,12 @@ void run_float_benchmark(bool packed)
 	free(vec.data);
 }
 
-// So profiler separates them:
-void run_float_benchmark_packed()
-{
-	run_float_benchmark(true);
-}
-
-void run_float_benchmark_exploded()
-{
-	run_float_benchmark(false);
-}
-
+template<class SrcType, class DstType>
 void float_bench_msgpack()
 {
-	const std::vector<float> src(NFloats, 3.14f);
+	const std::vector<float> src(NUM_VALS, 3.14f);
 	std::vector<float> dst;
-	dst.reserve(NFloats); // To make it fair
+	dst.reserve(NUM_VALS); // To make it fair
 	
 	msgpack::sbuffer buffer;  // simple buffer
 	
@@ -968,19 +977,27 @@ void float_bench_msgpack()
 }
 
 
-TEST_CASE( "BON/bench", "Benching writing and reading of packed values vs" )
+template<class SrcType, class DstType>
+void array_write_bench()
 {
-	printf("Benchmark - packed vs 'exploded', writing and reading of %d floats\n", NFloats);
-	
 	printf("\n");
-	printf("bon packed\n");	
-	run_float_benchmark_packed();
+	printf("bon packed\n");
+	run_float_benchmark<SrcType,DstType>(true);
 	
 	printf("\n");
 	printf("bon exploded:\n");
-	run_float_benchmark_exploded();
+	run_float_benchmark<SrcType,DstType>(false);
 	
 	printf("\n");
 	printf("msgpack:\n");
-	float_bench_msgpack();
+	float_bench_msgpack<SrcType,DstType>();
+}
+
+
+TEST_CASE( "BON/bench", "Benching writing and reading of packed values vs" )
+{
+	printf("Benchmark - packed vs 'exploded', writing and reading of %d values\n", NUM_VALS);
+	
+	array_write_bench<float, float>();
+	
 }

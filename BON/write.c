@@ -407,9 +407,9 @@ void bon_w_double(bon_w_doc* B, double val)
 	}
 }
 
-void bon_w_aggregate_type(bon_w_doc* B, bon_type* type);
+void bon_w_packegate_type(bon_w_doc* B, bon_type* type);
 
-void bon_w_array_type(bon_w_doc* B, bon_size length, bon_type* element_type)
+void bon_w_pack_array_type(bon_w_doc* B, bon_size length, bon_type* element_type)
 {
 	if ((B->flags & BON_W_FLAG_NO_COMPRESS) == 0)
 	{
@@ -422,21 +422,21 @@ void bon_w_array_type(bon_w_doc* B, bon_size length, bon_type* element_type)
 		if (length < BON_SHORT_ARRAY_COUNT)
 		{
 			bon_w_raw_uint8(B, BON_SHORT_ARRAY(length));
-			bon_w_aggregate_type(B, element_type);
+			bon_w_packegate_type(B, element_type);
 			return;
 		}
 	}
 	
 	bon_w_raw_uint8(B, BON_CTRL_ARRAY_VLQ);
 	bon_w_vlq(B, length);
-	bon_w_aggregate_type(B, element_type);
+	bon_w_packegate_type(B, element_type);
 }
 
-void bon_w_aggregate_type(bon_w_doc* B, bon_type* type)
+void bon_w_packegate_type(bon_w_doc* B, bon_type* type)
 {
 	switch (type->id) {
 		case BON_TYPE_ARRAY:
-			bon_w_array_type(B, type->u.array->size, type->u.array->type);
+			bon_w_pack_array_type(B, type->u.array->size, type->u.array->type);
 			break;
 			
 			
@@ -457,7 +457,7 @@ void bon_w_aggregate_type(bon_w_doc* B, bon_type* type)
 			for (bon_size ti=0; ti<n; ++ti) {
 				bon_kt* kt = strct->kts + ti;
 				bon_w_cstring(B, kt->key);
-				bon_w_aggregate_type(B, &kt->type);
+				bon_w_packegate_type(B, &kt->type);
 			}
 		} break;
 			
@@ -469,21 +469,21 @@ void bon_w_aggregate_type(bon_w_doc* B, bon_type* type)
 	}
 }
 
-void bon_w_aggr(bon_w_doc* B, const void* data, bon_size nbytes, bon_type* type)
+void bon_w_pack(bon_w_doc* B, const void* data, bon_size nbytes, bon_type* type)
 {
 	// Sanity check:
 	bon_size expected_size = bon_aggregate_payload_size(type);
 	if (nbytes != expected_size) {
-		fprintf(stderr, "bon_w_aggr: wrong size. Expected %d, got %d\n", (int)expected_size, (int)nbytes);
+		fprintf(stderr, "bon_w_pack: wrong size. Expected %d, got %d\n", (int)expected_size, (int)nbytes);
 		bon_w_set_error(B, BON_ERR_BAD_AGGREGATE_SIZE);
 		return;
 	}
 	
-	bon_w_aggregate_type(B, type);
+	bon_w_packegate_type(B, type);
 	bon_w_raw(B, data, nbytes);
 }
 
-void bon_w_aggr_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
+void bon_w_pack_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
 						  const char* fmt, ...)
 {
 	va_list ap;
@@ -492,12 +492,12 @@ void bon_w_aggr_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
 	va_end(ap);
 	
 	if (type) {
-		bon_w_aggr(B, data, nbytes, type);
+		bon_w_pack(B, data, nbytes, type);
 		bon_free_type(type);
 	}
 }
 
-void bon_w_array(bon_w_doc* B, bon_size len, bon_type_id element_t,
+void bon_w_pack_array(bon_w_doc* B, bon_size len, bon_type_id element_t,
 					  const void* data, bon_size nbytes)
 {
 	bon_w_assert(B, len * bon_type_size(element_t) == nbytes,
