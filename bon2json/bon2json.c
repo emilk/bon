@@ -119,7 +119,7 @@ bon_bool handle_file(const char* path, size_t flags, FILE* out)
 	
 	if (!data) { return BON_FALSE; }
 	
-	bon_r_doc* B = bon_r_open(data, size);
+	bon_r_doc* B = bon_r_open(data, size, BON_R_FLAG_DEFAULT);
 	
 	if (bon_r_error(B)) {
 		fprintf(stderr, "Faield to parse BON file: %s\n", bon_err_str(bon_r_error(B)));

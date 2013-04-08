@@ -51,7 +51,7 @@ bon_error bon_w_error(bon_w_doc* B) {
 
 void bon_w_set_error(bon_w_doc* B, bon_error err)
 {
-	onError(bon_err_str(err));
+	bon_onError(bon_err_str(err));
 	
 	if (B->error == BON_SUCCESS) {
 		B->error = err;

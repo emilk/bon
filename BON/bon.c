@@ -19,12 +19,12 @@
 
 //------------------------------------------------------------------------------
 
-void onError(const char* msg)
+void bon_onError(const char* msg)
 {
+#ifdef DEBUG
 	fprintf(stderr, "BON error: %s\n", msg);
 	
-#ifdef DEBUG
-	__asm__("int $3\n" : : );  // breakpoint
+	//__asm__("int $3\n" : : );  // breakpoint
 #endif
 }
 

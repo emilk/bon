@@ -279,7 +279,7 @@ double br_read_double(bon_reader* br, bon_type_id t);
 //------------------------------------------------------------------------------
 // Things common to bon.c, write.c, read.c:
 
-void onError(const char* msg);
+void bon_onError(const char* msg);
 
 bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap);
 
@@ -302,7 +302,7 @@ uint32_t uint32_to_le(uint32_t v);
 
 //------------------------------------------------------------------------------
 
-
+// TODO: handle failed allocs
 #define BON_ALLOC_TYPE(n, type)  (type*)calloc(n, sizeof(type))
 
 #define BON_VECTOR_EXPAND(vec, Type, amnt)                                 \

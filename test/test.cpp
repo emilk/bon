@@ -793,7 +793,7 @@ TEST_CASE( "BON/crc/short/pass", "Test of CRC checking" )
 		auto root = bon_r_root(B);
 		REQUIRE( root );
 		REQUIRE( bon_r_is_object(B, root) );
-		REQUIRE( bon_r_obj_size(B, root) == 0);
+		REQUIRE( bon_r_obj_size(B, root) == (bon_size)0);
 		REQUIRE( bon_r_error(B) == BON_SUCCESS );
 		bon_r_close(B);
 	}
