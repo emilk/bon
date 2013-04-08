@@ -266,23 +266,23 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
 			  
-			  bon_w_key(B, "nil",     BON_ZERO_ENDED);   bon_w_nil(B);
-			  bon_w_key(B, "true",    BON_ZERO_ENDED);   bon_w_bool(B, BON_TRUE);
-			  bon_w_key(B, "seven",   BON_ZERO_ENDED);   bon_w_sint64(B, 7);
-			  bon_w_key(B, "neg_1",   BON_ZERO_ENDED);   bon_w_sint64(B, -1);
-			  bon_w_key(B, "42",      BON_ZERO_ENDED);   bon_w_sint64(B, 42);
-			  bon_w_key(B, "-0x80",   BON_ZERO_ENDED);   bon_w_sint64(B, -0x80);
-			  bon_w_key(B, "0x7fff",  BON_ZERO_ENDED);   bon_w_sint64(B, 0x7fff);
+			  bon_w_key(B, "nil");      bon_w_nil(B);
+			  bon_w_key(B, "true");     bon_w_bool(B, BON_TRUE);
+			  bon_w_key(B, "seven");    bon_w_sint64(B, 7);
+			  bon_w_key(B, "neg_1");    bon_w_sint64(B, -1);
+			  bon_w_key(B, "42");       bon_w_sint64(B, 42);
+			  bon_w_key(B, "-0x80");    bon_w_sint64(B, -0x80);
+			  bon_w_key(B, "0x7fff");   bon_w_sint64(B, 0x7fff);
 			  
-			  bon_w_key(B, "f_pi", BON_ZERO_ENDED);  bon_w_float(B, 3.14f);
-			  bon_w_key(B, "d_pi", BON_ZERO_ENDED);  bon_w_double(B, 3.14);
+			  bon_w_key(B, "f_pi");  bon_w_float(B, 3.14f);
+			  bon_w_key(B, "d_pi");  bon_w_double(B, 3.14);
 			  		  
 			  
-			  bon_w_key(B, "a", BON_ZERO_ENDED);
-			  bon_w_string(B, STR_VLQ_1.c_str(), BON_ZERO_ENDED);
+			  bon_w_key(B, "a");
+			  bon_w_cstring(B, STR_VLQ_1.c_str());
 			  
-			  bon_w_key(B, "b", BON_ZERO_ENDED);
-			  bon_w_string(B, STR_VLQ_2.c_str(), BON_ZERO_ENDED);
+			  bon_w_key(B, "b");
+			  bon_w_cstring(B, STR_VLQ_2.c_str());
 			  
 			  bon_w_end_obj(B);
 		  },
@@ -373,7 +373,7 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
 			  
-			  bon_w_key(B, "lists", BON_ZERO_ENDED);
+			  bon_w_key(B, "lists");
 			  bon_w_begin_list(B);
 			  bon_w_uint64(B, 1);
 			  bon_w_begin_list(B);
@@ -427,8 +427,8 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 	bon_byte_vec block_1_vec = {0,0,0};
 	bon_w_doc* block_1 = bon_w_new_doc(bon_vec_writer, &block_1_vec, BON_W_FLAG_SKIP_HEADER_FOOTER);
 	bon_w_begin_obj(block_1);
-	bon_w_key(block_1, "ref2", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 2);
-	bon_w_key(block_1, "ref1337", BON_ZERO_ENDED);  bon_w_block_ref(block_1, 1337);
+	bon_w_key(block_1, "ref2");  bon_w_block_ref(block_1, 2);
+	bon_w_key(block_1, "ref1337");  bon_w_block_ref(block_1, 1337);
 	bon_w_end_obj(block_1);
 	REQUIRE( bon_w_close_doc(block_1) == BON_SUCCESS );
 	
@@ -507,7 +507,7 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
 			  
-			  bon_w_key(B, "vecs", BON_ZERO_ENDED);
+			  bon_w_key(B, "vecs");
 			  bon_w_aggr_fmt(B, inVecs, sizeof(inVecs),
 								  "[#{[3d][3f][4u8]}]", (bon_size)NVecs, "pos", "normal", "color");
 			  
@@ -625,16 +625,16 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  
 			  bon_w_begin_obj( B );
 			  
-			  bon_w_key(B, "s8",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_SINT8,    s8,   sizeof(s8)   );
-			  bon_w_key(B, "u8",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_UINT8,    u8,   sizeof(u8)   );
-			  bon_w_key(B, "s16",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_SINT16,   s16,  sizeof(s16)  );
-			  bon_w_key(B, "u16",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_UINT16,   u16,  sizeof(u16)  );
-			  bon_w_key(B, "s64",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_SINT64,   s64,  sizeof(s64)  );
-			  bon_w_key(B, "u64",  BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_UINT64,   u64,  sizeof(u64)  );
-			  bon_w_key(B, "fn",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT32,  fn,   sizeof(fn)   );
-			  bon_w_key(B, "fp",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT32,  fp,   sizeof(fp)   );
-			  bon_w_key(B, "dn",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT64,  dn,   sizeof(dn)   );
-			  bon_w_key(B, "dp",   BON_ZERO_ENDED);  bon_w_array(B, 1, BON_TYPE_FLOAT64,  dp,   sizeof(dp)   );
+			  bon_w_key(B, "s8");   bon_w_array(B, 1, BON_TYPE_SINT8,    s8,   sizeof(s8)   );
+			  bon_w_key(B, "u8");   bon_w_array(B, 1, BON_TYPE_UINT8,    u8,   sizeof(u8)   );
+			  bon_w_key(B, "s16");  bon_w_array(B, 1, BON_TYPE_SINT16,   s16,  sizeof(s16)  );
+			  bon_w_key(B, "u16");  bon_w_array(B, 1, BON_TYPE_UINT16,   u16,  sizeof(u16)  );
+			  bon_w_key(B, "s64");  bon_w_array(B, 1, BON_TYPE_SINT64,   s64,  sizeof(s64)  );
+			  bon_w_key(B, "u64");  bon_w_array(B, 1, BON_TYPE_UINT64,   u64,  sizeof(u64)  );
+			  bon_w_key(B, "fn");   bon_w_array(B, 1, BON_TYPE_FLOAT32,  fn,   sizeof(fn)   );
+			  bon_w_key(B, "fp");   bon_w_array(B, 1, BON_TYPE_FLOAT32,  fp,   sizeof(fp)   );
+			  bon_w_key(B, "dn");   bon_w_array(B, 1, BON_TYPE_FLOAT64,  dn,   sizeof(dn)   );
+			  bon_w_key(B, "dp");   bon_w_array(B, 1, BON_TYPE_FLOAT64,  dp,   sizeof(dp)   );
 			  
 			  bon_w_end_obj( B );
 		  },
@@ -733,8 +733,8 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
 			  
-			  bon_w_key(B, "-8",         BON_ZERO_ENDED);  bon_w_sint64(B, -8);
-			  bon_w_key(B, "0x12345678", BON_ZERO_ENDED);  bon_w_sint64(B, 0x12345678);
+			  bon_w_key(B, "-8");  bon_w_sint64(B, -8);
+			  bon_w_key(B, "0x12345678");  bon_w_sint64(B, 0x12345678);
 			  
 			  bon_w_end_obj(B);
 		  },

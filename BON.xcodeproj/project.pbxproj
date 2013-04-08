@@ -111,7 +111,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		80073EFA16E94EEA007518B0 /* json2bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = json2bon.c; path = ../../bon/json2bon/json2bon.c; sourceTree = "<group>"; };
+		80073EFA16E94EEA007518B0 /* json2bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; name = json2bon.c; path = ../../bon/json2bon/json2bon.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
 		8067429B16BB36970029D4E1 /* BON */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; name = BON; path = bon; sourceTree = BUILT_PRODUCTS_DIR; };
 		8067429E16BB36970029D4E1 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		806742A016BB36970029D4E1 /* BON.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = BON.1; sourceTree = "<group>"; };
@@ -142,7 +142,7 @@
 		809FA69C16BFED7A00A465A0 /* bon2json.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bon2json.c; sourceTree = "<group>"; };
 		809FA69E16BFED7A00A465A0 /* bon2json.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = bon2json.1; sourceTree = "<group>"; };
 		80D9FC97170ED401005DBF0D /* test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test; sourceTree = BUILT_PRODUCTS_DIR; };
-		80D9FC99170ED401005DBF0D /* test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = test.cpp; sourceTree = "<group>"; };
+		80D9FC99170ED401005DBF0D /* test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = test.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		80D9FC9B170ED401005DBF0D /* test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = test.1; sourceTree = "<group>"; };
 		80D9FCA0170ED5A3005DBF0D /* catch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
 		80E9B2F8171046C20095BC59 /* bon_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bon_private.h; sourceTree = "<group>"; };

@@ -58,7 +58,7 @@ bon_bool write_obj(json_t* json, bon_w_doc* B)
 	{
 		const char* key   = keys[i].key;
 		json_t*     value = json_object_get(json, key);
-		bon_w_key(B, key, BON_ZERO_ENDED);
+		bon_w_key(B, key);
 		if (!write_json(value, B)) {
 			success = BON_FALSE;
 			if (!ATTEMPT_RECOVERY)
@@ -74,7 +74,7 @@ bon_bool write_obj(json_t* json, bon_w_doc* B)
 	
 	bon_w_begin_obj(B);
 	json_object_foreach(json, key, value) {
-		bon_w_key(B, key, BON_ZERO_ENDED);
+		bon_w_key(B, key);
 		if (!write_json(value, B)) {
 			success = BON_FALSE;
 			if (!ATTEMPT_RECOVERY)
@@ -127,7 +127,7 @@ bon_bool write_json(json_t* json, bon_w_doc* B)
 			
 			
 		case JSON_STRING:
-			bon_w_string(B, json_string_value(json), BON_ZERO_ENDED);
+			bon_w_cstring(B, json_string_value(json));
 			break;
 			
 			

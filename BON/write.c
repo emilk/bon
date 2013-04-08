@@ -293,8 +293,8 @@ void bon_w_end_obj(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_OBJ_END);
 }
 
-void bon_w_key(bon_w_doc* B, const char* utf8, bon_size nbytes) {
-	bon_w_string(B, utf8, nbytes);
+void bon_w_key(bon_w_doc* B, const char* utf8) {
+	bon_w_cstring(B, utf8);
 }
 
 void bon_w_begin_list(bon_w_doc* B) {
@@ -331,6 +331,11 @@ void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes) {
 	
 	bon_w_raw(B, utf8, nbytes);
 	bon_w_raw_uint8(B, 0); // Zero-ended
+}
+
+void bon_w_cstring(bon_w_doc* B, const char* utf8)
+{
+	bon_w_string(B, utf8, BON_ZERO_ENDED);
 }
 
 void bon_w_uint64(bon_w_doc* B, uint64_t val)
@@ -437,7 +442,7 @@ void bon_w_aggregate_type(bon_w_doc* B, bon_type* type)
 			
 			for (bon_size ti=0; ti<n; ++ti) {
 				bon_kt* kt = strct->kts + ti;
-				bon_w_string(B, kt->key, BON_ZERO_ENDED);
+				bon_w_cstring(B, kt->key);
 				bon_w_aggregate_type(B, &kt->type);
 			}
 		} break;

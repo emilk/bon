@@ -304,7 +304,9 @@ void         bon_w_block        (bon_w_doc* B, bon_block_id block_id, const void
 // The different types of values:
 void         bon_w_begin_obj   (bon_w_doc* B);
 void         bon_w_end_obj     (bon_w_doc* B);
-void         bon_w_key         (bon_w_doc* B, const char* utf8, bon_size nbytes);  // you must write a value right after this
+
+// you must write a value right after this.
+void         bon_w_key         (bon_w_doc* B, const char* utf8);
 void         bon_w_begin_list  (bon_w_doc* B);
 void         bon_w_end_list    (bon_w_doc* B);
 
@@ -313,6 +315,7 @@ void         bon_w_block_ref  (bon_w_doc* B, bon_block_id id);
 void         bon_w_nil        (bon_w_doc* B);
 void         bon_w_bool       (bon_w_doc* B, bon_bool val);
 void         bon_w_string     (bon_w_doc* B, const char* utf8, bon_size nbytes);
+void         bon_w_cstring    (bon_w_doc* B, const char* utf8); // Zero-ended
 void         bon_w_uint64     (bon_w_doc* B, uint64_t val);
 void         bon_w_sint64     (bon_w_doc* B, int64_t val);
 void         bon_w_float      (bon_w_doc* B, float val);
