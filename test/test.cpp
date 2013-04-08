@@ -161,8 +161,15 @@ typedef std::function<void(bon_w_doc*)>  Writer;
 typedef std::function<void(Verifier&)>     Verifyer;
 typedef std::function<void(bon_r_doc*)>  Reader;
 
+void writeData(bon_byte_vec* vec, std::string bon_name)
+{
+	FILE* fp = fopen(bon_name.c_str(), "wb");
+	assert( fp );
+	fwrite(vec->data, 1, vec->size, fp);
+	fclose(fp);
+}
 
-void test(Writer w, Verifyer v, Reader r)
+void test(std::string baseName, Writer w, Verifyer v, Reader r)
 {
 	bon_byte_vec vec = {0,0,0};
 	
@@ -171,6 +178,10 @@ void test(Writer w, Verifyer v, Reader r)
 		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
 		w(B);
 		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+	}
+	
+	if (baseName != "") {
+		writeData(&vec, baseName + ".bon");
 	}
 	
 	if (v)
@@ -261,7 +272,8 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 	"01234567890123456789012345678901234567890123456789"
 	"01234567890123456789012345678901234567890123456789"; // 150
 	
-	test(
+	test("basic_types",
+		  
 		  // Write 
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
@@ -368,7 +380,8 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 	 {"lists":[1,[2,3]]}	 
 	 */
 	
-	test(
+	test("lists_and_objects",
+		  
 		  // Write
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
@@ -434,7 +447,8 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 	
 	
 	
-	test(
+	test("blocks",
+		  
 		  // Write
 		  [=](bon_w_doc* B) {
 			  bon_w_block(B, 1, block_1_vec.data, block_1_vec.size);
@@ -502,7 +516,8 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 		}
 	};
 	
-	test(
+	test("parse",
+		  
 		  // Write
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
@@ -607,7 +622,8 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 
 TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric conversions when unpacking BON data" )
 {	
-	test(
+	test("unpack_numeric",
+		  
 		  // Write
 		  [=](bon_w_doc* B) {
 			  int8_t    s8[]   =  { -8   };
@@ -728,7 +744,8 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 
 TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON data" )
 {
-	test(
+	test("unpack_convert",
+		  
 		  // Write
 		  [=](bon_w_doc* B) {
 			  bon_w_begin_obj(B);
@@ -780,6 +797,8 @@ TEST_CASE( "BON/crc/short/pass", "Test of CRC checking" )
 		bon_w_end_obj(B);
 		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
 	}
+	
+	writeData(&vec, "short.bon");
 	
 	{
 		Verifier p(vec.data, vec.size);

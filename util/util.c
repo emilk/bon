@@ -1,10 +1,11 @@
 //
-//  main.cpp
+//  util.c
 //  BON
 //
 //  Created by emilk on 2013-02-01.
 //  Copyright (c) 2013 Emil Ernerfeldt. All rights reserved.
 //
+// Util app named 'bon' for inspecting bon files.
 
 #include "bon.h"
 #include "bon_private.h"
@@ -18,34 +19,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-
-uint8_t* readFile(size_t* out_size, const char* path)
-{
-	*out_size = 0;
-	
-	struct stat info;
-	if (stat(path, &info) != 0) {
-		fprintf(stderr, "Failed to stat file %s\n", path);
-		return NULL;
-	}
-	
-	size_t fileSize = (size_t)info.st_size;
-	
-	uint8_t* data = (uint8_t*)malloc(fileSize);
-	
-	FILE* fp = fopen(path, "rb");
-	
-	size_t blocks_read = fread(data, fileSize, 1, fp);
-	if (blocks_read != 1) {
-		fprintf(stderr, "Failed to read file %s\n", path);
-		return NULL ;
-	}
-	
-	fclose(fp);
-	
-	*out_size = fileSize;
-	return data;
-}
 
 
 void print_summary(bon_value* v)
@@ -84,8 +57,8 @@ void print_commands()
 }
 
 bon_bool open_file(const char* path) {
-	size_t size;
-	const uint8_t* data = readFile(&size, path);
+	bon_size size;
+	const uint8_t* data = bon_read_file(&size, path);
 	if (!data) {
 		fprintf(stderr, "Failed to read .bon file at %s\n", path);
 		return BON_FALSE;
@@ -166,7 +139,7 @@ int main(int argc, const char * argv[])
 	 bon foo.bon
 	 ls         - list keys and what they map to (unless too long)
 	 cd         - open a child object
-	 print key  - output a value/list/object as json 
+	 print key  - output a value/list/object as json
 	 exit
 	 
 	 or:
@@ -176,7 +149,7 @@ int main(int argc, const char * argv[])
 	 cat | json2bon | bar.fon
 	 { "foo": 12 }^D
 	 bon2json bar.fon
-	
+	 
 	 
 	 // Print root block as json (i.e. skip trailing, big blocks)
 	 

@@ -59,7 +59,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "2.bon"
+            argument = "basic_types.bon"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

@@ -71,52 +71,58 @@ void bon_w_assert(bon_w_doc* B, bon_bool statement, bon_error onFail)
 //------------------------------------------------------------------------------
 // Writing
 
+// Bypass buffer
+void bon_write_to_writer(bon_w_doc* B, const void* data, bon_size n)
+{
+	if (!B->writer(B->userData, data, n)) {
+		B->error = BON_ERR_WRITE_ERROR;
+	}
+	
+	if (B->flags & BON_W_FLAG_CRC) {
+		B->crc_inv = crc_update(B->crc_inv, data, n);
+	}
+}
+
 void bon_w_flush(bon_w_doc* B) {
-	if (B->buff_ix > 0) {		
-		if (!B->writer(B->userData, B->buff, B->buff_ix)) {
-			B->error = BON_ERR_WRITE_ERROR;
-		}
-		
-		if (B->flags & BON_W_FLAG_CRC) {
-			B->crc_inv = crc_update(B->crc_inv, B->buff, B->buff_ix);
-		}
-		
+	if (B->buff_ix > 0) {
+		bon_write_to_writer(B, B->buff, B->buff_ix);
 		B->buff_ix = 0;
 	}
 }
 
 void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs) {
-	if (B->buff) {
-		if (B->buff_ix + bs < B->buff_size) {
-			// Fits in the buffer
-			memcpy(B->buff + B->buff_ix, data, bs);
-			B->buff_ix += bs;
-		} else {
-			bon_w_flush(B);
-			
-			if (bs < B->buff_size) {
-				// Now it fits
-				memcpy(B->buff, data, bs);
-				B->buff_ix = bs;
-			} else {
-				// Too large for buffer - write directly:
-				if (!B->writer(B->userData, data, bs)) {
-					B->error = BON_ERR_WRITE_ERROR;
-				}
-				
-				if (B->flags & BON_W_FLAG_CRC) {
-					B->crc_inv = crc_update(B->crc_inv, data, bs);
-				}
-			}
-		}
-	} else {
+	if (!B->buff) {
 		// Unbuffered
-		if (!B->writer(B->userData, data, bs)) {
-			B->error = BON_ERR_WRITE_ERROR;
-		}
+		bon_write_to_writer(B, data, bs);
+		return;
+	}
+	
+	const bon_size BIG_CHUNK = 1024;
+	
+	if (bs >= BIG_CHUNK) {
+		/*
+		 The power of the buffer is to mitigate many small writes (death by many small cuts).
+		 A big chunk like this can be sent right to the writer.
+		 */
+		bon_w_flush(B);
+		bon_write_to_writer(B, data, bs);
+		return;
+	}
+	
+	if (B->buff_ix + bs < B->buff_size) {
+		// Fits in the buffer
+		memcpy(B->buff + B->buff_ix, data, bs);
+		B->buff_ix += bs;
+	} else {
+		bon_w_flush(B);
 		
-		if (B->flags & BON_W_FLAG_CRC) {
-			B->crc_inv = crc_update(B->crc_inv, data, bs);
+		if (bs < B->buff_size) {
+			// Now it fits
+			memcpy(B->buff, data, bs);
+			B->buff_ix = bs;
+		} else {
+			// Too large for buffer - write directly:
+			bon_write_to_writer(B, data, bs);
 		}
 	}
 }
@@ -144,7 +150,7 @@ void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
 // See http://en.wikipedia.org/wiki/Variable-length_quantity
 // See http://rosettacode.org/wiki/Variable-length_quantity
 
-// Maximum numbero f bytes to encode a very large number
+// Maximum number of bytes to encode a very large number
 #define BON_VARINT_MAX_LEN 10
 
 uint32_t bon_vlq_size(bon_size x)

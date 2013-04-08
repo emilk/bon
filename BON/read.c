@@ -15,7 +15,7 @@
 #include <string.h>       // memcpy
 
 
-// For printf:ing int64
+// For fprintf:ing int64
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
 
@@ -324,7 +324,7 @@ void br_swallow(bon_reader* br, uint8_t token) {
 // See http://en.wikipedia.org/wiki/Variable-length_quantity
 // See http://rosettacode.org/wiki/Variable-length_quantity
 
-// Maximum numbero f bytes to encode a very large number
+// Maximum number of bytes to encode a very large number
 #define BON_VARINT_MAX_LEN 10
 
 uint64_t br_read_vlq(bon_reader* br)
@@ -834,6 +834,7 @@ void bon_r_header(bon_reader* br)
 	else
 	{
 		br_set_err(br, BON_ERR_BAD_HEADER);
+		//fprintf(stderr, "Expected BON0, got first byte 0xX\n", (unsigned)br_peek(br));
 	}
 }
 
@@ -2014,6 +2015,10 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 				return BON_FALSE;
 			}
 		}
+			
+		default:
+			fprintf(stderr, "bon_r_aggr_read: unknown type: 0x%0X\n", srcVal->type);
+			return BON_FALSE;
 		}
 	}
 }

@@ -10,11 +10,46 @@
 #include "bon.h"
 #include "bon_private.h"
 #include <math.h>      // isnan, isinf
+#include <stdlib.h>    // malloc
 
 
-// For printf:ing int64
+// For fprintf:ing int64
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+
+
+// File size (stat):
+#include <sys/stat.h>
+#include <sys/types.h>
+
+
+uint8_t* bon_read_file(bon_size* out_size, const char* path)
+{
+	*out_size = 0;
+	
+	struct stat info;
+	if (stat(path, &info) != 0) {
+		fprintf(stderr, "Failed to stat file %s\n", path);
+		return NULL;
+	}
+	
+	size_t fileSize = (size_t)info.st_size;
+	
+	uint8_t* data = (uint8_t*)malloc(fileSize);
+	
+	FILE* fp = fopen(path, "rb");
+	
+	size_t blocks_read = fread(data, fileSize, 1, fp);
+	if (blocks_read != 1) {
+		fprintf(stderr, "Failed to read file %s\n", path);
+		return NULL ;
+	}
+	
+	fclose(fp);
+	
+	*out_size = fileSize;
+	return data;
+}
 
 
 //------------------------------------------------------------------------------

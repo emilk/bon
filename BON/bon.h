@@ -12,7 +12,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-
 #if !__LITTLE_ENDIAN__ && !__BIG_ENDIAN__
 #  error "BON lib doesn't work on mixed endian machines!"
 #elif __LITTLE_ENDIAN__ && __BIG_ENDIAN__
@@ -221,17 +220,17 @@ bon_bool  bon_type_eq(const bon_type* a, const bon_type* b);
 
 
 typedef struct {
-	bon_size   size;
-	bon_size   cap;
-	uint8_t*   data;
+	bon_size  size; // Usage
+	bon_size  cap;  // Number of bytes allocated in 'data'
+	uint8_t*  data;
 } bon_byte_vec;
 
 /*
  Usage:
  bon_byte_vec vec = {0,0,0};
- bon_w_doc* bon = bon_w_new_doc(bon_vec_writer, &vec);
- write_bon( bon );
- bon_w_close_doc( &bon );
+ bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAGS_DEFAULT);
+ write_bon( B );
+ bon_w_close_doc( B );
  use( vec.data );
  free(vec.data);
  */
@@ -241,9 +240,9 @@ bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes);
 /*
  Usage:
  FILE* fp = fopen(FILE_NAME, "wb");
- bon_w_doc* B = bon_w_new_doc(&bon_file_writer, fp);
- write_bon( bon );
- bon_w_close_doc( &bon );
+ bon_w_doc* B = bon_w_new_doc(&bon_file_writer, fp, BON_W_FLAGS_DEFAULT);
+ write_bon( B );
+ bon_w_close_doc( B );
  fclose( fp );
 */
 bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
@@ -270,7 +269,7 @@ bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
 /*
  A writer will be called upon to write a BON-doc in small increments.
  It can be connected to a file-writer, memory-writer, socket etc.
- Return false on fail, and BON_ERR_WRITE_ERROR will be set
+ To signal an error, return false. BON_ERR_WRITE_ERROR will be set in the bon_w_doc.
  */
 typedef bon_bool (*bon_w_writer_t)(void* userData, const void* data, uint64_t nbytes);
 
@@ -280,14 +279,14 @@ typedef struct bon_w_doc bon_w_doc;
 
 typedef enum {
 	BON_W_FLAG_DEFAULT             =  0,
-	BON_W_FLAG_NO_COMPRESS         =  1 << 1,
-	BON_W_FLAG_CRC                 =  1 << 2,
-	BON_W_FLAG_SKIP_HEADER_FOOTER  =  1 << 3
+	BON_W_FLAG_CRC                 =  1 << 0,
+	BON_W_FLAG_SKIP_HEADER_FOOTER  =  1 << 1,
+	BON_W_FLAG_NO_COMPRESS         =  1 << 2
 } bon_w_flags;
 
 
 // Top level structure
-bon_w_doc*   bon_w_new_doc    (bon_w_writer_t, void* userData, bon_w_flags flags);
+bon_w_doc*   bon_w_new_doc    (bon_w_writer_t writer, void* userData, bon_w_flags flags);
 void         bon_w_flush      (bon_w_doc* B);  // Flush writes to the writer
 
 // Writes footer and flushes. Returns final error (if any)
@@ -307,6 +306,7 @@ void         bon_w_end_obj     (bon_w_doc* B);
 
 // you must write a value right after this.
 void         bon_w_key         (bon_w_doc* B, const char* utf8);
+
 void         bon_w_begin_list  (bon_w_doc* B);
 void         bon_w_end_list    (bon_w_doc* B);
 
@@ -316,10 +316,13 @@ void         bon_w_nil        (bon_w_doc* B);
 void         bon_w_bool       (bon_w_doc* B, bon_bool val);
 void         bon_w_string     (bon_w_doc* B, const char* utf8, bon_size nbytes);
 void         bon_w_cstring    (bon_w_doc* B, const char* utf8); // Zero-ended
+
+// Numbers:
 void         bon_w_uint64     (bon_w_doc* B, uint64_t val);
 void         bon_w_sint64     (bon_w_doc* B, int64_t val);
 void         bon_w_float      (bon_w_doc* B, float val);
 void         bon_w_double     (bon_w_doc* B, double val);
+
 
 // Writing coherent data
 // nbytes == number of bytes implied by 'type', but required for extra safety
@@ -339,6 +342,10 @@ void         bon_w_array(bon_w_doc* B, bon_size n_elem, bon_type_id type,
 // BON reader API
 
 
+// Helper function for reading the entire contents of a file:
+uint8_t* bon_read_file(bon_size* out_size, const char* path);
+
+
 typedef struct bon_value  bon_value;
 typedef struct bon_r_doc  bon_r_doc;
 
@@ -347,7 +354,7 @@ typedef enum {
 	BON_R_FLAG_DEFAULT      =  0,
 	
 	// Will trigger BON_ERR_CRC If the BON file has no CRC, or it is incorrect.
-	BON_R_FLAG_REQUIRE_CRC  =  1 << 2
+	BON_R_FLAG_REQUIRE_CRC  =  1 << 0
 } bon_r_flags;
 
 
@@ -359,29 +366,6 @@ bon_error   bon_r_error (bon_r_doc* B);
 
 
 //------------------------------------------------------------------------------
-// Inspeciting values. Use these before attemting to read a value.
-// Passing NULL as 'val' will make all these functions return BON_FALSE.
-
-// val==NULL  ->  BON_FALSE;
-bon_bool  bon_r_is_nil     (bon_r_doc* B, bon_value* val);
-
-bon_bool  bon_r_is_bool    (bon_r_doc* B, bon_value* val);
-
-// signed or unsigned
-bon_bool  bon_r_is_int     (bon_r_doc* B, bon_value* val);
-
-// int or double:
-bon_bool  bon_r_is_number  (bon_r_doc* B, bon_value* val);
-
-// Specifically double
-bon_bool  bon_r_is_double  (bon_r_doc* B, bon_value* val);
-
-bon_bool  bon_r_is_string  (bon_r_doc* B, bon_value* val);
-
-bon_bool  bon_r_is_list    (bon_r_doc* B, bon_value* val);
-
-bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
-
 
 // The logical type of a bon value.
 typedef enum {
@@ -398,6 +382,20 @@ typedef enum {
 
 bon_logical_type  bon_r_value_type(bon_r_doc* B, bon_value* val);
 
+// Inspeciting values. Use these before attemting to read a value.
+// Passing NULL as 'val' will make all these functions return BON_FALSE.
+
+// val==NULL  ->  BON_FALSE;
+bon_bool  bon_r_is_nil     (bon_r_doc* B, bon_value* val);  // note: bon_r_is_nil(B,NULL) == BON_FALSE
+bon_bool  bon_r_is_bool    (bon_r_doc* B, bon_value* val);
+bon_bool  bon_r_is_int     (bon_r_doc* B, bon_value* val);  // signed or unsigned
+bon_bool  bon_r_is_number  (bon_r_doc* B, bon_value* val);  // int or double
+bon_bool  bon_r_is_double  (bon_r_doc* B, bon_value* val);  // Specifically double
+bon_bool  bon_r_is_string  (bon_r_doc* B, bon_value* val);
+bon_bool  bon_r_is_list    (bon_r_doc* B, bon_value* val);
+bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
+
+
 
 //------------------------------------------------------------------------------
 // Reading values.
@@ -405,15 +403,15 @@ bon_logical_type  bon_r_value_type(bon_r_doc* B, bon_value* val);
 // Returns true iff 'val' is a bool and is true. False on fail. No implicit conversion.
 bon_bool  bon_r_bool    (bon_r_doc* B, bon_value* val);
 
-// Will return zeroif of the wrong type. Double/ints are converted to each other.
+// Will return zero if of the wrong type. Double/ints are converted to each other.
 uint64_t  bon_r_uint    (bon_r_doc* B, bon_value* val);
 int64_t   bon_r_int     (bon_r_doc* B, bon_value* val);
 double    bon_r_double  (bon_r_doc* B, bon_value* val);
 float     bon_r_float   (bon_r_doc* B, bon_value* val);
 
 // Returns NULL if wrong type
-bon_size     bon_r_strlen(bon_r_doc* B, bon_value* val);
-const char*  bon_r_cstr  (bon_r_doc* B, bon_value* val);
+const char*  bon_r_cstr  (bon_r_doc* B, bon_value* val);  // zero-ended UTF-8
+bon_size     bon_r_strlen(bon_r_doc* B, bon_value* val);  // in bytes (UTF-8)
 
 // Returns 0 if it is not a list.
 bon_size    bon_r_list_size(bon_r_doc* B, bon_value* list);

@@ -10,39 +10,6 @@
 #include "jansson.h"
 #include "bon.h"
 
-// File size (stat):
-#include <sys/stat.h>
-#include <sys/types.h>
-
-
-uint8_t* readFile(size_t* out_size, const char* path)
-{
-	*out_size = 0;
-	
-	struct stat info;
-	if (stat(path, &info) != 0) {
-		fprintf(stderr, "Failed to stat file %s\n", path);
-		return NULL;
-	}
-	
-	size_t fileSize = (size_t)info.st_size;
-	
-	uint8_t* data = (uint8_t*)malloc(fileSize);
-	
-	FILE* fp = fopen(path, "rb");
-	
-	size_t blocks_read = fread(data, fileSize, 1, fp);
-	if (blocks_read != 1) {
-		fprintf(stderr, "Failed to read file %s\n", path);
-		return NULL ;
-	}
-	
-	fclose(fp);
-	
-	*out_size = fileSize;
-	return data;
-}
-
 
 json_t* uint64_2_json(uint64_t u64)
 {
@@ -112,17 +79,14 @@ json_t* bon2json(bon_r_doc* B, bon_value* v)
 	}
 }
 
-bon_bool handle_file(const char* path, size_t flags, FILE* out)
+bon_bool handle_bon(const uint8_t* data, size_t size, size_t flags, FILE* out)
 {
-	size_t size;
-	const uint8_t* data = readFile(&size, path);
-	
 	if (!data) { return BON_FALSE; }
 	
 	bon_r_doc* B = bon_r_open(data, size, BON_R_FLAG_DEFAULT);
 	
 	if (bon_r_error(B)) {
-		fprintf(stderr, "Faield to parse BON file: %s\n", bon_err_str(bon_r_error(B)));
+		fprintf(stderr, "Failed to parse BON file: %s\n", bon_err_str(bon_r_error(B)));
 		bon_r_close(B);
 		return BON_FALSE;
 	}
@@ -145,6 +109,39 @@ bon_bool handle_file(const char* path, size_t flags, FILE* out)
 	
 	bon_r_close(B);
 }
+
+bon_bool handle_file(const char* path, size_t flags, FILE* out)
+{
+	bon_size size;
+	uint8_t* data = bon_read_file(&size, path);
+	bon_bool win = handle_bon(data, size, flags, out);
+	free(data);
+	return win;
+}
+
+
+uint8_t* readEntireFile(size_t* outSize, FILE* fp)
+{
+	uint8_t* buff     = NULL;
+	size_t cap        = 0;
+	size_t chunkSize  = 1024*128;
+	size_t nRead      = 0;
+	
+	while (!feof(fp))
+	{
+		cap = nRead + chunkSize;
+		buff = realloc(buff, cap);
+		
+		size_t n = fread(buff + nRead, 1, chunkSize, fp);
+		nRead += n;
+		
+		chunkSize *= 2; // Read progressively larger chunks
+	}
+	
+	*outSize = nRead;
+	return buff;
+}
+
 
 int main(int argc, const char * argv[])
 {
@@ -174,16 +171,20 @@ int main(int argc, const char * argv[])
 		} else {
 			if (!handle_file(argv[i], flags, out))
 				return EXIT_FAILURE;
+			
+			didParseFile = BON_TRUE;
 		}
 	}
 	
 	if (!didParseFile) {
-		// TODO: read from stdin
-		/*
-		json_error_t err;
-		json_t* json = json_loadf(stdin, flags, &err);
-		handle(json, &err, out);
-		 */
+		// Read from stdin to an expanding buffer:
+		FILE* binary_stdin = freopen(NULL, "rb", stdin);
+		size_t size;
+		uint8_t* buff = readEntireFile(&size, binary_stdin);
+		
+		if (!handle_bon(buff, size, flags, out)) {
+			return EXIT_FAILURE;
+		}
 	}
 	
 	return EXIT_SUCCESS;

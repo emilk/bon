@@ -14,8 +14,8 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "8067429A16BB36970029D4E1"
-               BuildableName = "bon"
+               BlueprintIdentifier = "80F091511712DFC40000DE29"
+               BuildableName = "libbon.a"
                BlueprintName = "bon"
                ReferencedContainer = "container:BON.xcodeproj">
             </BuildableReference>
@@ -32,8 +32,8 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8067429A16BB36970029D4E1"
-            BuildableName = "bon"
+            BlueprintIdentifier = "80F091511712DFC40000DE29"
+            BuildableName = "libbon.a"
             BlueprintName = "bon"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
@@ -51,8 +51,8 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8067429A16BB36970029D4E1"
-            BuildableName = "bon"
+            BlueprintIdentifier = "80F091511712DFC40000DE29"
+            BuildableName = "libbon.a"
             BlueprintName = "bon"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
@@ -75,8 +75,8 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "8067429A16BB36970029D4E1"
-            BuildableName = "bon"
+            BlueprintIdentifier = "80F091511712DFC40000DE29"
+            BuildableName = "libbon.a"
             BlueprintName = "bon"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
