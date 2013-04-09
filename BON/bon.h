@@ -447,8 +447,8 @@ bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
  array sizes or any missing object keys.
  */
 bon_bool bon_r_unpack(bon_r_doc* B, bon_value* srcVal,
-                         void* dst, bon_size nbytes,
-                         const bon_type* dstType);
+                      void* dst, bon_size nbytes,
+                      const bon_type* dstType);
 
 // Convenience:
 bon_bool bon_r_unpack_fmt(bon_r_doc* B, bon_value* srcVal,

@@ -852,6 +852,7 @@ TEST_CASE( "BON/crc/short/fail", "Test of CRC checking" )
 
 //------------------------------------------------------------------------------
 
+#if !DEBUG
 
 template<typename Fun>
 void time(const Fun& fun)
@@ -884,17 +885,25 @@ void run_float_benchmark(bool packed)
 	
 	bon_byte_vec vec = {0,0,0};
 	
-	printf("Writing...\n");
+	printf("Writing... ");
 	time([&]() {
 		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
 		bon_w_begin_obj(B);
 		bon_w_key(B, "list");
 		if (packed) {
-			bon_w_pack_array(B, NUM_VALS, BON_TYPE_FLOAT32, src.data(), sizeof(SrcType)*NUM_VALS);
+			if (std::is_same<SrcType, float>::value) {
+				bon_w_pack_array(B, NUM_VALS, BON_TYPE_FLOAT32, src.data(), sizeof(SrcType)*NUM_VALS);
+			} else {
+				bon_w_pack_array(B, NUM_VALS, BON_TYPE_FLOAT64, src.data(), sizeof(SrcType)*NUM_VALS);
+			}
 		} else {
 			bon_w_begin_list(B);
 			for (auto f : src) {
-				bon_w_float(B, f);
+				if (std::is_same<SrcType, float>::value) {
+					bon_w_float(B, f);
+				} else {
+					bon_w_double(B, f);
+				}
 			}
 			bon_w_end_list(B);
 		}
@@ -906,16 +915,16 @@ void run_float_benchmark(bool packed)
 	bon_value* root;
 	bon_value* list;
 	
-	printf("Parsing...\n");
+	printf("Parsing... ");
 	time([&]() {
 		B = bon_r_open(vec.data, vec.size, BON_R_FLAG_DEFAULT);
 		root = bon_r_root(B);
 		list = bon_r_get_key(B, root, "list");
 	});
 	
-	printf("Copying...\n");
+	printf("Copying... ");
 	time([&]() {
-		bool win;
+		bool win = false;
 		if (true) {
 			if (std::is_same<DstType, float>::value) {
 				win = bon_r_unpack_fmt(B, list, dst.data(), sizeof(DstType)*NUM_VALS, "[#f]", NUM_VALS);
@@ -930,7 +939,11 @@ void run_float_benchmark(bool packed)
 					win = false;
 					break;
 				}
-				dst[ix] = bon_r_float(B, elem);
+				if (std::is_same<DstType, float>::value) {
+					dst[ix] = bon_r_float(B, elem);
+				} else {
+					dst[ix] = (DstType)bon_r_double(B, elem);
+				}
 			}
 			win = true;
 		}
@@ -954,7 +967,7 @@ void float_bench_msgpack()
 	
 	msgpack::sbuffer buffer;  // simple buffer
 	
-	printf("Writing...\n");
+	printf("Writing... ");
 	time([&]() {
 		msgpack::pack(&buffer, src);
 	});
@@ -962,14 +975,14 @@ void float_bench_msgpack()
 	msgpack::unpacked msg;
 	msgpack_object mobj;
 	
-	printf("Parsing...\n");
+	printf("Parsing... ");
 	time([&]() {
 		msgpack::unpack(&msg, buffer.data(), buffer.size());
 		mobj = msg.get();
 	});
 	msgpack::object obj = mobj;
 	
-	printf("Copying...\n");
+	printf("Copying... ");
 	time([&]() {
 		obj.convert(&dst);
 		REQUIRE( dst[1] == 3.14f );
@@ -998,6 +1011,14 @@ TEST_CASE( "BON/bench", "Benching writing and reading of packed values vs" )
 {
 	printf("Benchmark - packed vs 'exploded', writing and reading of %d values\n", NUM_VALS);
 	
+	printf("------------------------------------------------------------------------------\n");
+	printf("float -> float\n");
 	array_write_bench<float, float>();
 	
+	
+	printf("------------------------------------------------------------------------------\n");
+	printf("float -> double\n");
+	array_write_bench<float, double>();
+	
 }
+#endif // DEBUG/bench

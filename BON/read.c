@@ -1788,7 +1788,41 @@ bon_bool translate_array(bon_r_doc* B,
 		return BON_FALSE;
 	}
 	
-	for (bon_size ai=0; ai<srcArray->size; ++ai) {
+	
+	bon_size n = srcArray->size;
+	
+	// Common optimizations. Oh fuck C sucks - give me C++ templates...
+	
+#define COPY_ARRAY(Src, Dst)                                \
+/**/     const Src* src = (const Src*)br->data;             \
+/**/  	Dst*       dst = (Dst*)      bw->data;             \
+/**/                                                        \
+/**/    	for (bon_size ix=0; ix<n; ++ix) {                  \
+/**/        *dst = (Dst)*src;                               \
+/**/    		++dst;                                          \
+/**/    		++src;                                          \
+/**/    	}                                                  \
+/**/                                                        \
+/**/    	br_skip(br, n * sizeof(Src));                      \
+/**/    	bw_skip(bw, n * sizeof(Dst));                      \
+/**/    	return BON_TRUE;
+	
+	// TODO: more optimizations?
+	if (srcArray->type->id == BON_TYPE_FLOAT64) {
+		if (dstArray->type->id == BON_TYPE_FLOAT32)  { COPY_ARRAY(double, float  ); }
+		if (dstArray->type->id == BON_TYPE_SINT32)   { COPY_ARRAY(double, int32_t); }
+	}
+	if (srcArray->type->id == BON_TYPE_FLOAT32) {
+		if (dstArray->type->id == BON_TYPE_FLOAT64)  { COPY_ARRAY(float, double ); }
+		if (dstArray->type->id == BON_TYPE_SINT32)   { COPY_ARRAY(float, int32_t); }
+	}
+	if (srcArray->type->id == BON_TYPE_SINT32) {
+		if (dstArray->type->id == BON_TYPE_FLOAT64)  { COPY_ARRAY(int32_t, double); }
+		if (dstArray->type->id == BON_TYPE_FLOAT32)  { COPY_ARRAY(int32_t, float ); }
+	}
+	
+	
+	for (bon_size ai=0; ai<n; ++ai) {
 		bon_bool win = translate_aggregate(B, srcArray->type, br,
 													  dstArray->type, bw);
 		
@@ -1934,8 +1968,8 @@ bon_bool bw_list_2_array(bon_r_doc* B, const bon_value_list* src_list,
 	
 	/* Copies to a uniform numeric array quickly. */
 #define COPY_NUMERIC_ARRAY(Type)                            \
-/**/     Type* dst      = (Type*)bw->data;                  \
 /**/  	bon_value* src  = src_list->data;                  \
+/**/     Type* dst       = (Type*)bw->data;                 \
 /**/                                                        \
 /**/    	for (bon_size ix=0; ix<n; ++ix) {                  \
 /**/    		if (src->type == BON_VALUE_DOUBLE) {            \
