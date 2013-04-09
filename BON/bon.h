@@ -2,9 +2,9 @@
 //  bon.h
 //  BON
 //
-//  Created by emilk on 2013-02-01.
-//  Copyright (c) 2013 Emil Ernerfeldt. All rights reserved.
-//
+//  Written 2013 by Emil Ernerfeldt.
+//  Copyright (c) 2013 Emil Ernerfeldt <emil.ernerfeldt@gmail.com>
+//  This is free software, under the MIT license (see LICENSE.txt for details).
 
 #ifndef BON_bon_w_h
 #define BON_bon_w_h

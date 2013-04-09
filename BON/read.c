@@ -2,9 +2,9 @@
 //  read.c
 //  BON
 //
-//  Created by emilk on 2013-04-07.
-//  Copyright (c) 2013 Emil Ernerfeldt. All rights reserved.
-//
+//  Written 2013 by Emil Ernerfeldt.
+//  Copyright (c) 2013 Emil Ernerfeldt.
+//  This is free software, under the MIT license (see LICENSE.txt for details).
 
 #include "bon.h"
 #include "bon_private.h"
@@ -1793,34 +1793,49 @@ bon_bool translate_array(bon_r_doc* B,
 	
 	// Common optimizations. Oh fuck C sucks - give me C++ templates...
 	
-#define COPY_ARRAY(Src, Dst)                                \
-/**/     const Src* src = (const Src*)br->data;             \
-/**/  	Dst*       dst = (Dst*)      bw->data;             \
-/**/                                                        \
-/**/    	for (bon_size ix=0; ix<n; ++ix) {                  \
-/**/        *dst = (Dst)*src;                               \
-/**/    		++dst;                                          \
-/**/    		++src;                                          \
-/**/    	}                                                  \
-/**/                                                        \
-/**/    	br_skip(br, n * sizeof(Src));                      \
-/**/    	bw_skip(bw, n * sizeof(Dst));                      \
-/**/    	return BON_TRUE;
+	bon_type_id src_type = srcArray->type->id;
+	bon_type_id dst_type = dstArray->type->id;
 	
-	// TODO: more optimizations?
-	if (srcArray->type->id == BON_TYPE_FLOAT64) {
-		if (dstArray->type->id == BON_TYPE_FLOAT32)  { COPY_ARRAY(double, float  ); }
-		if (dstArray->type->id == BON_TYPE_SINT32)   { COPY_ARRAY(double, int32_t); }
-	}
-	if (srcArray->type->id == BON_TYPE_FLOAT32) {
-		if (dstArray->type->id == BON_TYPE_FLOAT64)  { COPY_ARRAY(float, double ); }
-		if (dstArray->type->id == BON_TYPE_SINT32)   { COPY_ARRAY(float, int32_t); }
-	}
-	if (srcArray->type->id == BON_TYPE_SINT32) {
-		if (dstArray->type->id == BON_TYPE_FLOAT64)  { COPY_ARRAY(int32_t, double); }
-		if (dstArray->type->id == BON_TYPE_FLOAT32)  { COPY_ARRAY(int32_t, float ); }
-	}
+#if 1
+#define COPY_ARRAY(Src, Dst)                               \
+/**/    const Src* src = (const Src*)br->data;             \
+/**/    Dst*       dst = (Dst*)      bw->data;             \
+/**/                                                       \
+/**/    for (bon_size ix=0; ix<n; ++ix) {                  \
+/**/        *dst = (Dst)*src;                              \
+/**/        ++dst;                                         \
+/**/        ++src;                                         \
+/**/    }                                                  \
+/**/                                                       \
+/**/    br_skip(br, n * sizeof(Src));                      \
+/**/    bw_skip(bw, n * sizeof(Dst));                      \
+/**/    return BON_TRUE;
 	
+#define COPY_BY_TYPE(SrcType)                                            \
+if (dst_type == BON_TYPE_FLOAT64)  { COPY_ARRAY(SrcType, double  ); }    \
+if (dst_type == BON_TYPE_FLOAT32)  { COPY_ARRAY(SrcType, float   ); }    \
+if (dst_type == BON_TYPE_SINT64)   { COPY_ARRAY(SrcType, int64_t ); }    \
+if (dst_type == BON_TYPE_SINT32)   { COPY_ARRAY(SrcType, int32_t ); }    \
+if (dst_type == BON_TYPE_SINT16)   { COPY_ARRAY(SrcType, int16_t ); }    \
+if (dst_type == BON_TYPE_SINT8 )   { COPY_ARRAY(SrcType, int8_t  ); }    \
+if (dst_type == BON_TYPE_UINT64)   { COPY_ARRAY(SrcType, uint64_t); }    \
+if (dst_type == BON_TYPE_UINT32)   { COPY_ARRAY(SrcType, uint32_t); }    \
+if (dst_type == BON_TYPE_UINT16)   { COPY_ARRAY(SrcType, uint16_t); }    \
+if (dst_type == BON_TYPE_UINT8 )   { COPY_ARRAY(SrcType, uint8_t ); }
+	
+	if (src_type == BON_TYPE_FLOAT64) { COPY_BY_TYPE(double)   };
+	if (src_type == BON_TYPE_FLOAT32) { COPY_BY_TYPE(float)    };
+	if (src_type == BON_TYPE_SINT64 ) { COPY_BY_TYPE(int64_t)  };
+	if (src_type == BON_TYPE_SINT32 ) { COPY_BY_TYPE(int32_t)  };
+	if (src_type == BON_TYPE_SINT16 ) { COPY_BY_TYPE(int16_t)  };
+	if (src_type == BON_TYPE_SINT8  ) { COPY_BY_TYPE(int8_t )  };
+	if (src_type == BON_TYPE_UINT64 ) { COPY_BY_TYPE(uint64_t) };
+	if (src_type == BON_TYPE_UINT32 ) { COPY_BY_TYPE(uint32_t) };
+	if (src_type == BON_TYPE_UINT16 ) { COPY_BY_TYPE(uint16_t) };
+	if (src_type == BON_TYPE_UINT8  ) { COPY_BY_TYPE(uint8_t ) };
+#endif
+	
+	// If we get here its not numeric -> numeric
 	
 	for (bon_size ai=0; ai<n; ++ai) {
 		bon_bool win = translate_aggregate(B, srcArray->type, br,
@@ -1966,7 +1981,7 @@ bon_bool bw_list_2_array(bon_r_doc* B, const bon_value_list* src_list,
 	
 	const bon_size n = dst_array->size;
 	
-	/* Copies to a uniform numeric array quickly. */
+	/* Quickly copies to a uniform numeric array. */
 #define COPY_NUMERIC_ARRAY(Type)                            \
 /**/  	bon_value* src  = src_list->data;                  \
 /**/     Type* dst       = (Type*)bw->data;                 \

@@ -2,9 +2,9 @@
 //  main.cpp
 //  test
 //
-//  Created by emilk on 2013-04-05.
-//  Copyright (c) 2013 Emil Ernerfeldt. All rights reserved.
-//
+//  Written 2013 by Emil Ernerfeldt.
+//  Copyright (c) 2013 Emil Ernerfeldt <emil.ernerfeldt@gmail.com>
+//  This is free software, under the MIT license (see LICENSE.txt for details).
 
 
 #define CATCH_CONFIG_MAIN
@@ -852,7 +852,7 @@ TEST_CASE( "BON/crc/short/fail", "Test of CRC checking" )
 
 //------------------------------------------------------------------------------
 
-#if !DEBUG
+#if 1 // !DEBUG
 
 template<typename Fun>
 void time(const Fun& fun)
@@ -987,6 +987,8 @@ void float_bench_msgpack()
 		obj.convert(&dst);
 		REQUIRE( dst[1] == 3.14f );
 	});
+	
+	printf("Used %d MB\n", (int)std::round((float)buffer.size() / 1024 / 1024));
 }
 
 
@@ -994,11 +996,11 @@ template<class SrcType, class DstType>
 void array_write_bench()
 {
 	printf("\n");
-	printf("bon packed\n");
+	printf("bon (packed):\n");
 	run_float_benchmark<SrcType,DstType>(true);
 	
 	printf("\n");
-	printf("bon exploded:\n");
+	printf("bon (exploded):\n");
 	run_float_benchmark<SrcType,DstType>(false);
 	
 	printf("\n");
