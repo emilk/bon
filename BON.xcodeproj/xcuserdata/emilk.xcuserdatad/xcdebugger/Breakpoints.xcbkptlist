@@ -29,5 +29,18 @@
          landmarkName = "handle()"
          landmarkType = "7">
       </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         filePath = "BON/bon.c"
+         timestampString = "387236643.9674"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "295"
+         endingLineNumber = "295"
+         landmarkName = "bon_print()"
+         landmarkType = "7">
+      </FileBreakpoint>
    </FileBreakpoints>
 </Bucket>

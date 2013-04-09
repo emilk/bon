@@ -486,7 +486,7 @@ const void* bon_r_unpack_array(bon_r_doc* B, bon_value* srcVal,
 
 // Quick and dirty printout of a value, in json-like format (but NOT json conforming).
 // Useful for debugging.
-void bon_print(FILE* out, bon_value* value, size_t indent);
+void bon_print(bon_r_doc* B, bon_value* value, FILE* out, size_t indent);
 
 
 

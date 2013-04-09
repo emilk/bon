@@ -144,7 +144,7 @@
 		80F0912E1712C4960000DE29 /* hello.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hello.c; sourceTree = "<group>"; };
 		80F091351712C4B20000DE29 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		80F091371712C4B20000DE29 /* hello_bon.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = hello_bon.1; sourceTree = "<group>"; };
-		80F091401712DE320000DE29 /* util */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = util; sourceTree = BUILT_PRODUCTS_DIR; };
+		80F091401712DE320000DE29 /* bon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bon; sourceTree = BUILT_PRODUCTS_DIR; };
 		80F091421712DE320000DE29 /* util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = util.c; sourceTree = "<group>"; };
 		80F091441712DE320000DE29 /* util.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = util.1; sourceTree = "<group>"; };
 		80F091521712DFC40000DE29 /* libbon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libbon.a; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -210,7 +210,7 @@
 				809FA66116BFE33D00A465A0 /* json2bon */,
 				809FA69A16BFED7A00A465A0 /* bon2json */,
 				80D9FC97170ED401005DBF0D /* test */,
-				80F091401712DE320000DE29 /* util */,
+				80F091401712DE320000DE29 /* bon */,
 				80F091521712DFC40000DE29 /* libbon.a */,
 			);
 			name = Products;
@@ -387,7 +387,7 @@
 			);
 			name = util;
 			productName = util;
-			productReference = 80F091401712DE320000DE29 /* util */;
+			productReference = 80F091401712DE320000DE29 /* bon */;
 			productType = "com.apple.product-type.tool";
 		};
 		80F091511712DFC40000DE29 /* bon */ = {
@@ -673,14 +673,14 @@
 		80F091471712DE320000DE29 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = bon;
 			};
 			name = Debug;
 		};
 		80F091481712DE320000DE29 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = bon;
 			};
 			name = Release;
 		};

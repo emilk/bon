@@ -116,7 +116,7 @@ void bon_print_float(FILE* out, double dbl)
 	else                 fprintf(out, "%f", dbl);
 }
 
-void bon_print_aggr(FILE* out, const bon_type* aggType, bon_reader* br)
+void bon_print_aggr(bon_r_doc* B, const bon_type* aggType, bon_reader* br, FILE* out)
 {
 	uint8_t id = aggType->id;
 	
@@ -125,7 +125,7 @@ void bon_print_aggr(FILE* out, const bon_type* aggType, bon_reader* br)
 			fprintf(out, "[");
 			bon_type_array* arr = aggType->u.array;
 			for (uint64_t ti=0; ti<arr->size; ++ti) {
-				bon_print_aggr(out, arr->type, br);
+				bon_print_aggr(B, arr->type, br, out);
 				if (ti != arr->size-1)
 					fprintf(out, ", ");
 			}
@@ -139,7 +139,7 @@ void bon_print_aggr(FILE* out, const bon_type* aggType, bon_reader* br)
 			for (uint64_t ti=0; ti<strct->size; ++ti) {
 				bon_kt* kt = &strct->kts[ti];
 				fprintf(out, "\"%s\": ", kt->key);
-				bon_print_aggr(out, &kt->type, br);
+				bon_print_aggr(B, &kt->type, br, out);
 				if (ti != strct->size-1)
 					fprintf(out, ", ");
 			}
@@ -186,11 +186,63 @@ void bon_print_aggr(FILE* out, const bon_type* aggType, bon_reader* br)
 }
 
 // Will print in json format.
-void bon_print(FILE* out, bon_value* v, size_t indent)
+void bon_print(bon_r_doc* B, bon_value* v, FILE* out, size_t indent)
 {
 #define INDENT "\t"
 #define PRINT_NEWLINE_INDENT fprintf(out, "\n"); for (size_t iix=0; iix<indent; ++iix) fprintf(out, INDENT);
 	
+	v = bon_r_follow_refs(B, v);
+	if (!v) {
+		fprintf(out, "NULL");
+		return;
+	}
+	
+	if (bon_r_is_object(B, v)) {
+		const bon_kvs* kvs = &v->u.obj.kvs;
+		bon_size size = kvs->size;
+		
+		if (size==0) {
+			fprintf(out, "{ }");
+		} else {
+			bon_bool multiline = (size > 1);
+			
+			if (multiline) {
+				fprintf(out, "{");
+				indent++;
+				PRINT_NEWLINE_INDENT
+			} else {
+				fprintf(out, "{ ");
+			}
+			
+			for (bon_size i=0; i<size; ++i) {
+				bon_kv* kv = &kvs->data[i];
+				
+				fprintf(out, "\"");
+				fprintf(out, "\"%s\": ", kv->key);
+				fprintf(out, "\": ");
+				bon_print(B, &kv->val, out, indent);
+				
+				if (i != size-1) {
+					fprintf(out, ",");
+					
+					if (multiline) {
+						PRINT_NEWLINE_INDENT
+					}
+				}
+			}
+			
+			if (multiline) {
+				indent--;
+				PRINT_NEWLINE_INDENT
+				fprintf(out, "}");
+			} else {
+				fprintf(out, " }");
+			}
+		}
+		return;
+	}
+	
+
 	switch (v->type) {
 		case BON_VALUE_NIL:
 			fprintf(out, "nil");
@@ -229,7 +281,7 @@ void bon_print(FILE* out, bon_value* v, size_t indent)
 			const bon_value_list* vals = &v->u.list;
 			bon_size size = vals->size;
 			for (bon_size i=0; i<size; ++i) {
-				bon_print(out, vals->data + i, indent);
+				bon_print(B, vals->data + i, out, indent);
 				if (i != size-1)
 					fprintf(out, ", ");
 			}
@@ -240,56 +292,12 @@ void bon_print(FILE* out, bon_value* v, size_t indent)
 		case BON_VALUE_AGGREGATE: {
 			bon_size byteSize = bon_aggregate_payload_size(&v->u.agg.type);
 			bon_reader br = { v->u.agg.data, byteSize, 0, BON_BAD_BLOCK_ID, 0 };
-			bon_print_aggr(out, &v->u.agg.type, &br);
+			bon_print_aggr(B, &v->u.agg.type, &br, out);
 			if (br.nbytes!=0) {
 				fprintf(stderr, "Bad aggregate\n");
 			}
 		} break;
 			
-			
-		case BON_VALUE_OBJ: {			
-			const bon_kvs* kvs = &v->u.obj.kvs;
-			bon_size size = kvs->size;
-			
-			if (size==0) {
-				fprintf(out, "{ }");
-			} else {
-				bon_bool multiline = (size > 1);
-				
-				if (multiline) {
-					fprintf(out, "{");
-					indent++;
-					PRINT_NEWLINE_INDENT
-				} else {
-					fprintf(out, "{ ");
-				}
-				
-				for (bon_size i=0; i<size; ++i) {
-					bon_kv* kv = &kvs->data[i];
-					
-					fprintf(out, "\"");
-					fprintf(out, "\"%s\": ", kv->key);
-					fprintf(out, "\": ");
-					bon_print(out, &kv->val, indent);
-					
-					if (i != size-1) {
-						fprintf(out, ",");
-						
-						if (multiline) {
-							PRINT_NEWLINE_INDENT
-						}
-					}
-				}
-				
-				if (multiline) {
-					indent--;
-					PRINT_NEWLINE_INDENT
-					fprintf(out, "}");
-				} else {
-					fprintf(out, " }");
-				}
-			}
-		} break;
 			
 		case BON_VALUE_BLOCK_REF: {
 			fprintf(out, "@%"PRIu64, v->u.blockRefId);
