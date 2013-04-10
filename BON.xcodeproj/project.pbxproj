@@ -108,6 +108,7 @@
 
 /* Begin PBXFileReference section */
 		80073EFA16E94EEA007518B0 /* json2bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; name = json2bon.c; path = ../../bon/json2bon/json2bon.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
+		801A711A1715A26600CE61F0 /* write_inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = write_inline.h; sourceTree = "<group>"; };
 		806742A016BB36970029D4E1 /* BON.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = BON.1; sourceTree = "<group>"; };
 		806742A716BB36A70029D4E1 /* bon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = bon.h; sourceTree = "<group>"; };
 		806742A816BB7C8A0029D4E1 /* bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = bon.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
@@ -232,6 +233,7 @@
 				80F09122171203900000DE29 /* crc32.h */,
 				80F09125171207840000DE29 /* crc32.c */,
 				80C8D5691714E08200117DF4 /* inline.h */,
+				801A711A1715A26600CE61F0 /* write_inline.h */,
 			);
 			path = BON;
 			sourceTree = "<group>";

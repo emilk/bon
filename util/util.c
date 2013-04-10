@@ -32,8 +32,8 @@ struct elem_t
 
 // Globals:
 bon_r_doc* B             = NULL;
-elem_t*   g_stack_root  = NULL;
-elem_t*   g_stack_top   = NULL;
+elem_t*    g_stack_root  = NULL;
+elem_t*    g_stack_top   = NULL;
 
 bon_value* top() {
 	return g_stack_top->val;
@@ -91,11 +91,11 @@ void print_summary(bon_value* v)
 	switch (bon_r_value_type(B, v))
 	{			
 		case BON_LOGICAL_LIST:
-			printf("[ ... ]  (%d elements)", (int)bon_r_list_size(B, v));
+			printf("[ ... ]  (list with %d elements)", (int)bon_r_list_size(B, v));
 			break;
 			
 		case BON_LOGICAL_OBJECT:
-			printf("{ ... }  (%d keys)", (int)bon_r_obj_size(B, v));
+			printf("{ ... }  (object with %d keys)", (int)bon_r_obj_size(B, v));
 			break;
 			
 		default:
@@ -228,12 +228,24 @@ void cd(const char* key)
 	}
 }
 
+void stats()
+{
+	bon_stats* stats = &B->stats;
+	printf("-----------------\n");
+	printf("%8d bytes in total\n",                  (int)stats->bytes_file);
+	//printf("%8d bytes in %d strings (incl header)\n",  (int)stats->bytes_string_wet, (int)stats->count_string);
+	printf("%8d bytes in %d strings (excl header)\n",  (int)stats->bytes_string_dry, (int)stats->count_string);
+	//printf("%8d bytes in %d aggrs (incl header)\n",    (int)stats->bytes_aggr_wet, (int)stats->count_aggr);
+	printf("%8d bytes in %d packed format (excl header)\n",    (int)stats->bytes_aggr_dry, (int)stats->count_aggr);
+	printf("-----------------\n");
+}
+
 
 void run()
 {
 	char line[256];
 	
-	printf("> ");
+	//printf("> ");
 	
 	while (fgets(line, sizeof(line), stdin)) {
 		bon_value* dir = top(); // current dir
@@ -265,19 +277,12 @@ void run()
 			const char* key = line+3;
 			cd(key);
 		} else if (strncmp(line, "stats", 6)==0) {
-			bon_stats* stats = &B->stats;
-			printf("-----------------\n");
-			printf("%8d bytes in total\n",                  (int)stats->bytes_file);
-			//printf("%8d bytes in %d strings (incl header)\n",  (int)stats->bytes_string_wet, (int)stats->count_string);
-			printf("%8d bytes in %d strings (excl header)\n",  (int)stats->bytes_string_dry, (int)stats->count_string);
-			//printf("%8d bytes in %d aggrs (incl header)\n",    (int)stats->bytes_aggr_wet, (int)stats->count_aggr);
-			printf("%8d bytes in %d aggrs (excl header)\n",    (int)stats->bytes_aggr_dry, (int)stats->count_aggr);
-			printf("-----------------\n");
+			stats();
 		} else {
 			printf("Unknown commands (try typing \"help\")\n");
 		}
 		
-		printf("> ");
+		//printf("> ");
 	}
 }
 

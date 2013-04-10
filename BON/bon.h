@@ -199,7 +199,7 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type);
  bon_type* bon_new_type_fmt("{$[3f]$[4u8]}", "pos", "color")
  
  u8 u16 u32 u64   - unsigned int
- i8 i16 i32 i64   - signed int
+ i8 i16 i32 i64   - signed integer
  f                - float
  d                - double
  {...}            - object. Interleave $ (key placeholder) and types.
@@ -278,8 +278,7 @@ typedef struct bon_w_doc bon_w_doc;
 typedef enum {
 	BON_W_FLAG_DEFAULT             =  0,
 	BON_W_FLAG_CRC                 =  1 << 0,
-	BON_W_FLAG_SKIP_HEADER_FOOTER  =  1 << 1,
-	BON_W_FLAG_NO_COMPRESS         =  1 << 2
+	BON_W_FLAG_SKIP_HEADER_FOOTER  =  1 << 1
 } bon_w_flags;
 
 
@@ -299,27 +298,27 @@ void         bon_w_block        (bon_w_doc* B, bon_block_id block_id, const void
 
 
 // The different types of values:
-void         bon_w_begin_obj   (bon_w_doc* B);
-void         bon_w_end_obj     (bon_w_doc* B);
+static void  bon_w_begin_obj   (bon_w_doc* B);
+static void  bon_w_end_obj     (bon_w_doc* B);
 
 // you must write a value right after this.
-void         bon_w_key         (bon_w_doc* B, const char* utf8);
+static void  bon_w_key         (bon_w_doc* B, const char* utf8);
 
-void         bon_w_begin_list  (bon_w_doc* B);
-void         bon_w_end_list    (bon_w_doc* B);
+static void  bon_w_begin_list  (bon_w_doc* B);
+static void  bon_w_end_list    (bon_w_doc* B);
 
-void         bon_w_block_ref  (bon_w_doc* B, bon_block_id id);
+static void  bon_w_block_ref  (bon_w_doc* B, bon_block_id id);
 
-void         bon_w_nil        (bon_w_doc* B);
-void         bon_w_bool       (bon_w_doc* B, bon_bool val);
-void         bon_w_string     (bon_w_doc* B, const char* utf8, bon_size nbytes);
-void         bon_w_cstring    (bon_w_doc* B, const char* utf8); // Zero-ended
+static void  bon_w_nil        (bon_w_doc* B);
+static void  bon_w_bool       (bon_w_doc* B, bon_bool val);
+static void  bon_w_string     (bon_w_doc* B, const char* utf8, bon_size nbytes);
+static void  bon_w_cstring    (bon_w_doc* B, const char* utf8); // Zero-ended
 
 // Numbers:
-void         bon_w_uint64     (bon_w_doc* B, uint64_t val);
-void         bon_w_sint64     (bon_w_doc* B, int64_t val);
+static void  bon_w_uint64     (bon_w_doc* B, uint64_t val);
+static void  bon_w_sint64     (bon_w_doc* B, int64_t val);
 static void  bon_w_float      (bon_w_doc* B, float val);
-void         bon_w_double     (bon_w_doc* B, double val);
+static void  bon_w_double     (bon_w_doc* B, double val);
 
 
 // Writing coherent data

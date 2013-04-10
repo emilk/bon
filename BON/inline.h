@@ -20,48 +20,7 @@
 
 //------------------------------------------------------------------------------
 
-void bon_w_sint64(bon_w_doc* B, int64_t val);
-void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs);
-
-
-static inline void bon_w_raw_uint8(bon_w_doc* B, uint8_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-static inline void bon_w_raw_uint16(bon_w_doc* B, uint16_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-static inline void bon_w_raw_uint32(bon_w_doc* B, uint32_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-static inline void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-// A lot quicker than  bon_w_raw_uint8 + bon_w_raw
-#define BON_WRITE_QUICKLY(type_ctrl)           \
-/**/    unsigned char buf[1 + sizeof(val)];    \
-/**/    buf[0] = type_ctrl;                    \
-/**/    memcpy(buf+1, &val, sizeof(val));      \
-/**/    bon_w_raw(B, buf, sizeof(buf));        \
-
-
-static inline void bon_w_float(bon_w_doc* B, float val)
-{
-#if 1
-	// I think this can be optimized to testing just the exponent sign bit.
-	int64_t ival = (int64_t)val;
-	if (val == (float)ival) {
-		bon_w_sint64(B, ival);
-		return;
-	}
-#endif
-	
-	BON_WRITE_QUICKLY(BON_CTRL_FLOAT);
-}
-
+#include "write_inline.h"
 
 //------------------------------------------------------------------------------
 

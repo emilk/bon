@@ -290,7 +290,7 @@ void br_putback(bon_reader* br) {
 	}
 }
 
-bon_bool read(bon_reader* br, uint8_t* out, size_t n) {
+static inline bon_bool read(bon_reader* br, uint8_t* out, size_t n) {
 	if (br->nbytes >= n) {
 		memcpy(out, br->data, n);
 		br->data   += n;
@@ -312,22 +312,15 @@ static inline const uint8_t* br_read(bon_reader* br, size_t size)
 }
 
 // Will swallow a token, or set error if next byte isn't this token.
-void br_swallow(bon_reader* br, uint8_t token) {
+static inline void br_swallow(bon_reader* br, uint8_t token) {
 	if (br_next(br) != token) {
 		br_set_err(br, BON_ERR_MISSING_TOKEN);
 	}
 }
 
-
 //------------------------------------------------------------------------------
-// VarInt - standard VLQ
-// See http://en.wikipedia.org/wiki/Variable-length_quantity
-// See http://rosettacode.org/wiki/Variable-length_quantity
 
-// Maximum number of bytes to encode a very large number
-#define BON_VARINT_MAX_LEN 10
-
-uint64_t br_read_vlq(bon_reader* br)
+static inline uint64_t br_read_vlq(bon_reader* br)
 {
 	uint64_t r = 0;
 	uint32_t size = 0; // Sanity check
@@ -348,8 +341,6 @@ uint64_t br_read_vlq(bon_reader* br)
 	
 	return r;
 }
-
-
 
 //------------------------------------------------------------------------------
 
