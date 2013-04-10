@@ -494,20 +494,20 @@ void parse_aggr_type(bon_reader* br, bon_type* type);
 void parse_array_type(bon_reader* br, bon_type* type, bon_size arraySize)
 {
 	type->id = BON_TYPE_ARRAY;
-	bon_type_array* array = BON_CALLOC_TYPE(1, bon_type_array);
+	bon_type_array* array = BON_ALLOC_TYPE(1, bon_type_array);
 	type->u.array = array;
 	array->size = arraySize;
-	array->type = (bon_type*)calloc(1, sizeof(bon_type));
+	array->type = BON_ALLOC_TYPE(1, bon_type);
 	parse_aggr_type(br, array->type);
 }
 
 void parse_struct_type(bon_reader* br, bon_type* type, bon_size structSize)
 {
 	type->id = BON_TYPE_STRUCT;
-	bon_type_struct* strct = BON_CALLOC_TYPE(1, bon_type_struct);
+	bon_type_struct* strct = BON_ALLOC_TYPE(1, bon_type_struct);
 	type->u.strct = strct;
 	strct->size   = structSize;
-	strct->kts    = BON_CALLOC_TYPE(structSize, bon_kt);
+	strct->kts    = BON_ALLOC_TYPE(structSize, bon_kt);
 	
 	for (bon_size ti=0; ti<strct->size; ++ti) {
 		bon_value key;
@@ -525,8 +525,6 @@ void parse_struct_type(bon_reader* br, bon_type* type, bon_size structSize)
 
 void parse_aggr_type(bon_reader* br, bon_type* type)
 {
-	memset(type, 0, sizeof(bon_type));
-	
 	if (br->error)
 		return;
 	
@@ -544,9 +542,9 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 		{
 			bon_size arraySize     = ctrl - BON_SHORT_BYTE_ARRAY_START;
 			
-			bon_type_array* array  = BON_CALLOC_TYPE(1, bon_type_array);
+			bon_type_array* array  = BON_ALLOC_TYPE(1, bon_type_array);
 			array->size            = arraySize;
-			array->type            = (bon_type*)calloc(1, sizeof(bon_type));
+			array->type            = BON_ALLOC_TYPE(1, bon_type);
 			array->type->id        = BON_TYPE_UINT8;
 			
 			type->id               = BON_TYPE_ARRAY;
@@ -575,7 +573,7 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 void bon_r_unpack_value(bon_reader* br, bon_value* val)
 {
 	val->type = BON_VALUE_AGGREGATE;
-	bon_value_agg* agg = BON_CALLOC_TYPE(1, bon_value_agg);
+	bon_value_agg* agg = BON_ALLOC_TYPE(1, bon_value_agg);
 	val->u.agg = agg;
 	bon_type* type = &agg->type;
 	parse_aggr_type(br, type);
@@ -926,7 +924,7 @@ void bon_r_read_content(bon_reader* br)
 		// Block-less document
 		blocks->size  = 1;
 		blocks->cap   = 1;
-		blocks->data  = BON_CALLOC_TYPE(1, bon_r_block);
+		blocks->data  = BON_ALLOC_TYPE(1, bon_r_block);
 		bon_r_block* root = blocks->data;
 		root->id              = 0;
 		root->payload         = br->data;
@@ -1321,7 +1319,7 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 			
 			bon_list* list   =  &dst->u.list;
 			list->size             =  n;
-			list->data             =  (bon_value*)malloc(n * sizeof(bon_value));
+			list->data             =  BON_ALLOC_TYPE(n, bon_value);
 			
 			for (bon_size ix=0; ix<n; ++ix) {
 				bon_explode_aggr(B, list->data +ix, array->type, br);
@@ -1338,7 +1336,7 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 			
 			bon_obj*        kvs     =  &dst->u.obj;
 			kvs->size               =  n;
-			kvs->data               =  (bon_kv*)malloc(n * sizeof(bon_kv));
+			kvs->data               =  BON_ALLOC_TYPE(n, bon_kv);
 			
 			for (bon_size ix=0; ix<n; ++ix) {
 				bon_kv* kv = kvs->data  + ix;
@@ -1403,7 +1401,7 @@ bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val)
 			0
 		};
 		
-		agg->exploded = BON_CALLOC_TYPE(1, bon_value);
+		agg->exploded = BON_ALLOC_TYPE(1, bon_value);
 		
 		if (!bon_explode_aggr( B, agg->exploded, &agg->type, &br )) {
 			free( agg->exploded );

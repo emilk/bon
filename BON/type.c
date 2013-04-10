@@ -43,7 +43,7 @@ void bon_free_type(bon_type* t) {
 }
 
 bon_type* bon_new_type_simple(bon_type_id id) {
-	bon_type* t = calloc(1, sizeof(bon_type));
+	bon_type* t = BON_ALLOC_TYPE(1, bon_type);
 	t->id = id;
 	return t;
 }
@@ -53,9 +53,9 @@ bon_type* bon_new_type_simple_array(bon_size n, bon_type_id id) {
 }
 
 bon_type* bon_new_type_array(bon_size n, bon_type* type) {
-	bon_type* t = calloc(1, sizeof(bon_type));
+	bon_type* t = BON_ALLOC_TYPE(1, bon_type);
 	t->id = BON_TYPE_ARRAY;
-	t->u.array = calloc(1, sizeof(bon_type_array));
+	t->u.array = BON_ALLOC_TYPE(1, bon_type_array);
 	t->u.array->size = n;
 	t->u.array->type = type;
 	return t;
@@ -64,9 +64,9 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type) {
 #if 0
 bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types) {
 	
-	bon_type* t        =  calloc(1, sizeof(bon_type));
+	bon_type* t        =  BON_ALLOC_TYPE(1, bon_type);
 	t->id              =  BON_TYPE_STRUCT;
-	t->u.strct         =  calloc(1, sizeof(bon_type_struct));
+	t->u.strct         =  BON_ALLOC_TYPE(1, bon_type_struct);
 	t->u.strct->size   =  n;
 	t->u.strct->keys   =  names;  // TODO: copy
 	t->u.strct->types  =  types;  // TODO: copy
@@ -94,11 +94,11 @@ bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 			case '}': {
 				++*fmt;
 				
-				bon_type_struct* strct = BON_CALLOC_TYPE(1, bon_type_struct);
+				bon_type_struct* strct = BON_ALLOC_TYPE(1, bon_type_struct);
 				strct->size  =  expStrct.size;
 				strct->kts   =  expStrct.data;
 				
-				bon_type* ret = BON_CALLOC_TYPE(1, bon_type);
+				bon_type* ret = BON_ALLOC_TYPE(1, bon_type);
 				ret->id = BON_TYPE_STRUCT;
 				ret->u.strct = strct;
 				return ret;

@@ -82,7 +82,7 @@ void time_n(unsigned n, const Fun& fun, const Cleanup& cleanup)
 {
 	std::vector<long long> times;
 	
-	const int warmup = 3;
+	const unsigned warmup = n;
 	
 	for (unsigned i=0; i<warmup; ++i)
 	{
@@ -111,6 +111,21 @@ void time_n(unsigned n, const Fun& fun)
 	
 #if 1
 
+TEST_CASE( "BON/bench/writing/msgpack", "MsgPack speed of writing floats")
+{
+	printf("\nMsgPack write speed:\n");
+	const std::vector<float> src(NUM_VALS, 3.14f);
+	
+	time_n(16, [&]() {
+		msgpack::sbuffer buffer;  // simple buffer
+		
+		//msgpack::pack(&buffer, src);
+		for (auto f : src) {
+			msgpack::pack(&buffer, f);
+		}
+	});
+}
+
 TEST_CASE( "BON/bench/writing", "Speed of bon_w_float")
 {
 	printf("\nBON write speed:\n");
@@ -131,21 +146,6 @@ TEST_CASE( "BON/bench/writing", "Speed of bon_w_float")
 		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
 		
 		free(vec.data);
-	});
-}
-
-TEST_CASE( "BON/bench/writing/msgpack", "MsgPack speed of writing floats")
-{
-	printf("\nMsgPack write speed:\n");
-	const std::vector<float> src(NUM_VALS, 3.14f);
-	
-	time_n(16, [&]() {
-		msgpack::sbuffer buffer;  // simple buffer
-		
-		//msgpack::pack(&buffer, src);
-		for (auto f : src) {
-			msgpack::pack(&buffer, f);
-		}
 	});
 }
 

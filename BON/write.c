@@ -14,7 +14,6 @@
 #include <math.h>         // isfinite
 #include <stdarg.h>       // va_list, va_start, va_arg, va_end
 #include <stdlib.h>       // malloc, free, realloc, calloc, ...
-#include <string.h>       // memcpy, memset
 
 
 //------------------------------------------------------------------------------
