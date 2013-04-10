@@ -127,23 +127,6 @@ void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs) {
 	}
 }
 
-void bon_w_raw_uint8(bon_w_doc* B, uint8_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-void bon_w_raw_uint16(bon_w_doc* B, uint16_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-void bon_w_raw_uint32(bon_w_doc* B, uint32_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
-	bon_w_raw(B, &val, sizeof(val));
-}
-
-
 
 //------------------------------------------------------------------------------
 // VarInt - standard VLQ
@@ -229,10 +212,17 @@ bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_w_flags flag
 	B->error     = BON_SUCCESS;
 	B->flags     = flags;
 	
+#if 0
+	// Slower.
+	B->buff      = NULL;
+	B->buff_ix   = 0;
+	B->buff_size = 0;
+#else
 	const unsigned BUFF_SIZE = 64*1024;
 	B->buff      = malloc(BUFF_SIZE);
 	B->buff_ix   = 0;
 	B->buff_size = BUFF_SIZE;
+#endif
 	
 	if ((B->flags & BON_W_FLAG_SKIP_HEADER_FOOTER) == 0) {
 		bon_w_header(B);
@@ -381,20 +371,6 @@ void bon_w_sint64(bon_w_doc* B, int64_t val) {
 		bon_w_raw_uint8(B, BON_CTRL_SINT64);
 		bon_w_raw_uint64(B, (uint64_t)val);
 	}
-}
-
-void bon_w_float(bon_w_doc* B, float val)
-{
-#if 1
-	int64_t ival = (int64_t)val;
-	if (val == (float)ival) {
-		bon_w_sint64(B, ival);
-		return;
-	}
-#endif
-	
-	bon_w_raw_uint8(B, BON_CTRL_FLOAT32);
-	bon_w_raw(B, &val, 4);
 }
 
 void bon_w_double(bon_w_doc* B, double val)

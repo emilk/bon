@@ -320,7 +320,7 @@ void         bon_w_cstring    (bon_w_doc* B, const char* utf8); // Zero-ended
 // Numbers:
 void         bon_w_uint64     (bon_w_doc* B, uint64_t val);
 void         bon_w_sint64     (bon_w_doc* B, int64_t val);
-void         bon_w_float      (bon_w_doc* B, float val);
+static void  bon_w_float      (bon_w_doc* B, float val);
 void         bon_w_double     (bon_w_doc* B, double val);
 
 
@@ -404,10 +404,10 @@ bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
 bon_bool  bon_r_bool    (bon_r_doc* B, bon_value* val);
 
 // Will return zero if of the wrong type. Double/ints are converted to each other.
-uint64_t  bon_r_uint    (bon_r_doc* B, bon_value* val);
-int64_t   bon_r_int     (bon_r_doc* B, bon_value* val);
-double    bon_r_double  (bon_r_doc* B, bon_value* val);
-float     bon_r_float   (bon_r_doc* B, bon_value* val);
+uint64_t         bon_r_uint    (bon_r_doc* B, bon_value* val);
+int64_t          bon_r_int     (bon_r_doc* B, bon_value* val);
+static float     bon_r_float   (bon_r_doc* B, bon_value* val);
+static double    bon_r_double  (bon_r_doc* B, bon_value* val);
 
 // Returns NULL if wrong type
 const char*  bon_r_cstr  (bon_r_doc* B, bon_value* val);  // zero-ended UTF-8
@@ -415,7 +415,7 @@ bon_size     bon_r_strlen(bon_r_doc* B, bon_value* val);  // in bytes (UTF-8)
 
 // Returns 0 if it is not a list.
 bon_size    bon_r_list_size(bon_r_doc* B, bon_value* list);
-bon_value*  bon_r_list_elem(bon_r_doc* B, bon_value* list, bon_size ix);
+static bon_value*  bon_r_list_elem(bon_r_doc* B, bon_value* list, bon_size ix);
 
 // Number of keys-value pairs in an object
 bon_size     bon_r_obj_size(bon_r_doc* B, bon_value* val);
@@ -488,6 +488,8 @@ const void* bon_r_unpack_array(bon_r_doc* B, bon_value* srcVal,
 // Useful for debugging.
 void bon_print(bon_r_doc* B, bon_value* value, FILE* out, size_t indent);
 
+//------------------------------------------------------------------------------
 
+#include "inline.h"
 
 #endif

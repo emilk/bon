@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "80F0913F1712DE320000DE29"
-               BuildableName = "util"
+               BuildableName = "bon"
                BlueprintName = "util"
                ReferencedContainer = "container:BON.xcodeproj">
             </BuildableReference>
@@ -33,7 +33,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "80F0913F1712DE320000DE29"
-            BuildableName = "util"
+            BuildableName = "bon"
             BlueprintName = "util"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
@@ -52,7 +52,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "80F0913F1712DE320000DE29"
-            BuildableName = "util"
+            BuildableName = "bon"
             BlueprintName = "util"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
@@ -76,7 +76,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "80F0913F1712DE320000DE29"
-            BuildableName = "util"
+            BuildableName = "bon"
             BlueprintName = "util"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>

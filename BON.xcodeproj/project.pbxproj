@@ -43,7 +43,6 @@
 		809FA6AC16BFF82500A465A0 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67F16BFE5B800A465A0 /* value.c */; };
 		809FA6AD16BFF82900A465A0 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
 		80C8D5661714DEFE00117DF4 /* bench.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80C8D5651714DEFE00117DF4 /* bench.cpp */; };
-		80C8D5681714DFF000117DF4 /* inline.c in Sources */ = {isa = PBXBuildFile; fileRef = 80C8D5671714DFF000117DF4 /* inline.c */; };
 		80D9FC9A170ED401005DBF0D /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80D9FC99170ED401005DBF0D /* test.cpp */; };
 		80D9FC9C170ED401005DBF0D /* test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 80D9FC9B170ED401005DBF0D /* test.1 */; };
 		80D9FCA1170ED914005DBF0D /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
@@ -137,7 +136,7 @@
 		809FA69C16BFED7A00A465A0 /* bon2json.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bon2json.c; sourceTree = "<group>"; };
 		809FA69E16BFED7A00A465A0 /* bon2json.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = bon2json.1; sourceTree = "<group>"; };
 		80C8D5651714DEFE00117DF4 /* bench.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bench.cpp; sourceTree = "<group>"; };
-		80C8D5671714DFF000117DF4 /* inline.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = inline.c; sourceTree = "<group>"; };
+		80C8D5691714E08200117DF4 /* inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inline.h; sourceTree = "<group>"; };
 		80D9FC97170ED401005DBF0D /* test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test; sourceTree = BUILT_PRODUCTS_DIR; };
 		80D9FC99170ED401005DBF0D /* test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = test.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		80D9FC9B170ED401005DBF0D /* test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = test.1; sourceTree = "<group>"; };
@@ -232,7 +231,7 @@
 				8096DDC8171185F400F0BFCA /* write.c */,
 				80F09122171203900000DE29 /* crc32.h */,
 				80F09125171207840000DE29 /* crc32.c */,
-				80C8D5671714DFF000117DF4 /* inline.c */,
+				80C8D5691714E08200117DF4 /* inline.h */,
 			);
 			path = BON;
 			sourceTree = "<group>";
@@ -501,7 +500,6 @@
 				8096DDD4171185F400F0BFCA /* write.c in Sources */,
 				80F09129171207840000DE29 /* crc32.c in Sources */,
 				80C8D5661714DEFE00117DF4 /* bench.cpp in Sources */,
-				80C8D5681714DFF000117DF4 /* inline.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

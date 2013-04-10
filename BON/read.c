@@ -256,7 +256,7 @@ void br_assert(bon_reader* br, bon_bool statement, bon_error onFail)
 	}
 }
 
-void br_skip(bon_reader* br, size_t n) {
+static inline void br_skip(bon_reader* br, size_t n) {
 	assert(br->nbytes >= n);
 	br->data   += n;
 	br->nbytes -= n;
@@ -303,7 +303,7 @@ bon_bool read(bon_reader* br, uint8_t* out, size_t n) {
 }
 
 // Returns a pointer to the next 'size' bytes, or NULL if fail
-const uint8_t* br_read(bon_reader* br, size_t size)
+static inline const uint8_t* br_read(bon_reader* br, size_t size)
 {
 	const uint8_t* ptr = br->data;
 	br_skip(br, size);
@@ -387,7 +387,7 @@ uint64_t br_read_u64(bon_reader* br) {
 }
 
 
-float br_read_float_native(bon_reader* br) {
+static inline float br_read_float_native(bon_reader* br) {
 	const uint8_t* ptr = br_read(br, sizeof(float));
 	if (ptr) {
 		return *(const float*)ptr;
@@ -618,6 +618,13 @@ void bon_r_string_sized(bon_reader* br, bon_value* val, size_t strLen)
 // We've read a control byte - read the value following it.
 void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 {
+	if (ctrl == BON_TYPE_FLOAT32)
+	{
+		val->type  = BON_VALUE_DOUBLE;
+		val->u.dbl = br_read_float_native(br);
+		return;
+	}
+	
 	switch (ctrl)
 	{
 		case BON_CTRL_BLOCK_REF:
@@ -995,6 +1002,7 @@ void bon_free_value_insides(bon_value* val)
 			for (bon_size ix=0; ix < val->u.list.size; ++ix) {
 				bon_free_value_insides( val->u.list.data + ix );
 			}
+			free( val->u.list.data );
 		} break;
 			
 		case BON_VALUE_OBJ: {
@@ -1002,6 +1010,7 @@ void bon_free_value_insides(bon_value* val)
 			for (bon_size ix=0; ix<kvs->size; ++ix) {
 				bon_free_value_insides( &kvs->data[ix].val );
 			}
+			free( kvs->data );
 		} break;
 			
 		case BON_VALUE_AGGREGATE: {
@@ -1025,8 +1034,8 @@ void bon_r_close(bon_r_doc* B)
 			bon_free_value_insides( &block->value );
 		}
 	}
-	
-	
+	free( B->blocks.data );
+		
 	free(B);
 }
 
@@ -1083,19 +1092,6 @@ bon_value* bon_r_root(bon_r_doc* B)
 bon_error bon_r_error(bon_r_doc* B)
 {
 	return B->error;
-}
-
-bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
-{
-	/* We should be protected from infinite recursion here,
-	 since we check all blockRefId on reading,
-	 ensuring they only point to blocks with higher ID:s. */
-	while (B->error==0 &&
-			 val && val->type == BON_VALUE_BLOCK_REF)
-	{
-		val = bon_r_get_block(B, val->u.blockRefId);
-	}
-	return val;
 }
 
 //------------------------------------------------------------------------------
@@ -1244,28 +1240,6 @@ uint64_t bon_r_uint(bon_r_doc* B, bon_value* val)
 	} else {
 		return (uint64_t)bon_r_int(B, val);
 	}
-}
-
-double bon_r_double(bon_r_doc* B, bon_value* val)
-{
-	val = bon_r_follow_refs(B, val);
-	
-	if (!val) {
-		return 0;
-	} else if (val->type == BON_VALUE_DOUBLE) {
-		return val->u.dbl;
-	} else if (val->type == BON_VALUE_UINT64) {
-		return val->u.u64;
-	} else if (val->type == BON_VALUE_SINT64) {
-		return val->u.s64;
-	} else {
-		return 0;
-	}
-}
-
-float bon_r_float(bon_r_doc* B, bon_value* obj)
-{
-	return (float)bon_r_double(B, obj);
 }
 
 bon_size bon_r_strlen(bon_r_doc* B, bon_value* val)
@@ -1431,35 +1405,6 @@ bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val)
 	}
 	
 	return agg->exploded;
-}
-
-
-bon_value* follow_and_explode(bon_r_doc* B, bon_value* val)
-{
-	val = bon_r_follow_refs(B, val);
-	
-	if (val && val->type == BON_VALUE_AGGREGATE) {
-		// If the user treats it like an object, convert it into one.
-		val = bon_exploded_aggr(B, val);
-	}
-	
-	return val;
-}
-
-bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size ix)
-{
-	val = follow_and_explode(B, val);
-	if (!val) { return NULL; }
-	
-	if (val->type == BON_VALUE_LIST)
-	{
-		const bon_value_list* vals = &val->u.list;
-		if (ix < vals->size) {
-			return &vals->data[ ix ];
-		}
-	}
-	
-	return NULL;
 }
 
 

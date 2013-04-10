@@ -294,7 +294,7 @@ uint64_t  bon_type_size(bon_type_id t);
 // Returns NULL on fail
 bon_value* bon_r_get_block(bon_r_doc* B, bon_block_id block_id);
 
-bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
+static bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val);
 
 // Endianness conversion (used for crc32)
 uint32_t le_to_uint32(uint32_t v);
