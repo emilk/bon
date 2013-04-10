@@ -108,7 +108,8 @@ bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 				fprintf(stderr, "obj with no ending }\n");
 				goto on_error;
 				
-			default: {				
+			case '$': {
+				++*fmt; // Skip key placeholder ($)
 				const char* key = va_arg(*ap, const char*);
 				bon_type* tmp_type = bon_new_type_fmt_ap(fmt, ap);
 				if (!tmp_type) {
@@ -121,6 +122,11 @@ bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 				kt->key  = key;
 				kt->type = *tmp_type;
 				free(tmp_type);
+			} break;
+				
+			default: {
+				fprintf(stderr, "obj with no key placeholder ($)\n");
+				goto on_error;
 			}
 		}
 	}
@@ -191,12 +197,12 @@ bon_type* bon_new_type_fmt_ap(const char** fmt, va_list* ap)
 			
 		case 'f': {
 			++*fmt;
-			return bon_new_type_simple(BON_TYPE_FLOAT32);
+			return bon_new_type_simple(BON_TYPE_FLOAT);
 		}
 			
 		case 'd': {
 			++*fmt;
-			return bon_new_type_simple(BON_TYPE_FLOAT64);
+			return bon_new_type_simple(BON_TYPE_DOUBLE);
 		}
 			
 		case 's': {
@@ -309,16 +315,16 @@ uint64_t bon_type_size(bon_type_id t)
 		case BON_TYPE_SINT32_BE:
 		case BON_TYPE_UINT32_LE:
 		case BON_TYPE_UINT32_BE:
-		case BON_TYPE_FLOAT32_LE:
-		case BON_TYPE_FLOAT32_BE:
+		case BON_TYPE_FLOAT_LE:
+		case BON_TYPE_FLOAT_BE:
 			return 4;
 			
 		case BON_TYPE_SINT64_LE:
 		case BON_TYPE_SINT64_BE:
 		case BON_TYPE_UINT64_LE:
 		case BON_TYPE_UINT64_BE:
-		case BON_TYPE_FLOAT64_LE:
-		case BON_TYPE_FLOAT64_BE:
+		case BON_TYPE_DOUBLE_LE:
+		case BON_TYPE_DOUBLE_BE:
 			return 8;
 			
 		default:

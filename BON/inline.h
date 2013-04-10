@@ -59,7 +59,7 @@ static inline void bon_w_float(bon_w_doc* B, float val)
 	}
 #endif
 	
-	BON_WRITE_QUICKLY(BON_CTRL_FLOAT32);
+	BON_WRITE_QUICKLY(BON_CTRL_FLOAT);
 }
 
 

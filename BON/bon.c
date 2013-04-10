@@ -170,10 +170,10 @@ void bon_print_aggr(bon_r_doc* B, const bon_type* aggType, bon_reader* br, FILE*
 		} break;
 			
 			
-		case BON_CTRL_FLOAT32_LE:
-		case BON_CTRL_FLOAT32_BE:
-		case BON_CTRL_FLOAT64_LE:
-		case BON_CTRL_FLOAT64_BE: {
+		case BON_CTRL_FLOAT_LE:
+		case BON_CTRL_FLOAT_BE:
+		case BON_CTRL_DOUBLE_LE:
+		case BON_CTRL_DOUBLE_BE: {
 			double dbl = br_read_double(br, id);
 			bon_print_float(out, dbl);
 		} break;

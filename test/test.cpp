@@ -240,8 +240,8 @@ TEST_CASE( "BON/control codes", "control codes" ) {
 		BON_CTRL_UINT32_LE,      BON_CTRL_UINT32_BE,
 		BON_CTRL_SINT64_LE,      BON_CTRL_SINT64_BE,
 		BON_CTRL_UINT64_LE,      BON_CTRL_UINT64_BE,
-		BON_CTRL_FLOAT32_LE,     BON_CTRL_FLOAT32_BE,
-		BON_CTRL_FLOAT64_LE,     BON_CTRL_FLOAT64_BE,
+		BON_CTRL_FLOAT_LE,     BON_CTRL_FLOAT_BE,
+		BON_CTRL_DOUBLE_LE,     BON_CTRL_DOUBLE_BE,
 		BON_CTRL_LIST_BEGIN,     BON_CTRL_LIST_END,    // 0x5B   0x5D
 		BON_CTRL_OBJ_BEGIN,      BON_CTRL_OBJ_END,     // 0x7B   0x7D
 	};
@@ -307,8 +307,8 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 			  p( BON_SHORT_STRING(5), "-0x80",   0,  BON_CTRL_SINT8, -0x80        );
 			  p( BON_SHORT_STRING(6), "0x7fff",  0,  BON_CTRL_UINT16, 0xff, 0x7f  );
 			  
-			  p( BON_SHORT_STRING(4), "f_pi",  0,  BON_CTRL_FLOAT32, 3.14f  );
-			  p( BON_SHORT_STRING(4), "d_pi",  0,  BON_CTRL_FLOAT64, 3.14   );
+			  p( BON_SHORT_STRING(4), "f_pi",  0,  BON_CTRL_FLOAT, 3.14f  );
+			  p( BON_SHORT_STRING(4), "d_pi",  0,  BON_CTRL_DOUBLE, 3.14   );
 			  
 			  p( BON_SHORT_STRING(1), 'a', 0                          );
 			  p( BON_CTRL_STRING_VLQ, STR_VLQ_1.size(), STR_VLQ_1, 0  );
@@ -520,7 +520,7 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 			  
 			  bon_w_key(B, "vecs");
 			  bon_w_pack_fmt(B, inVecs, sizeof(inVecs),
-								  "[#{[3d][3f][4u8]}]", (bon_size)NVecs, "pos", "normal", "color");
+								  "[#{$[3d]$[3f]$[4u8]}]", NVecs, "pos", "normal", "color");
 			  
 			  bon_w_end_obj(B);
 		  },
@@ -533,9 +533,9 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 			  
 			  p( BON_SHORT_STRUCT(3) );
 			  p( BON_SHORT_STRING(3), "pos", 0);
-			  p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT64 );
+			  p( BON_SHORT_ARRAY(3), BON_CTRL_DOUBLE );
 			  p( BON_SHORT_STRING(6), "normal", 0);
-			  p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT32 );
+			  p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT );
 			  p( BON_SHORT_STRING(5), "color", 0);
 			  p( BON_SHORT_BYTE_ARRAY(4) );
 			  
@@ -566,14 +566,14 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 			  
 			  {
 				  auto vertPtr = (const InVert*)bon_r_unpack_ptr_fmt(B, vecs, 2*sizeof(InVert),
-																					"[#{[3d][3f][4u8]}]", (bon_size)NVecs,
-																					"pos", "normal", "color");
+																					"[#{$[3d]$[3f]$[4u8]}]",
+																				   NVecs, "pos", "normal", "color");
 				  REQUIRE( vertPtr );
 				  REQUIRE( vertPtr[1].color[0] == 64 );
 			  }
 			  
 			  {
-				  struct alignas(1) OutVert {
+				  struct OutVert {
 					  uint8_t   color[4];
 					  float     pos[3];
 				  };
@@ -583,7 +583,7 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 				  OutVert outVerts[NVecs];
 				  
 				  bool win = bon_r_unpack_fmt(B, vecs, outVerts, sizeof(outVerts),
-															"[2{[4u8][3f]}]", "color", "pos");
+															"[2{$[4u8]$[3f]}]", "color", "pos");
 				  REQUIRE( win );
 				  REQUIRE( outVerts[0].color[0]  == 255  );
 				  REQUIRE( outVerts[0].pos[0]    == 1.0f );
@@ -637,16 +637,16 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  
 			  bon_w_begin_obj( B );
 			  
-			  bon_w_key(B, "s8");   bon_w_pack_array(B, 1, BON_TYPE_SINT8,    s8,   sizeof(s8)   );
-			  bon_w_key(B, "u8");   bon_w_pack_array(B, 1, BON_TYPE_UINT8,    u8,   sizeof(u8)   );
-			  bon_w_key(B, "s16");  bon_w_pack_array(B, 1, BON_TYPE_SINT16,   s16,  sizeof(s16)  );
-			  bon_w_key(B, "u16");  bon_w_pack_array(B, 1, BON_TYPE_UINT16,   u16,  sizeof(u16)  );
-			  bon_w_key(B, "s64");  bon_w_pack_array(B, 1, BON_TYPE_SINT64,   s64,  sizeof(s64)  );
-			  bon_w_key(B, "u64");  bon_w_pack_array(B, 1, BON_TYPE_UINT64,   u64,  sizeof(u64)  );
-			  bon_w_key(B, "fn");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT32,  fn,   sizeof(fn)   );
-			  bon_w_key(B, "fp");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT32,  fp,   sizeof(fp)   );
-			  bon_w_key(B, "dn");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT64,  dn,   sizeof(dn)   );
-			  bon_w_key(B, "dp");   bon_w_pack_array(B, 1, BON_TYPE_FLOAT64,  dp,   sizeof(dp)   );
+			  bon_w_key(B, "s8");   bon_w_pack_array(B,  s8, sizeof(s8),  1, BON_TYPE_SINT8   );
+			  bon_w_key(B, "u8");   bon_w_pack_array(B,  u8, sizeof(u8),  1, BON_TYPE_UINT8   );
+			  bon_w_key(B, "s16");  bon_w_pack_array(B, s16, sizeof(s16), 1, BON_TYPE_SINT16  );
+			  bon_w_key(B, "u16");  bon_w_pack_array(B, u16, sizeof(u16), 1, BON_TYPE_UINT16  );
+			  bon_w_key(B, "s64");  bon_w_pack_array(B, s64, sizeof(s64), 1, BON_TYPE_SINT64  );
+			  bon_w_key(B, "u64");  bon_w_pack_array(B, u64, sizeof(u64), 1, BON_TYPE_UINT64  );
+			  bon_w_key(B, "fn");   bon_w_pack_array(B,  fn, sizeof(fn),  1, BON_TYPE_FLOAT );
+			  bon_w_key(B, "fp");   bon_w_pack_array(B,  fp, sizeof(fp),  1, BON_TYPE_FLOAT );
+			  bon_w_key(B, "dn");   bon_w_pack_array(B,  dn, sizeof(dn),  1, BON_TYPE_DOUBLE );
+			  bon_w_key(B, "dp");   bon_w_pack_array(B,  dp, sizeof(dp),  1, BON_TYPE_DOUBLE );
 			  
 			  bon_w_end_obj( B );
 		  },
@@ -662,10 +662,10 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  p( BON_SHORT_STRING(3), "s64", 0,  BON_SHORT_ARRAY(1), BON_CTRL_SINT64,  -64,  0xff, 0xff, 0xff,  0xff, 0xff, 0xff, 0xff  );
 			  p( BON_SHORT_STRING(3), "u64", 0,  BON_SHORT_ARRAY(1), BON_CTRL_UINT64,  +64,  0,    0,    0,     0,    0,    0,    0     );
 			  
-			  p( BON_SHORT_STRING(2), "fn",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT32,  -3.14f    );
-			  p( BON_SHORT_STRING(2), "fp",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT32,  +3.14f    );
-			  p( BON_SHORT_STRING(2), "dn",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT64,  -2.71828  );
-			  p( BON_SHORT_STRING(2), "dp",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT64,  +2.71828  );
+			  p( BON_SHORT_STRING(2), "fn",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT,  -3.14f    );
+			  p( BON_SHORT_STRING(2), "fp",  0,  BON_SHORT_ARRAY(1), BON_CTRL_FLOAT,  +3.14f    );
+			  p( BON_SHORT_STRING(2), "dn",  0,  BON_SHORT_ARRAY(1), BON_CTRL_DOUBLE,  -2.71828  );
+			  p( BON_SHORT_STRING(2), "dp",  0,  BON_SHORT_ARRAY(1), BON_CTRL_DOUBLE,  +2.71828  );
 			  
 			  p( BON_CTRL_OBJ_END );
 		  },
@@ -769,13 +769,13 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  
 			  struct f_i32_t { float f; int32_t i32; };
 			  f_i32_t f_i32 = {0,0};
-			  REQUIRE( bon_r_unpack_fmt(B, root,  &f_i32, sizeof(f_i32), "{fi32}", "-8", "0x12345678") );
+			  REQUIRE( bon_r_unpack_fmt(B, root,  &f_i32, sizeof(f_i32), "{$f$i32}", "-8", "0x12345678") );
 			  REQUIRE( f_i32.f == -8 );
 			  REQUIRE( f_i32.i32 == 0x12345678 );
 			  
 			  struct i64_d_t { int64_t i64; double d; };
 			  i64_d_t i64_d = {0,0};
-			  REQUIRE( bon_r_unpack_fmt(B, root,  &i64_d, sizeof(i64_d), "{i64d}", "-8", "0x12345678") );
+			  REQUIRE( bon_r_unpack_fmt(B, root,  &i64_d, sizeof(i64_d), "{$i64$d}", "-8", "0x12345678") );
 			  REQUIRE( i64_d.i64  == -8 );
 			  REQUIRE( i64_d.d    == 0x12345678 );
 		  }
@@ -843,3 +843,97 @@ TEST_CASE( "BON/crc/short/fail", "Test of CRC checking" )
 
 
 //------------------------------------------------------------------------------
+
+
+
+TEST_CASE( "BON/pack/matrix", "Packing a rectangular matirx" )
+{
+	constexpr size_t W = 4;
+	constexpr size_t H = 10;
+	float src[W][H];
+	
+	for (size_t i=0; i<W; ++i) {
+		for (size_t j=0; j<H; ++j) {
+			src[i][j] = i * 100 + j + 0.1f;
+		}
+	}
+	
+	int16_t dst[W][H] = {{0}};
+	
+	
+	test("matrix",
+		  
+		  // Write
+		  [=](bon_w_doc* B) {
+			  bon_w_begin_obj(B);
+			  
+			  bon_w_key(B, "mat");
+			  
+#if 0
+			  bon_w_pack_fmt(B, src, sizeof(src), "[#[#f]]", W, H);
+#else
+			  bon_w_begin_list(B);
+			  for (size_t i=0; i<W; ++i) {
+				  bon_w_begin_list(B);
+				  for (size_t j=0; j<H; ++j) {
+					  bon_w_float(B, src[i][j]);
+				  }
+				  bon_w_end_list(B);
+			  }
+			  bon_w_end_list(B);
+#endif
+			  
+			  bon_w_end_obj(B);
+		  },
+		  
+		  [=](Verifier& p) {
+			  p( BON_CTRL_OBJ_BEGIN );
+			  
+			  p( BON_SHORT_STRING(3),  "mat",         0 );
+			  
+#if 0
+			  p( BON_SHORT_ARRAY(W), BON_SHORT_ARRAY(H), BON_CTRL_FLOAT );
+			  
+			  for (size_t i=0; i<W; ++i) {
+				  for (size_t j=0; j<H; ++j) {
+					  p( src[i][j] );
+				  }
+			  }
+#else
+			  p( BON_CTRL_LIST_BEGIN );
+			  for (size_t i=0; i<W; ++i) {
+				  p( BON_CTRL_LIST_BEGIN );
+				  for (size_t j=0; j<H; ++j) {
+					  p( BON_CTRL_FLOAT );
+					  p( src[i][j] );
+				  }
+				  p( BON_CTRL_LIST_END );
+			  }
+			  p( BON_CTRL_LIST_END );
+#endif
+			  
+			  p( BON_CTRL_OBJ_END );
+		  },
+		  
+		  [&](bon_r_doc* B) {
+			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
+			  
+			  auto root = bon_r_root(B);
+			  REQUIRE( root );
+			  
+			  auto mat = read_key(B, root, "mat");
+			  
+			  auto win = bon_r_unpack_fmt(B, mat, dst, sizeof(dst), "[#[#i16]]", W, H);
+			  REQUIRE( win );
+			  
+			  for (size_t i=0; i<W; ++i) {
+				  for (size_t j=0; j<H; ++j) {
+					  REQUIRE( dst[i][j]  ==  (int32_t)src[i][j] );
+				  }
+			  }
+			  
+			  REQUIRE( bon_r_list_size(B, mat) == W );
+			  REQUIRE( bon_r_list_size(B, bon_r_list_elem(B, mat, 0)) == H );
+		  }
+	);
+}

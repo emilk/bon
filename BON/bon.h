@@ -99,8 +99,8 @@ typedef enum {
 	BON_CTRL_SINT64_LE   = 'V',    BON_CTRL_SINT64_BE   = 'v',
 	BON_CTRL_UINT64_LE   = 'W',    BON_CTRL_UINT64_BE   = 'w',
 	
-	BON_CTRL_FLOAT32_LE  = 'X',    BON_CTRL_FLOAT32_BE  = 'x',
-	BON_CTRL_FLOAT64_LE  = 'Y',    BON_CTRL_FLOAT64_BE  = 'y',
+	BON_CTRL_FLOAT_LE  = 'X',    BON_CTRL_FLOAT_BE  = 'x',
+	BON_CTRL_DOUBLE_LE  = 'Y',    BON_CTRL_DOUBLE_BE  = 'y',
 	
 	// Open-ended list and object
 	BON_CTRL_LIST_BEGIN  = '[',    BON_CTRL_LIST_END    = ']',  // 0x5B   0x5D
@@ -113,8 +113,8 @@ typedef enum {
 	BON_CTRL_UINT32   = BON_CTRL_UINT32_LE,
 	BON_CTRL_SINT64   = BON_CTRL_SINT64_LE,
 	BON_CTRL_UINT64   = BON_CTRL_UINT64_LE,
-	BON_CTRL_FLOAT32  = BON_CTRL_FLOAT32_LE,
-	BON_CTRL_FLOAT64  = BON_CTRL_FLOAT64_LE,
+	BON_CTRL_FLOAT  = BON_CTRL_FLOAT_LE,
+	BON_CTRL_DOUBLE  = BON_CTRL_DOUBLE_LE,
 #else
 	BON_CTRL_SINT16   = BON_CTRL_SINT16_BE,
 	BON_CTRL_UINT16   = BON_CTRL_UINT16_BE,
@@ -122,8 +122,8 @@ typedef enum {
 	BON_CTRL_UINT32   = BON_CTRL_UINT32_BE,
 	BON_CTRL_SINT64   = BON_CTRL_SINT64_BE,
 	BON_CTRL_UINT64   = BON_CTRL_UINT64_BE,
-	BON_CTRL_FLOAT32  = BON_CTRL_FLOAT32_BE,
-	BON_CTRL_FLOAT64  = BON_CTRL_FLOAT64_BE
+	BON_CTRL_FLOAT  = BON_CTRL_FLOAT_BE,
+	BON_CTRL_DOUBLE  = BON_CTRL_DOUBLE_BE
 #endif
 } bon_ctrl;
 
@@ -160,10 +160,10 @@ typedef enum {
 	BON_TYPE_UINT64_LE  = BON_CTRL_UINT64_LE,
 	BON_TYPE_UINT64_BE  = BON_CTRL_UINT64_BE,
 	
-	BON_TYPE_FLOAT32_LE = BON_CTRL_FLOAT32_LE,
-	BON_TYPE_FLOAT32_BE = BON_CTRL_FLOAT32_BE,
-	BON_TYPE_FLOAT64_LE = BON_CTRL_FLOAT64_LE,
-	BON_TYPE_FLOAT64_BE = BON_CTRL_FLOAT64_BE,
+	BON_TYPE_FLOAT_LE = BON_CTRL_FLOAT_LE,
+	BON_TYPE_FLOAT_BE = BON_CTRL_FLOAT_BE,
+	BON_TYPE_DOUBLE_LE = BON_CTRL_DOUBLE_LE,
+	BON_TYPE_DOUBLE_BE = BON_CTRL_DOUBLE_BE,
 	
 	BON_TYPE_SINT16   = BON_CTRL_SINT16,
 	BON_TYPE_UINT16   = BON_CTRL_UINT16,
@@ -171,8 +171,8 @@ typedef enum {
 	BON_TYPE_UINT32   = BON_CTRL_UINT32,
 	BON_TYPE_SINT64   = BON_CTRL_SINT64,
 	BON_TYPE_UINT64   = BON_CTRL_UINT64,
-	BON_TYPE_FLOAT32  = BON_CTRL_FLOAT32,
-	BON_TYPE_FLOAT64  = BON_CTRL_FLOAT64
+	BON_TYPE_FLOAT  = BON_CTRL_FLOAT,
+	BON_TYPE_DOUBLE  = BON_CTRL_DOUBLE
 } bon_type_id;
 
 //------------------------------------------------------------------------------
@@ -196,18 +196,16 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type);
 
 /*
  struct Vert { float pos[3]; uint8_t color[4]; }
- bon_type* bon_new_type_fmt("{[3f][4u8]}", "pos", "color")
+ bon_type* bon_new_type_fmt("{$[3f]$[4u8]}", "pos", "color")
  
- b                - bon_bool (single byte)
- u8 u16 u32 u64   - unsigned
- i8 i16 i32 i64   - signed
+ u8 u16 u32 u64   - unsigned int
+ i8 i16 i32 i64   - signed int
  f                - float
  d                - double
- s                - const char*
- {...}            - object with any number of types (keys given in vargs)
+ {...}            - object. Interleave $ (key placeholder) and types.
  [3f]             - array of three floats
- [#i]             - array of signed integers (size given in vargs as bon_size)
-  
+ [#u8]            - array of bytes (array size given in vargs as bon_size)
+   
  NULL on fail
  */
 bon_type* bon_new_type_fmt(const char* fmt, ...);
@@ -333,8 +331,8 @@ void         bon_w_pack_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
 								    const char* fmt, ...);
 
 // Helper:
-void         bon_w_pack_array(bon_w_doc* B, bon_size n_elem, bon_type_id type,
-                              const void* data, bon_size nbytes);
+void         bon_w_pack_array(bon_w_doc* B, const void* data, bon_size nbytes,
+										bon_size n_elem, bon_type_id type);
 
 
 
@@ -468,7 +466,7 @@ bon_bool bon_r_unpack_fmt(bon_r_doc* B, bon_value* srcVal,
  struct Vert { float pos[3]; uint8_t color[4]; }
  const int n = bon_r_list_size(B, val)
  const Vert* verts = bon_r_unpack_ptr_fmt(B, val, n * sizeof(Vert),
-                                          "[#{[3f][4u8]}]", n, "pos", "color");
+                                          "[#{$[3f]$[4u8]}]", n, "pos", "color");
  
  */
 const void* bon_r_unpack_ptr    (bon_r_doc* B, bon_value* srcVal,

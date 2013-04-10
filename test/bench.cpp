@@ -169,9 +169,9 @@ void run_float_benchmark(bool packed)
 		bon_w_key(B, "list");
 		if (packed) {
 			if (std::is_same<SrcType, float>::value) {
-				bon_w_pack_array(B, NUM_VALS, BON_TYPE_FLOAT32, src.data(), sizeof(SrcType)*NUM_VALS);
+				bon_w_pack_array(B, src.data(), sizeof(SrcType)*NUM_VALS, NUM_VALS, BON_TYPE_FLOAT);
 			} else {
-				bon_w_pack_array(B, NUM_VALS, BON_TYPE_FLOAT64, src.data(), sizeof(SrcType)*NUM_VALS);
+				bon_w_pack_array(B, src.data(), sizeof(SrcType)*NUM_VALS, NUM_VALS, BON_TYPE_DOUBLE);
 			}
 		} else {
 			bon_w_begin_list(B);
@@ -201,7 +201,7 @@ void run_float_benchmark(bool packed)
 	};
 	
 	printf("Parsing... ");
-#if 1
+#if 0
 	time_n(16, parse, [&]() {
 		bon_r_close(B);
 	});

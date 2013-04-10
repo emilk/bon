@@ -196,10 +196,10 @@ bon_bool bon_is_int(uint8_t ctrl)
 bon_bool bon_is_float_double(uint8_t ctrl)
 {
 	switch (ctrl) {
-		case BON_CTRL_FLOAT32_LE:
-		case BON_CTRL_FLOAT32_BE:
-		case BON_CTRL_FLOAT64_LE:
-		case BON_CTRL_FLOAT64_BE:
+		case BON_CTRL_FLOAT_LE:
+		case BON_CTRL_FLOAT_BE:
+		case BON_CTRL_DOUBLE_LE:
+		case BON_CTRL_DOUBLE_BE:
 			return BON_TRUE;
 			
 		default:
@@ -224,10 +224,10 @@ bon_bool bon_is_simple_type(uint8_t ctrl)
 		case BON_CTRL_SINT64_BE:
 		case BON_CTRL_UINT64_LE:
 		case BON_CTRL_UINT64_BE:
-		case BON_CTRL_FLOAT32_LE:
-		case BON_CTRL_FLOAT32_BE:
-		case BON_CTRL_FLOAT64_LE:
-		case BON_CTRL_FLOAT64_BE:
+		case BON_CTRL_FLOAT_LE:
+		case BON_CTRL_FLOAT_BE:
+		case BON_CTRL_DOUBLE_LE:
+		case BON_CTRL_DOUBLE_BE:
 			return BON_TRUE;
 			
 		default:
@@ -429,14 +429,14 @@ double br_read_double_swapped(bon_reader* br) {
 
 double br_read_double(bon_reader* br, bon_type_id t) {
 	switch (t) {
-		case BON_CTRL_FLOAT32_LE:
+		case BON_CTRL_FLOAT_LE:
 #if __LITTLE_ENDIAN__
 			return br_read_float_native(br);
 #else
 			return br_read_float_swapped(br);
 #endif
 			
-		case BON_CTRL_FLOAT32_BE:
+		case BON_CTRL_FLOAT_BE:
 #if __LITTLE_ENDIAN__
 			return br_read_float_swapped(br);
 #else
@@ -444,7 +444,7 @@ double br_read_double(bon_reader* br, bon_type_id t) {
 #endif
 			
 			
-		case BON_CTRL_FLOAT64_LE:
+		case BON_CTRL_DOUBLE_LE:
 #if __LITTLE_ENDIAN__
 			return br_read_double_native(br);
 #else
@@ -452,7 +452,7 @@ double br_read_double(bon_reader* br, bon_type_id t) {
 #endif
 			
 			
-		case BON_CTRL_FLOAT64_BE:
+		case BON_CTRL_DOUBLE_BE:
 #if __LITTLE_ENDIAN__
 			return br_read_double_swapped(br);
 #else
@@ -618,7 +618,7 @@ void bon_r_string_sized(bon_reader* br, bon_value* val, size_t strLen)
 // We've read a control byte - read the value following it.
 void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 {
-	if (ctrl == BON_TYPE_FLOAT32)
+	if (ctrl == BON_TYPE_FLOAT)
 	{
 		val->type  = BON_VALUE_DOUBLE;
 		val->u.dbl = br_read_float_native(br);
@@ -681,10 +681,10 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 			break;
 			
 			
-		case BON_CTRL_FLOAT32_LE:
-		case BON_CTRL_FLOAT32_BE:
-		case BON_CTRL_FLOAT64_LE:
-		case BON_CTRL_FLOAT64_BE:
+		case BON_CTRL_FLOAT_LE:
+		case BON_CTRL_FLOAT_BE:
+		case BON_CTRL_DOUBLE_LE:
+		case BON_CTRL_DOUBLE_BE:
 			val->type  = BON_VALUE_DOUBLE;
 			val->u.dbl = br_read_double(br, ctrl);
 			break;
@@ -1359,8 +1359,8 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 		}
 			
 			
-		case BON_TYPE_FLOAT32_LE:  case BON_TYPE_FLOAT32_BE:
-		case BON_TYPE_FLOAT64_LE:  case BON_TYPE_FLOAT64_BE: {
+		case BON_TYPE_FLOAT_LE:  case BON_TYPE_FLOAT_BE:
+		case BON_TYPE_DOUBLE_LE:  case BON_TYPE_DOUBLE_BE: {
 			dst->type   =  BON_VALUE_DOUBLE;
 			dst->u.dbl  =  br_read_double(br, id);
 			return BON_TRUE;
@@ -1647,8 +1647,8 @@ bon_bool bw_write_uint_as(bon_writer* bw, uint64_t val, bon_type_id type)
 		case BON_TYPE_UINT64_LE:  return bw_write_uint_bytes(bw, val, 8, UNSIGNED,  LE);
 		case BON_TYPE_UINT64_BE:  return bw_write_uint_bytes(bw, val, 8, UNSIGNED,  BE);
 			
-		case BON_TYPE_FLOAT32_LE: case BON_TYPE_FLOAT32_BE:
-		case BON_TYPE_FLOAT64_LE: case BON_TYPE_FLOAT64_BE:
+		case BON_TYPE_FLOAT_LE: case BON_TYPE_FLOAT_BE:
+		case BON_TYPE_DOUBLE_LE: case BON_TYPE_DOUBLE_BE:
 			return bw_write_double_as(bw, (double)val, type);
 			
 		default:
@@ -1674,8 +1674,8 @@ bon_bool bw_write_sint_as(bon_writer* bw, int64_t val, bon_type_id type)
 		case BON_TYPE_SINT64_LE:  return bw_write_uint_bytes(bw, (uint64_t)val, 8, SIGNED,    LE);
 		case BON_TYPE_SINT64_BE:  return bw_write_uint_bytes(bw, (uint64_t)val, 8, SIGNED,    BE);
 			
-		case BON_TYPE_FLOAT32_LE: case BON_TYPE_FLOAT32_BE:
-		case BON_TYPE_FLOAT64_LE: case BON_TYPE_FLOAT64_BE:
+		case BON_TYPE_FLOAT_LE: case BON_TYPE_FLOAT_BE:
+		case BON_TYPE_DOUBLE_LE: case BON_TYPE_DOUBLE_BE:
 			return bw_write_double_as(bw, (double)val, type);
 			
 		default:
@@ -1686,25 +1686,25 @@ bon_bool bw_write_sint_as(bon_writer* bw, int64_t val, bon_type_id type)
 
 bon_bool bw_write_double_as(bon_writer* bw, double val, bon_type_id type)
 {	
-	if (type == BON_TYPE_FLOAT32) {
+	if (type == BON_TYPE_FLOAT) {
 		float f = (float)val;
 		return bw_write_raw(bw, &f, sizeof(f));
 	}
 	
-	if (type == BON_TYPE_FLOAT64){
+	if (type == BON_TYPE_DOUBLE){
 		return bw_write_raw(bw, &val, sizeof(val));
 	}
 	
-	if (type == BON_TYPE_FLOAT32_LE ||
-		 type == BON_TYPE_FLOAT32_BE)
+	if (type == BON_TYPE_FLOAT_LE ||
+		 type == BON_TYPE_FLOAT_BE)
 	{
 		// non-native endian:
 		float f = (float)val;
 		return bw_write_raw_reversed(bw, &f, sizeof(f));
 	}
 	
-	if (type == BON_TYPE_FLOAT64_LE ||
-		 type == BON_TYPE_FLOAT64_BE)
+	if (type == BON_TYPE_DOUBLE_LE ||
+		 type == BON_TYPE_DOUBLE_BE)
 	{
 		// non-native endian:
 		return bw_write_raw_reversed(bw, &val, sizeof(val));
@@ -1757,8 +1757,8 @@ bon_bool translate_array(bon_r_doc* B,
 /**/    return BON_TRUE;
 	
 #define COPY_BY_TYPE(SrcType)                                            \
-if (dst_type == BON_TYPE_FLOAT64)  { COPY_ARRAY(SrcType, double  ); }    \
-if (dst_type == BON_TYPE_FLOAT32)  { COPY_ARRAY(SrcType, float   ); }    \
+if (dst_type == BON_TYPE_DOUBLE)  { COPY_ARRAY(SrcType, double  ); }    \
+if (dst_type == BON_TYPE_FLOAT)  { COPY_ARRAY(SrcType, float   ); }    \
 if (dst_type == BON_TYPE_SINT64)   { COPY_ARRAY(SrcType, int64_t ); }    \
 if (dst_type == BON_TYPE_SINT32)   { COPY_ARRAY(SrcType, int32_t ); }    \
 if (dst_type == BON_TYPE_SINT16)   { COPY_ARRAY(SrcType, int16_t ); }    \
@@ -1768,8 +1768,8 @@ if (dst_type == BON_TYPE_UINT32)   { COPY_ARRAY(SrcType, uint32_t); }    \
 if (dst_type == BON_TYPE_UINT16)   { COPY_ARRAY(SrcType, uint16_t); }    \
 if (dst_type == BON_TYPE_UINT8 )   { COPY_ARRAY(SrcType, uint8_t ); }
 	
-	if (src_type == BON_TYPE_FLOAT64) { COPY_BY_TYPE(double)   };
-	if (src_type == BON_TYPE_FLOAT32) { COPY_BY_TYPE(float)    };
+	if (src_type == BON_TYPE_DOUBLE) { COPY_BY_TYPE(double)   };
+	if (src_type == BON_TYPE_FLOAT) { COPY_BY_TYPE(float)    };
 	if (src_type == BON_TYPE_SINT64 ) { COPY_BY_TYPE(int64_t)  };
 	if (src_type == BON_TYPE_SINT32 ) { COPY_BY_TYPE(int32_t)  };
 	if (src_type == BON_TYPE_SINT16 ) { COPY_BY_TYPE(int16_t)  };
@@ -1902,8 +1902,8 @@ bon_bool translate_aggregate(bon_r_doc* B,
 			return bw_write_uint_as(bw, br_read_uint64(br, srcType->id), dstType->id);
 		}
 			
-		case BON_TYPE_FLOAT32_LE:  case BON_TYPE_FLOAT32_BE:
-		case BON_TYPE_FLOAT64_LE:  case BON_TYPE_FLOAT64_BE: {
+		case BON_TYPE_FLOAT_LE:  case BON_TYPE_FLOAT_BE:
+		case BON_TYPE_DOUBLE_LE:  case BON_TYPE_DOUBLE_BE: {
 			return bw_write_double_as(bw, br_read_double(br, srcType->id), dstType->id);
 		}
 			
@@ -1951,11 +1951,11 @@ bon_bool bw_list_2_array(bon_r_doc* B, const bon_value_list* src_list,
 	// Optimizations for copying to native numeric types:
 	
 	switch (dst_array->type->id) {
-		case BON_TYPE_FLOAT32: {
+		case BON_TYPE_FLOAT: {
 			COPY_NUMERIC_ARRAY(float)
 		} break;
 			
-		case BON_TYPE_FLOAT64: {
+		case BON_TYPE_DOUBLE: {
 			COPY_NUMERIC_ARRAY(double)
 		} break;
 			

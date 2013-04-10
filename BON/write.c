@@ -378,7 +378,7 @@ void bon_w_double(bon_w_doc* B, double val)
 	if (!isfinite(val) || (double)(float)val == val) {
 		bon_w_float(B, (float)val);
 	} else {
-		bon_w_raw_uint8(B, BON_CTRL_FLOAT64);
+		bon_w_raw_uint8(B, BON_CTRL_DOUBLE);
 		bon_w_raw(B, &val, 8);
 	}
 }
@@ -473,8 +473,8 @@ void bon_w_pack_fmt(bon_w_doc* B, const void* data, bon_size nbytes,
 	}
 }
 
-void bon_w_pack_array(bon_w_doc* B, bon_size len, bon_type_id element_t,
-					  const void* data, bon_size nbytes)
+void bon_w_pack_array(bon_w_doc* B, const void* data, bon_size nbytes,
+							 bon_size len, bon_type_id element_t)
 {
 	bon_w_assert(B, len * bon_type_size(element_t) == nbytes,
 					 BON_ERR_BAD_AGGREGATE_SIZE);
