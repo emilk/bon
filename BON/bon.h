@@ -27,7 +27,8 @@ typedef char bon_bool;
 #define BON_TRUE  ((bon_bool)1)
 #define BON_FALSE ((bon_bool)0)
 
-typedef uint64_t bon_size;
+typedef size_t bon_size;
+
 #define BON_ZERO_ENDED (bon_size)(-1)  // Valid as argument of string size
 
 typedef uint64_t bon_block_id;

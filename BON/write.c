@@ -11,7 +11,6 @@
 #include "bon_private.h"
 #include "crc32.h"
 #include <assert.h>
-#include <math.h>         // isfinite
 #include <stdarg.h>       // va_list, va_start, va_arg, va_end
 #include <stdlib.h>       // malloc, free, realloc, calloc, ...
 

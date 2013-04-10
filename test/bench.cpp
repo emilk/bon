@@ -15,12 +15,27 @@ extern "C" {
 #include "crc32.h"
 }
 
-
-#include <msgpack.hpp>
-
 #include <iostream>
 #include <iomanip>
 #include <numeric>  // accumulate
+
+
+
+
+#ifdef __clang__
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wconversion"
+#  pragma clang diagnostic ignored "-Wshadow"
+#  pragma clang diagnostic ignored "-Wunused-parameter"
+#  pragma clang diagnostic ignored "-Wunused-function"
+#  include <msgpack.hpp>
+#  pragma clang diagnostic pop
+#else
+#  include <msgpack.hpp>
+#endif
+
+
+
 
 
 using namespace std;

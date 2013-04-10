@@ -210,7 +210,7 @@ void cd(const char* key)
 	bon_value* val = val_by_name_or_num(key);
 	
 	if (val) {
-		bon_value* old = top();
+		//bon_value* old = top();
 		
 		g_stack_top->next = (elem_t*)calloc(1, sizeof(elem_t));
 		g_stack_top->next->val = val;

@@ -10,7 +10,7 @@
 #define BON_write_inline_h
 
 #include <assert.h>
-#include "crc32.h"
+#include <math.h>     // isfinite
 
 //#define inline
 
