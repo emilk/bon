@@ -198,7 +198,7 @@ void bon_print(bon_r_doc* B, bon_value* v, FILE* out, size_t indent)
 	}
 	
 	if (bon_r_is_object(B, v)) {
-		const bon_kvs* kvs = &v->u.obj.kvs;
+		const bon_obj* kvs = &v->u.obj;
 		bon_size size = kvs->size;
 		
 		if (size==0) {
@@ -278,7 +278,7 @@ void bon_print(bon_r_doc* B, bon_value* v, FILE* out, size_t indent)
 			
 		case BON_VALUE_LIST: {
 			fprintf(out, "[ ");
-			const bon_value_list* vals = &v->u.list;
+			const bon_list* vals = &v->u.list;
 			bon_size size = vals->size;
 			for (bon_size i=0; i<size; ++i) {
 				bon_print(B, vals->data + i, out, indent);

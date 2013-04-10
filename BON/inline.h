@@ -81,7 +81,7 @@ static inline bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size 
 	
 	if (val->type == BON_VALUE_LIST)
 	{
-		const bon_value_list* vals = &val->u.list;
+		const bon_list* vals = &val->u.list;
 		if (ix < vals->size) {
 			return &vals->data[ ix ];
 		}

@@ -157,13 +157,6 @@ typedef struct bon_kv bon_kv;
 
 
 typedef struct {
-	bon_size  size;
-	bon_size  cap;
-	bon_kv*   data;
-} bon_kvs;
-
-
-typedef struct {
 	bon_size     size;  // Size in bytes, excluding trailing zero.
 	const char*  ptr;   // Points to 'size' bytes of an utf8 encoded string, followed by a zero.
 } bon_value_str;
@@ -171,9 +164,8 @@ typedef struct {
 
 typedef struct {
 	bon_size   size;
-	bon_size   cap;
 	bon_value* data;
-} bon_value_list;
+} bon_list;
 
 
 typedef struct {
@@ -184,9 +176,9 @@ typedef struct {
 
 
 typedef struct {
-	// move 'kvs' inline?
-	bon_kvs  kvs;
-} bon_value_obj;
+	bon_size  size;
+	bon_kv*   data;
+} bon_obj;
 
 
 typedef union {
@@ -195,9 +187,9 @@ typedef union {
 	int64_t         s64;
 	double          dbl;
 	bon_value_str   str;
-	bon_value_list  list;
-	bon_value_obj   obj;
-	bon_value_agg   agg;
+	bon_list        list;
+	bon_obj         obj;
+	bon_value_agg*  agg; // Pointer to keep down size of bon_value
 	bon_block_id    blockRefId;
 } bon_value_union;
 

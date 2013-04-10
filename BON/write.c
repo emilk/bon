@@ -73,7 +73,7 @@ void bon_w_assert(bon_w_doc* B, bon_bool statement, bon_error onFail)
 
 
 // Bypass buffer
-inline void bon_write_to_writer(bon_w_doc* B, const void* data, bon_size n)
+static inline void bon_write_to_writer(bon_w_doc* B, const void* data, bon_size n)
 {
 	if (!B->writer(B->userData, data, n)) {
 		B->error = BON_ERR_WRITE_ERROR;

@@ -208,6 +208,8 @@ void test(std::string baseName, Writer w, Verifyer v, Reader r)
 
 TEST_CASE( "BON/code ranges", "Code ranges" ) {
 	REQUIRE((BON_SHORT_NEG_INT_START + 16)  == 256);
+	
+	printf("sizeof(bon_value): %d\n", (int)sizeof(bon_value));
 }
 
 

@@ -344,8 +344,8 @@ static inline uint64_t br_read_vlq(bon_reader* br)
 
 //------------------------------------------------------------------------------
 
-void bon_r_list_values(bon_reader* br, bon_value_list* vals);
-void bon_r_kvs(bon_reader* br, bon_kvs* kvs);
+void bon_r_list_values(bon_reader* br, bon_list* vals);
+void bon_r_kvs(bon_reader* br, bon_obj* kvs);
 
 uint16_t br_read_u16(bon_reader* br) {
 	const uint8_t* ptr = br->data;
@@ -577,7 +577,8 @@ void bon_r_unpack_value(bon_reader* br, bon_value* val)
 	val->type = BON_VALUE_AGGREGATE;
 	bon_type* type = &val->u.agg.type;
 	parse_aggr_type(br, type);
-	val->u.agg.data = br->data;
+	val->u.agg.data     = br->data;
+	val->u.agg.exploded = NULL;
 	bon_size nBytesPayload = bon_aggregate_payload_size(type);
 	br_skip(br, nBytesPayload);
 	
@@ -690,7 +691,7 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 			
 		case BON_CTRL_OBJ_BEGIN:
 			val->type      = BON_VALUE_OBJ;
-			bon_r_kvs(br, &val->u.obj.kvs);
+			bon_r_kvs(br, &val->u.obj);
 			if (br_next(br) != BON_CTRL_OBJ_END) {
 				br_set_err(br, BON_ERR_MISSING_OBJ_END);
 			}
@@ -714,8 +715,6 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 
 void bon_r_value(bon_reader* br, bon_value* val)
 {
-	memset(val, 0, sizeof(bon_value));
-	
 	uint8_t ctrl = br_next(br);
 	
 	
@@ -754,9 +753,15 @@ void bon_r_value(bon_reader* br, bon_value* val)
 }
 
 
-void bon_r_list_values(bon_reader* br, bon_value_list* vals)
-{
-	memset(vals, 0, sizeof(bon_value_list));
+void bon_r_list_values(bon_reader* br, bon_list* vals)
+{	
+	typedef struct {
+		bon_size   size;
+		bon_size   cap;
+		bon_value* data;
+	} value_list;
+	
+	value_list exp_list = {0,0,0};
 	
 	while (!br->error)
 	{
@@ -764,18 +769,27 @@ void bon_r_list_values(bon_reader* br, bon_value_list* vals)
 			break;
 		}
 		
-		BON_VECTOR_EXPAND(*vals, bon_value, 1)
-		bon_r_value(br, vals->data + vals->size - 1);
+		BON_VECTOR_EXPAND(exp_list, bon_value, 1)
+		bon_r_value(br, exp_list.data + exp_list.size - 1);
 	}
+	
+	vals->size = exp_list.size;
+	vals->data = exp_list.data;
 }
 
 
 bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id);
 
 
-void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
+void bon_r_kvs(bon_reader* br, bon_obj* obj)
 {
-	memset(kvs, 0, sizeof(bon_kvs));
+	typedef struct {
+		bon_size  size;
+		bon_size  cap;
+		bon_kv*   data;
+	} bon_kvs;
+	
+	bon_kvs kvs = {0,0,0};
 	
 	while (!br->error)
 	{
@@ -784,9 +798,9 @@ void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 			break;
 		}
 		
-		BON_VECTOR_EXPAND(*kvs, bon_kv, 1)
+		BON_VECTOR_EXPAND(kvs, bon_kv, 1)
 		
-		bon_kv* kv = kvs->data + kvs->size - 1;
+		bon_kv* kv = kvs.data + kvs.size - 1;
 		
 		bon_value keyVal;
 		bon_r_value(br, &keyVal);
@@ -797,6 +811,7 @@ void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 			key = bon_r_load_block(br->B, key->u.blockRefId);
 			if (!key) {
 				br_set_err(br, BON_ERR_BAD_KEY);
+				free(kvs.data);
 				return;
 			}
 		}
@@ -806,12 +821,16 @@ void bon_r_kvs(bon_reader* br, bon_kvs* kvs)
 			 key->u.str.size != strlen(key->u.str.ptr))
 		{
 			br_set_err(br, BON_ERR_BAD_KEY);
+			free(kvs.data);
 			return;
 		}
 		
 		kv->key = key->u.str.ptr;
 		bon_r_value(br, &kv->val);
 	}
+	
+	obj->size = kvs.size;
+	obj->data = kvs.data;
 }
 
 void bon_r_header(bon_reader* br)
@@ -997,7 +1016,7 @@ void bon_free_value_insides(bon_value* val)
 		} break;
 			
 		case BON_VALUE_OBJ: {
-			bon_kvs* kvs = &val->u.obj.kvs;
+			bon_obj* kvs = &val->u.obj;
 			for (bon_size ix=0; ix<kvs->size; ++ix) {
 				bon_free_value_insides( &kvs->data[ix].val );
 			}
@@ -1296,10 +1315,9 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 			
 			dst->type              =  BON_VALUE_LIST;
 			
-			bon_value_list* list   =  &dst->u.list;
+			bon_list* list   =  &dst->u.list;
 			list->size             =  n;
-			list->cap              =  n;
-			list->data             =  BON_ALLOC_TYPE(n, bon_value);
+			list->data             =  (bon_value*)malloc(n * sizeof(bon_value));
 			
 			for (bon_size ix=0; ix<n; ++ix) {
 				bon_explode_aggr(B, list->data +ix, array->type, br);
@@ -1314,11 +1332,9 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 			
 			dst->type               =  BON_VALUE_OBJ;
 			
-			bon_value_obj*  obj     =  &dst->u.obj;
-			bon_kvs*        kvs     =  &obj->kvs;
+			bon_obj*        kvs     =  &dst->u.obj;
 			kvs->size               =  n;
-			kvs->cap                =  n;
-			kvs->data               =  BON_ALLOC_TYPE(n, bon_kv);
+			kvs->data               =  (bon_kv*)malloc(n * sizeof(bon_kv));
 			
 			for (bon_size ix=0; ix<n; ++ix) {
 				bon_kv* kv = kvs->data  + ix;
@@ -1407,7 +1423,7 @@ bon_size bon_r_obj_size(bon_r_doc* B, bon_value* val)
 	
 	switch (val->type) {
 		case BON_VALUE_OBJ:
-			return val->u.obj.kvs.size;
+			return val->u.obj.size;
 			
 		case BON_VALUE_AGGREGATE: {
 			const bon_value_agg* agg = &val->u.agg;
@@ -1432,7 +1448,7 @@ const char* bon_r_obj_key(bon_r_doc* B, bon_value* val, bon_size ix)
 		return NULL;
 	}
 	
-	bon_kvs* kvs = &val->u.obj.kvs;
+	bon_obj* kvs = &val->u.obj;
 	if (ix < kvs->size) {
 		return kvs->data[ix].key;
 	} else {
@@ -1448,7 +1464,7 @@ bon_value* bon_r_obj_value(bon_r_doc* B, bon_value* val, bon_size ix)
 		return NULL;
 	}
 	
-	bon_kvs* kvs = &val->u.obj.kvs;
+	bon_obj* kvs = &val->u.obj;
 	if (ix < kvs->size) {
 		return &kvs->data[ix].val;
 	} else {
@@ -1465,8 +1481,7 @@ bon_value* bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key)
 		return NULL;
 	}
 	
-	const bon_value_obj*  obj  = &val->u.obj;
-	const bon_kvs*        kvs  = &obj->kvs;
+	const bon_obj* kvs  = &val->u.obj;
 	
 	for (bon_size i=0; i<kvs->size; ++i) {
 		bon_kv* kv = &kvs->data[i];
@@ -1908,7 +1923,7 @@ bon_bool translate_aggregate(bon_r_doc* B,
 bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 									const bon_type* dstType, bon_writer* bw);
 
-bon_bool bw_list_2_array(bon_r_doc* B, const bon_value_list* src_list,
+bon_bool bw_list_2_array(bon_r_doc* B, const bon_list* src_list,
 								 const bon_type_array* dst_array, bon_writer* bw)
 {
 	if (src_list->size != dst_array->size) {
@@ -2019,7 +2034,7 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 				return BON_FALSE;
 			}
 			
-			const bon_value_list* src_list  = &srcVal->u.list;
+			const bon_list* src_list  = &srcVal->u.list;
 			const bon_type_array* dst_array = dstType->u.array;
 			
 			return bw_list_2_array(B, src_list, dst_array, bw);
