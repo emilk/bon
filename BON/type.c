@@ -94,11 +94,11 @@ bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 			case '}': {
 				++*fmt;
 				
-				bon_type_struct* strct = BON_ALLOC_TYPE(1, bon_type_struct);
+				bon_type_struct* strct = BON_CALLOC_TYPE(1, bon_type_struct);
 				strct->size  =  expStrct.size;
 				strct->kts   =  expStrct.data;
 				
-				bon_type* ret = BON_ALLOC_TYPE(1, bon_type);
+				bon_type* ret = BON_CALLOC_TYPE(1, bon_type);
 				ret->id = BON_TYPE_STRUCT;
 				ret->u.strct = strct;
 				return ret;

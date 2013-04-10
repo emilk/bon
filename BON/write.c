@@ -161,7 +161,7 @@ void bon_w_footer(bon_w_doc* B)
 
 bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_w_flags flags)
 {
-	bon_w_doc* B = BON_ALLOC_TYPE(1, bon_w_doc);
+	bon_w_doc* B = BON_CALLOC_TYPE(1, bon_w_doc);
 	B->writer    = writer;
 	B->userData  = userData;
 	B->crc_inv   = 0xffffffff;

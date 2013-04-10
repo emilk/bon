@@ -290,9 +290,10 @@ void bon_print(bon_r_doc* B, bon_value* v, FILE* out, size_t indent)
 			
 			
 		case BON_VALUE_AGGREGATE: {
-			bon_size byteSize = bon_aggregate_payload_size(&v->u.agg.type);
-			bon_reader br = { v->u.agg.data, byteSize, 0, BON_BAD_BLOCK_ID, 0 };
-			bon_print_aggr(B, &v->u.agg.type, &br, out);
+			bon_value_agg* agg = v->u.agg;
+			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
+			bon_reader br = { agg->data, byteSize, 0, BON_BAD_BLOCK_ID, 0 };
+			bon_print_aggr(B, &agg->type, &br, out);
 			if (br.nbytes!=0) {
 				fprintf(stderr, "Bad aggregate\n");
 			}

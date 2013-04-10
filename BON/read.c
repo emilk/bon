@@ -494,7 +494,7 @@ void parse_aggr_type(bon_reader* br, bon_type* type);
 void parse_array_type(bon_reader* br, bon_type* type, bon_size arraySize)
 {
 	type->id = BON_TYPE_ARRAY;
-	bon_type_array* array = BON_ALLOC_TYPE(1, bon_type_array);
+	bon_type_array* array = BON_CALLOC_TYPE(1, bon_type_array);
 	type->u.array = array;
 	array->size = arraySize;
 	array->type = (bon_type*)calloc(1, sizeof(bon_type));
@@ -504,10 +504,10 @@ void parse_array_type(bon_reader* br, bon_type* type, bon_size arraySize)
 void parse_struct_type(bon_reader* br, bon_type* type, bon_size structSize)
 {
 	type->id = BON_TYPE_STRUCT;
-	bon_type_struct* strct = BON_ALLOC_TYPE(1, bon_type_struct);
+	bon_type_struct* strct = BON_CALLOC_TYPE(1, bon_type_struct);
 	type->u.strct = strct;
 	strct->size   = structSize;
-	strct->kts    = BON_ALLOC_TYPE(structSize, bon_kt);
+	strct->kts    = BON_CALLOC_TYPE(structSize, bon_kt);
 	
 	for (bon_size ti=0; ti<strct->size; ++ti) {
 		bon_value key;
@@ -544,7 +544,7 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 		{
 			bon_size arraySize     = ctrl - BON_SHORT_BYTE_ARRAY_START;
 			
-			bon_type_array* array  = BON_ALLOC_TYPE(1, bon_type_array);
+			bon_type_array* array  = BON_CALLOC_TYPE(1, bon_type_array);
 			array->size            = arraySize;
 			array->type            = (bon_type*)calloc(1, sizeof(bon_type));
 			array->type->id        = BON_TYPE_UINT8;
@@ -575,10 +575,12 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 void bon_r_unpack_value(bon_reader* br, bon_value* val)
 {
 	val->type = BON_VALUE_AGGREGATE;
-	bon_type* type = &val->u.agg.type;
+	bon_value_agg* agg = BON_CALLOC_TYPE(1, bon_value_agg);
+	val->u.agg = agg;
+	bon_type* type = &agg->type;
 	parse_aggr_type(br, type);
-	val->u.agg.data     = br->data;
-	val->u.agg.exploded = NULL;
+	agg->data     = br->data;
+	agg->exploded = NULL;
 	bon_size nBytesPayload = bon_aggregate_payload_size(type);
 	br_skip(br, nBytesPayload);
 	
@@ -924,7 +926,7 @@ void bon_r_read_content(bon_reader* br)
 		// Block-less document
 		blocks->size  = 1;
 		blocks->cap   = 1;
-		blocks->data  = BON_ALLOC_TYPE(1, bon_r_block);
+		blocks->data  = BON_CALLOC_TYPE(1, bon_r_block);
 		bon_r_block* root = blocks->data;
 		root->id              = 0;
 		root->payload         = br->data;
@@ -958,7 +960,7 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes, bon_r_flags flags)
 {
 	assert(data);
 	
-	bon_r_doc* B = BON_ALLOC_TYPE(1, bon_r_doc);
+	bon_r_doc* B = BON_CALLOC_TYPE(1, bon_r_doc);
 	B->flags = flags;
 	
 	if (B->flags & BON_R_FLAG_REQUIRE_CRC)
@@ -1024,11 +1026,13 @@ void bon_free_value_insides(bon_value* val)
 		} break;
 			
 		case BON_VALUE_AGGREGATE: {
-			bon_free_type_insides( &val->u.agg.type );
-			if (val->u.agg.exploded) {
-				bon_free_value_insides( val->u.agg.exploded );
-				free( val->u.agg.exploded );
+			bon_value_agg* agg = val->u.agg;
+			bon_free_type_insides( &agg->type );
+			if ( agg->exploded ) {
+				bon_free_value_insides( agg->exploded );
+				free( agg->exploded );
 			}
+			free(agg);
 		} break;
 			
 		default:
@@ -1159,7 +1163,7 @@ bon_bool bon_r_is_list(bon_r_doc* B, bon_value* val)
 	if (!val) { return BON_FALSE; }
 	if (val->type == BON_VALUE_LIST) { return BON_TRUE; }
 	if (val->type == BON_VALUE_AGGREGATE) {
-		const bon_value_agg* agg = &val->u.agg;
+		const bon_value_agg* agg = val->u.agg;
 		return agg->type.id == BON_TYPE_ARRAY;
 	}
 	return BON_FALSE;
@@ -1172,7 +1176,7 @@ bon_bool bon_r_is_object(bon_r_doc* B, bon_value* val)
 	
 	if (val->type == BON_VALUE_OBJ) { return BON_TRUE; }
 	if (val->type == BON_VALUE_AGGREGATE) {
-		const bon_value_agg* agg = &val->u.agg;
+		const bon_value_agg* agg = val->u.agg;
 		return agg->type.id == BON_TYPE_STRUCT;
 	}
 	return BON_FALSE;
@@ -1288,7 +1292,7 @@ bon_size bon_r_list_size(bon_r_doc* B, bon_value* val)
 			return val->u.list.size;
 			
 		case BON_VALUE_AGGREGATE: {
-			const bon_value_agg* agg = &val->u.agg;
+			const bon_value_agg* agg = val->u.agg;
 			if (agg->type.id == BON_TYPE_ARRAY) {
 				return agg->type.u.array->size;
 			} else {
@@ -1388,7 +1392,7 @@ bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val)
 		return val; // Original is good
 	}
 	
-	bon_value_agg* agg = &val->u.agg;
+	bon_value_agg* agg = val->u.agg;
 	
 	if (!agg->exploded) {
 		bon_reader     br  = {
@@ -1399,7 +1403,7 @@ bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val)
 			0
 		};
 		
-		agg->exploded = BON_ALLOC_TYPE(1, bon_value);
+		agg->exploded = BON_CALLOC_TYPE(1, bon_value);
 		
 		if (!bon_explode_aggr( B, agg->exploded, &agg->type, &br )) {
 			free( agg->exploded );
@@ -1426,7 +1430,7 @@ bon_size bon_r_obj_size(bon_r_doc* B, bon_value* val)
 			return val->u.obj.size;
 			
 		case BON_VALUE_AGGREGATE: {
-			const bon_value_agg* agg = &val->u.agg;
+			const bon_value_agg* agg = val->u.agg;
 			if (agg->type.id == BON_TYPE_STRUCT) {
 				return agg->type.u.strct->size;
 			} else {
@@ -2071,7 +2075,7 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 		}
 			
 		case BON_VALUE_AGGREGATE: {
-			const bon_value_agg* agg = &srcVal->u.agg;
+			const bon_value_agg* agg = srcVal->u.agg;
 			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
 			bon_reader br = { agg->data, byteSize, B, BON_BAD_BLOCK_ID, 0 };
 			bon_bool win = translate_aggregate(B, &agg->type, &br, dstType, bw);
@@ -2172,15 +2176,15 @@ const void* bon_r_unpack_ptr(bon_r_doc* B, bon_value* val,
 	
 	if (val->type != BON_VALUE_AGGREGATE) { return NULL; }
 	
-	if (bon_type_eq(&val->u.agg.type, dstType) == BON_FALSE) { return NULL; }
+	if (bon_type_eq(&val->u.agg->type, dstType) == BON_FALSE) { return NULL; }
 	
-	if (nbytes != bon_aggregate_payload_size(&val->u.agg.type)) {
+	if (nbytes != bon_aggregate_payload_size(&val->u.agg->type)) {
 		fprintf(stderr, "Aggregate size mismatch\n");
 		return NULL;
 	}
 	
 	// All win
-	return val->u.agg.data;
+	return val->u.agg->data;
 }
 
 const void* bon_r_unpack_ptr_fmt(bon_r_doc* B, bon_value* val,
@@ -2211,7 +2215,7 @@ const void* bon_r_unpack_array(bon_r_doc* B, bon_value* val,
 	
 	if (val->type != BON_VALUE_AGGREGATE) { return NULL; }
 	
-	bon_value_agg* agg = &val->u.agg;
+	bon_value_agg* agg = val->u.agg;
 	if (agg->type.id != BON_TYPE_ARRAY) { return NULL; }
 	
 	bon_type_array* arr = agg->type.u.array;

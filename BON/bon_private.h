@@ -295,7 +295,7 @@ uint32_t uint32_to_le(uint32_t v);
 //------------------------------------------------------------------------------
 
 // TODO: handle failed allocs
-#define BON_ALLOC_TYPE(n, type)  (type*)calloc(n, sizeof(type))
+#define BON_CALLOC_TYPE(n, type)  (type*)calloc(n, sizeof(type))
 
 #define BON_VECTOR_EXPAND(vec, Type, amnt)                                 \
 /**/  (vec).size += amnt;                                                  \
