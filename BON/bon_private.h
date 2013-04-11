@@ -9,6 +9,8 @@
 #ifndef BON_bon_private_h
 #define BON_bon_private_h
 
+#include <stdarg.h>
+
 /*
  This is NOT part of the public API.
  Only include this file if you want to poke around the internals of BON!

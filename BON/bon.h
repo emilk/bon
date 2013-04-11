@@ -12,6 +12,15 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#if defined(__linux__)
+#  include <endian.h>
+#  if __BYTE_ORDER == __LITTLE_ENDIAN
+#    define __LITTLE_ENDIAN__ 1
+#  elif __BYTE_ORDER == __BIG_ENDIAN
+#    define __BIG_ENDIAN__ 1
+#  endif
+#endif
+
 #if !__LITTLE_ENDIAN__ && !__BIG_ENDIAN__
 #  error "BON lib doesn't work on mixed endian machines!"
 #elif __LITTLE_ENDIAN__ && __BIG_ENDIAN__
