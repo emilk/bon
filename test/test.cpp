@@ -781,7 +781,63 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 			  REQUIRE( i64_d.i64  == -8 );
 			  REQUIRE( i64_d.d    == 0x12345678 );
 		  }
-	);
+		  );
+}
+
+
+
+TEST_CASE( "BON/integers", "Writing and reading of integers" )
+{
+	std::vector<int64_t> ints = {
+		0, 1, 14, 15, 16, 17, 127, 128, 129, 255, 256, 257,
+		(1<<15)-1, (1<<15), (1<<15)+1,
+		(1<<16)-1, (1<<16), (1<<16)+1,
+		(1ULL<<32)-1, (1ULL<<32), (1ULL<<32)+1,
+		(1ULL<<48)-1
+	};
+	
+	{
+		// Negatives too:
+		auto n = ints.size();
+		for (size_t i=0; i<n; ++i) {
+			ints.push_back( - ints[i] );
+		}
+	}
+	
+	
+	test("integers",
+		  // Write
+		  [=](bon_w_doc* B) {
+			  bon_w_begin_obj(B);
+			  
+			  bon_w_key(B, "ints");
+			  bon_w_begin_list(B);
+			  for (auto i : ints) {
+				  bon_w_sint64(B, i);
+			  }
+			  bon_w_end_list(B);
+			  
+			  bon_w_end_obj(B);
+		  },
+		  
+		  nullptr, // Skip verify
+		  
+		  [=](bon_r_doc* B) {
+			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
+			  
+			  auto root = bon_r_root(B);
+			  REQUIRE( root );
+			  
+			  auto list = read_key(B, root, "ints");
+			  
+			  REQUIRE( bon_r_list_size(B, list) == ints.size() );
+			  
+			  for (size_t i=0; i<ints.size(); ++i) {
+				  auto elem = bon_r_list_elem(B, list, i);
+				  REQUIRE( ints[i] == bon_r_int(B, elem) );
+			  }
+		  }
+		  );
 }
 
 

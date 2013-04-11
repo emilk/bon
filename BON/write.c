@@ -199,8 +199,7 @@ bon_error bon_w_close_doc(bon_w_doc* B)
 
 void bon_w_begin_block_sized(bon_w_doc* B, bon_block_id block_id, bon_size nbytes)
 {
-	bon_w_raw_uint8(B, BON_CTRL_BLOCK_BEGIN);
-	bon_w_vlq(B, block_id);
+	bon_w_ctrl_vlq(B, BON_CTRL_BLOCK_BEGIN, block_id);
 	bon_w_vlq(B, nbytes);
 }
 
@@ -245,8 +244,7 @@ void bon_w_pack_array_type(bon_w_doc* B, bon_size length, bon_type* element_type
 		return;
 	}
 	
-	bon_w_raw_uint8(B, BON_CTRL_ARRAY_VLQ);
-	bon_w_vlq(B, length);
+	bon_w_ctrl_vlq(B, BON_CTRL_ARRAY_VLQ, length);
 	bon_w_packegate_type(B, element_type);
 }
 
@@ -262,13 +260,11 @@ void bon_w_packegate_type(bon_w_doc* B, bon_type* type)
 			bon_type_struct* strct = type->u.strct;
 			bon_size n = strct->size;
 			
-			if (n < BON_SHORT_STRUCT_COUNT)
-			{
+			if (n < BON_SHORT_STRUCT_COUNT) {
 				bon_w_raw_uint8(B, BON_SHORT_STRUCT(n));
 			}
 			else {
-				bon_w_raw_uint8(B, BON_CTRL_STRUCT_VLQ);
-				bon_w_vlq(B, n);
+				bon_w_ctrl_vlq(B, BON_CTRL_STRUCT_VLQ, n);
 			}
 			
 			for (bon_size ti=0; ti<n; ++ti) {
@@ -338,8 +334,7 @@ void bon_w_pack_array(bon_w_doc* B, const void* data, bon_size nbytes,
 		return;
 	}
 	
-	bon_w_raw_uint8(B, BON_CTRL_ARRAY_VLQ);
-	bon_w_vlq(B, len);
+	bon_w_ctrl_vlq(B, BON_CTRL_ARRAY_VLQ, len);
 	bon_w_raw_uint8(B, element_t);
 	
 	bon_w_raw(B, data, nbytes);

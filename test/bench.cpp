@@ -118,19 +118,27 @@ void time_n(unsigned n, const Fun& fun, const Cleanup& cleanup)
 	printStatistics(begin(times), end(times));
 }
 
+template<typename Fun, typename Cleanup>
+void time_n_plus_one(unsigned n, const Fun& fun, const Cleanup& cleanup)
+{
+	time_n(n, fun, cleanup);
+	fun();
+}
+
 template<typename Fun>
 void time_n(unsigned n, const Fun& fun)
 {
 	time_n(n, fun, [](){});
 }
 	
-#if 1
+#if 0
 
 TEST_CASE( "BON/bench/writing/msgpack", "MsgPack speed of writing floats")
 {
 	printf("\nMsgPack write speed:\n");
 	const std::vector<float> src(NUM_VALS, 3.14f);
 	
+	printf("Writing... ");
 	time_n(16, [&]() {
 		msgpack::sbuffer buffer;  // simple buffer
 		
@@ -139,16 +147,39 @@ TEST_CASE( "BON/bench/writing/msgpack", "MsgPack speed of writing floats")
 			msgpack::pack(&buffer, f);
 		}
 	});
+	
+#if 0
+	msgpack::unpacked msg;
+	msgpack_object mobj;
+	
+	printf("Parsing... ");
+	time([&]() {
+		msgpack::unpack(&msg, buffer.data(), buffer.size());
+		mobj = msg.get();
+	});
+	msgpack::object obj = mobj;
+	
+	printf("Copying... ");
+	time([&]() {
+		obj.convert(&dst);
+		REQUIRE( dst[1] == 3.14f );
+	});
+#endif
 }
+
+#endif
+
+#if 0
 
 TEST_CASE( "BON/bench/writing", "Speed of bon_w_float")
 {
 	printf("\nBON write speed:\n");
 	const std::vector<float> src(NUM_VALS, 3.14f);
 	
-	time_n(16, [&]() {
-		bon_byte_vec vec = {0,0,0};
-		
+	bon_byte_vec vec = {0,0,0};
+	
+	printf("Writing... ");
+	time_n_plus_one(16, [&]() {		
 		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
 		bon_w_begin_obj(B);
 		bon_w_key(B, "list");
@@ -159,15 +190,31 @@ TEST_CASE( "BON/bench/writing", "Speed of bon_w_float")
 		bon_w_end_list(B);
 		bon_w_end_obj(B);
 		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
-		
+	}, [&](){
 		free(vec.data);
+		memset(&vec, 0, sizeof(vec));
 	});
+	
+	printf("Parsing... ");
+	bon_r_doc* B;
+	bon_value* root;
+	bon_value* list;
+	
+	time_n(16, [&]() {
+		B = bon_r_open(vec.data, vec.size, BON_R_FLAG_DEFAULT);
+		root = bon_r_root(B);
+		list = bon_r_get_key(B, root, "list");
+	}, [&]() {
+		bon_r_close(B);
+	});
+	
+	free(vec.data);
 }
 
 #endif 
 
 
-#if 1 // !DEBUG
+#if 0
 
 template<class SrcType, class DstType>
 void run_float_benchmark(bool packed)

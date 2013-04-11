@@ -85,12 +85,22 @@ static inline uint32_t bon_w_vlq_to(uint8_t* out, bon_size x)
 	return size;
 }
 
-static inline uint32_t bon_w_vlq(bon_w_doc* B, bon_size x)
+#if 1
+static inline void bon_w_vlq(bon_w_doc* B, bon_size x)
 {
-	uint8_t vals[BON_VARINT_MAX_LEN];
-	uint32_t size = bon_w_vlq_to(vals, x);
-	bon_w_raw(B, vals, size);
-	return size;
+	uint8_t buff[BON_VARINT_MAX_LEN];
+	uint32_t size = bon_w_vlq_to(buff, x);
+	bon_w_raw(B, buff, size);
+}
+#endif
+
+// Done often, lets do it fast:
+static inline void bon_w_ctrl_vlq(bon_w_doc* B, bon_ctrl ctrl, bon_size x)
+{
+	uint8_t buff[1 + BON_VARINT_MAX_LEN];
+	buff[0] = ctrl;
+	uint32_t size = bon_w_vlq_to(1 + buff, x);
+	bon_w_raw(B, buff, 1 + size);
 }
 
 //------------------------------------------------------------------------------
@@ -100,12 +110,12 @@ static inline uint32_t bon_w_vlq(bon_w_doc* B, bon_size x)
 /*
  A much faster version of
  bon_w_raw_uint8(B, type_ctrl);
- bon_w_raw(B, &val, sizeof(val));
+ bon_w_raw(B, &data, sizeof(data));
  */
-#define BON_WRITE_QUICKLY(type_ctrl)           \
-/**/    unsigned char buf[1 + sizeof(val)];    \
+#define BON_WRITE_QUICKLY(type_ctrl, data)     \
+/**/    unsigned char buf[1 + sizeof(data)];   \
 /**/    buf[0] = type_ctrl;                    \
-/**/    memcpy(buf+1, &val, sizeof(val));      \
+/**/    memcpy(buf+1, &data, sizeof(data));    \
 /**/    bon_w_raw(B, buf, sizeof(buf));        \
 
 
@@ -135,8 +145,7 @@ static inline void bon_w_block_ref(bon_w_doc* B, bon_block_id block_id)
 	if (block_id < BON_SHORT_BLOCK_COUNT) {
 		bon_w_raw_uint8(B, BON_SHORT_BLOCK(block_id));
 	} else {
-		bon_w_raw_uint8(B, BON_CTRL_BLOCK_REF);
-		bon_w_vlq(B, block_id);
+		bon_w_ctrl_vlq(B, BON_CTRL_BLOCK_REF, block_id);
 	}
 }
 
@@ -160,8 +169,7 @@ static inline void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes)
 	if (nbytes < BON_SHORT_STRING_COUNT) {
 		bon_w_raw_uint8(B, BON_SHORT_STRING(nbytes));
 	} else {
-		bon_w_raw_uint8(B, BON_CTRL_STRING_VLQ);
-		bon_w_vlq(B, nbytes);
+		bon_w_ctrl_vlq(B, BON_CTRL_STRING_VLQ, nbytes);
 	}
 	
 	bon_w_raw(B, utf8, nbytes);
@@ -173,51 +181,40 @@ static inline void bon_w_cstring(bon_w_doc* B, const char* utf8)
 	bon_w_string(B, utf8, BON_ZERO_ENDED);
 }
 
-static inline void bon_w_uint64(bon_w_doc* B, uint64_t val)
+static inline void bon_w_uint64(bon_w_doc* B, uint64_t u64)
 {
-	if (val < BON_SHORT_POS_INT_COUNT) {
-		bon_w_raw_uint8(B, (uint8_t)val);
-	} else if (val == (val&0xff)) {
-		bon_w_raw_uint8(B, BON_CTRL_UINT8);
-		bon_w_raw_uint8(B, (uint8_t)val);
-	} else if (val == (val&0xffff)) {
-		bon_w_raw_uint8(B, BON_CTRL_UINT16);
-		bon_w_raw_uint16(B, (uint16_t)val);
-	} else if (val == (val&0xffffffff)) {
-		bon_w_raw_uint8(B, BON_CTRL_UINT32);
-		bon_w_raw_uint32(B, (uint32_t)val);
+	if (u64 < BON_SHORT_POS_INT_COUNT) {
+		bon_w_raw_uint8(B, (uint8_t)u64);
+	} else if (u64 == (u64&0xff)) {
+		uint8_t u8 = (uint8_t)u64;
+		BON_WRITE_QUICKLY(BON_CTRL_UINT8, u8);
+	} else if (u64 == (u64&0xffff)) {
+		uint16_t u16 = (uint16_t)u64;
+		BON_WRITE_QUICKLY(BON_CTRL_UINT16, u16);
+	} else if (u64 == (u64&0xffffffff)) {
+		uint32_t u32 = (uint32_t)u64;
+		BON_WRITE_QUICKLY(BON_CTRL_UINT32, u32);
 	} else {
-		bon_w_raw_uint8(B, BON_CTRL_UINT64);
-		bon_w_raw_uint64(B, (uint64_t)val);
+		BON_WRITE_QUICKLY(BON_CTRL_UINT64, u64);
 	}
 }
 
-static inline void bon_w_sint64(bon_w_doc* B, int64_t val) {
-	if (val >= 0) {
-		bon_w_uint64(B, (uint64_t)val);
-	} else if (-16 <= val) {
-		bon_w_raw_uint8(B, (uint8_t)val);
-	} else if (-0x80 <= val && val < 0x80) {
-		bon_w_raw_uint8(B, BON_CTRL_SINT8);
-		bon_w_raw_uint8(B, (uint8_t)val);
-	} else if (-0x8000 <= val && val < 0x8000) {
-		bon_w_raw_uint8(B, BON_CTRL_SINT16);
-		bon_w_raw_uint16(B, (uint16_t)val);
-	} else if (-0x80000000LL <= val && val < 0x80000000LL) {
-		bon_w_raw_uint8(B, BON_CTRL_SINT32);
-		bon_w_raw_uint32(B, (uint32_t)val);
+static inline void bon_w_sint64(bon_w_doc* B, int64_t s64) {
+	if (s64 >= 0) {
+		bon_w_uint64(B, (uint64_t)s64);
+	} else if (-16 <= s64) {
+		bon_w_raw_uint8(B, (uint8_t)s64);
+	} else if (-0x80 <= s64 && s64 < 0x80) {
+		uint8_t u8 = (uint8_t)s64;
+		BON_WRITE_QUICKLY(BON_CTRL_SINT8, u8);
+	} else if (-0x8000 <= s64 && s64 < 0x8000) {
+		uint16_t u16 = (uint16_t)s64;
+		BON_WRITE_QUICKLY(BON_CTRL_SINT16, u16);
+	} else if (-0x80000000LL <= s64 && s64 < 0x80000000LL) {
+		uint32_t u32 = (uint32_t)s64;
+		BON_WRITE_QUICKLY(BON_CTRL_SINT32, u32);
 	} else {
-		bon_w_raw_uint8(B, BON_CTRL_SINT64);
-		bon_w_raw_uint64(B, (uint64_t)val);
-	}
-}
-
-static inline void bon_w_double(bon_w_doc* B, double val)
-{
-	if (!isfinite(val) || (double)(float)val == val) {
-		bon_w_float(B, (float)val);
-	} else {
-		BON_WRITE_QUICKLY(BON_CTRL_DOUBLE);
+		BON_WRITE_QUICKLY(BON_CTRL_SINT64, s64);
 	}
 }
 
@@ -233,7 +230,16 @@ static inline void bon_w_float(bon_w_doc* B, float val)
 	}
 #endif
 	
-	BON_WRITE_QUICKLY(BON_CTRL_FLOAT);
+	BON_WRITE_QUICKLY(BON_CTRL_FLOAT, val);
+}
+
+static inline void bon_w_double(bon_w_doc* B, double val)
+{
+	if (!isfinite(val) || (double)(float)val == val) {
+		bon_w_float(B, (float)val);
+	} else {
+		BON_WRITE_QUICKLY(BON_CTRL_DOUBLE, val);
+	}
 }
 
 

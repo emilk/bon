@@ -194,6 +194,7 @@ typedef union {
 } bon_value_union;
 
 
+// 24 bytes on a 64-bit machine.
 struct bon_value {
 	bon_value_type   type;
 	bon_value_union  u;
@@ -298,6 +299,18 @@ uint32_t uint32_to_le(uint32_t v);
 #define BON_ALLOC_TYPE(n, type)   (type*)malloc(n * sizeof(type))
 #define BON_CALLOC_TYPE(n, type)  (type*)calloc(n, sizeof(type))
 
+#if 0
+// Doubling in size. Only makes about 4% (positive) dfference in speed.
+#define BON_VECTOR_EXPAND(vec, Type, amnt)                                 \
+/**/  (vec).size += amnt;                                                  \
+/**/  if ((vec).size > (vec).cap) {                                        \
+/**/      size_t newCap = (vec).cap ? 2 * (vec).cap : 32;                  \
+/**/      if (newCap < amnt) { newCap = 2*amnt; }                          \
+/**/      (vec).data = (Type*)realloc((vec).data, newCap * sizeof(Type));  \
+/**/      (vec).cap  = newCap;                                             \
+/**/  }
+
+#else
 #define BON_VECTOR_EXPAND(vec, Type, amnt)                                 \
 /**/  (vec).size += amnt;                                                  \
 /**/  if ((vec).size > (vec).cap) {                                        \
@@ -305,6 +318,7 @@ uint32_t uint32_to_le(uint32_t v);
 /**/      (vec).data = (Type*)realloc((vec).data, newCap * sizeof(Type));  \
 /**/      (vec).cap  = newCap;                                             \
 /**/  }
+#endif
 
 
 
