@@ -170,9 +170,9 @@ void test(std::string baseName, Writer w, Verifyer v, Reader r)
 	
 	//SECTION( "build", "writing bon" )
 	{
-		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
+		bon_w_doc* B = bon_w_new(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
 		w(B);
-		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+		REQUIRE( bon_w_close(B) == BON_SUCCESS );
 	}
 	
 	if (baseName != "") {
@@ -273,7 +273,7 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 		  
 		  // Write 
 		  [=](bon_w_doc* B) {
-			  bon_w_begin_obj(B);
+			  bon_w_obj_begin(B);
 			  
 			  bon_w_key(B, "nil");      bon_w_nil(B);
 			  bon_w_key(B, "true");     bon_w_bool(B, BON_TRUE);
@@ -293,7 +293,7 @@ TEST_CASE( "BON/basic types", "Writes, verifies and reads all the basic types of
 			  bon_w_key(B, "b");
 			  bon_w_cstring(B, STR_VLQ_2.c_str());
 			  
-			  bon_w_end_obj(B);
+			  bon_w_obj_end(B);
 		  },
 		  
 		  
@@ -381,18 +381,18 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 		  
 		  // Write
 		  [=](bon_w_doc* B) {
-			  bon_w_begin_obj(B);
+			  bon_w_obj_begin(B);
 			  
 			  bon_w_key(B, "lists");
-			  bon_w_begin_list(B);
+			  bon_w_list_begin(B);
 			  bon_w_uint64(B, 1);
-			  bon_w_begin_list(B);
+			  bon_w_list_begin(B);
 			  bon_w_uint64(B, 2);
 			  bon_w_uint64(B, 3);
-			  bon_w_end_list(B);
-			  bon_w_end_list(B);
+			  bon_w_list_end(B);
+			  bon_w_list_end(B);
 			  
-			  bon_w_end_obj(B);
+			  bon_w_obj_end(B);
 		  },
 		  
 		  [=](Verifier& p) {
@@ -435,12 +435,12 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 	 create root object for placing in lagter
 	 */
 	bon_byte_vec block_1_vec = {0,0,0};
-	bon_w_doc* block_1 = bon_w_new_doc(bon_vec_writer, &block_1_vec, BON_W_FLAG_SKIP_HEADER_FOOTER);
-	bon_w_begin_obj(block_1);
+	bon_w_doc* block_1 = bon_w_new(bon_vec_writer, &block_1_vec, BON_W_FLAG_SKIP_HEADER_FOOTER);
+	bon_w_obj_begin(block_1);
 	bon_w_key(block_1, "ref2");  bon_w_block_ref(block_1, 2);
 	bon_w_key(block_1, "ref1337");  bon_w_block_ref(block_1, 1337);
-	bon_w_end_obj(block_1);
-	REQUIRE( bon_w_close_doc(block_1) == BON_SUCCESS );
+	bon_w_obj_end(block_1);
+	REQUIRE( bon_w_close(block_1) == BON_SUCCESS );
 	
 	
 	
@@ -450,17 +450,17 @@ TEST_CASE( "BON/blocks", "Blocks and references" )
 		  [=](bon_w_doc* B) {
 			  bon_w_block(B, 1, block_1_vec.data, block_1_vec.size);
 			  
-			  bon_w_begin_block(B, 2);
+			  bon_w_block_begin(B, 2);
 			  bon_w_uint64(B, 12);
-			  bon_w_end_block(B);
+			  bon_w_block_end(B);
 			  
-			  bon_w_begin_block(B, 1337);
+			  bon_w_block_begin(B, 1337);
 			  bon_w_uint64(B, 13);
-			  bon_w_end_block(B);
+			  bon_w_block_end(B);
 			  
-			  bon_w_begin_block(B, 0);
+			  bon_w_block_begin(B, 0);
 			  bon_w_block_ref(B, 1);
-			  bon_w_end_block(B);
+			  bon_w_block_end(B);
 		  },
 		  
 		  [=](Verifier& p) {
@@ -517,13 +517,13 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 		  
 		  // Write
 		  [=](bon_w_doc* B) {
-			  bon_w_begin_obj(B);
+			  bon_w_obj_begin(B);
 			  
 			  bon_w_key(B, "vecs");
 			  bon_w_pack_fmt(B, inVecs, sizeof(inVecs),
 								  "[#{$[3d]$[3f]$[4u8]}]", NVecs, "pos", "normal", "color");
 			  
-			  bon_w_end_obj(B);
+			  bon_w_obj_end(B);
 		  },
 		  
 		  [=](Verifier& p) {
@@ -636,7 +636,7 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  double    dn[]   =  { -2.71828  };
 			  double    dp[]   =  { +2.71828  };
 			  
-			  bon_w_begin_obj( B );
+			  bon_w_obj_begin( B );
 			  
 			  bon_w_key(B, "s8");   bon_w_pack_array(B,  s8, sizeof(s8),  1, BON_TYPE_SINT8   );
 			  bon_w_key(B, "u8");   bon_w_pack_array(B,  u8, sizeof(u8),  1, BON_TYPE_UINT8   );
@@ -649,7 +649,7 @@ TEST_CASE( "BON/unpack/numeric conversions of packed data", "Automatic numeric c
 			  bon_w_key(B, "dn");   bon_w_pack_array(B,  dn, sizeof(dn),  1, BON_TYPE_DOUBLE );
 			  bon_w_key(B, "dp");   bon_w_pack_array(B,  dp, sizeof(dp),  1, BON_TYPE_DOUBLE );
 			  
-			  bon_w_end_obj( B );
+			  bon_w_obj_end( B );
 		  },
 		  
 		  
@@ -745,12 +745,12 @@ TEST_CASE( "BON/unpack/conversions", "Automatic conversions when unpacking BON d
 		  
 		  // Write
 		  [=](bon_w_doc* B) {
-			  bon_w_begin_obj(B);
+			  bon_w_obj_begin(B);
 			  
 			  bon_w_key(B, "-8");  bon_w_sint64(B, -8);
 			  bon_w_key(B, "0x12345678");  bon_w_sint64(B, 0x12345678);
 			  
-			  bon_w_end_obj(B);
+			  bon_w_obj_end(B);
 		  },
 		  
 		  [=](Verifier& p) {
@@ -807,16 +807,16 @@ TEST_CASE( "BON/integers", "Writing and reading of integers" )
 	test("integers",
 		  // Write
 		  [=](bon_w_doc* B) {
-			  bon_w_begin_obj(B);
+			  bon_w_obj_begin(B);
 			  
 			  bon_w_key(B, "ints");
-			  bon_w_begin_list(B);
+			  bon_w_list_begin(B);
 			  for (auto i : ints) {
 				  bon_w_sint64(B, i);
 			  }
-			  bon_w_end_list(B);
+			  bon_w_list_end(B);
 			  
-			  bon_w_end_obj(B);
+			  bon_w_obj_end(B);
 		  },
 		  
 		  nullptr, // Skip verify
@@ -845,10 +845,10 @@ TEST_CASE( "BON/crc/short/pass", "Test of CRC checking" )
 	bon_byte_vec vec = {0,0,0};
 	
 	{
-		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_CRC);
-		bon_w_begin_obj(B);
-		bon_w_end_obj(B);
-		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+		bon_w_doc* B = bon_w_new(bon_vec_writer, &vec, BON_W_FLAG_CRC);
+		bon_w_obj_begin(B);
+		bon_w_obj_end(B);
+		REQUIRE( bon_w_close(B) == BON_SUCCESS );
 	}
 	
 	writeData(&vec, "short.bon");
@@ -877,10 +877,10 @@ TEST_CASE( "BON/crc/short/fail", "Test of CRC checking" )
 	bon_byte_vec vec = {0,0,0};
 	
 	{
-		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_CRC);
-		bon_w_begin_obj(B);
-		bon_w_end_obj(B);
-		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+		bon_w_doc* B = bon_w_new(bon_vec_writer, &vec, BON_W_FLAG_CRC);
+		bon_w_obj_begin(B);
+		bon_w_obj_end(B);
+		REQUIRE( bon_w_close(B) == BON_SUCCESS );
 	}
 	
 	{
@@ -922,25 +922,25 @@ TEST_CASE( "BON/pack/matrix", "Packing a rectangular matirx" )
 		  
 		  // Write
 		  [=](bon_w_doc* B) {
-			  bon_w_begin_obj(B);
+			  bon_w_obj_begin(B);
 			  
 			  bon_w_key(B, "mat");
 			  
 #if 0
 			  bon_w_pack_fmt(B, src, sizeof(src), "[#[#f]]", W, H);
 #else
-			  bon_w_begin_list(B);
+			  bon_w_list_begin(B);
 			  for (size_t i=0; i<W; ++i) {
-				  bon_w_begin_list(B);
+				  bon_w_list_begin(B);
 				  for (size_t j=0; j<H; ++j) {
 					  bon_w_float(B, src[i][j]);
 				  }
-				  bon_w_end_list(B);
+				  bon_w_list_end(B);
 			  }
-			  bon_w_end_list(B);
+			  bon_w_list_end(B);
 #endif
 			  
-			  bon_w_end_obj(B);
+			  bon_w_obj_end(B);
 		  },
 		  
 		  [=](Verifier& p) {
@@ -1003,6 +1003,7 @@ TEST_CASE( "BON/bad", "Error detection when reading a bad BON file" )
 		auto B = bon_r_open((const uint8_t*)file, strlen(file), BON_R_FLAG_DEFAULT);
 		REQUIRE(B->error == expected);
 		printf("Reported error (expected): %s\n", bon_r_err_str(B));
+		bon_r_close(B);
 	};
 
 	test_err("BON0{\x16}F", BON_ERR_BAD_KEY);

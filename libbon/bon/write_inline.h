@@ -124,11 +124,11 @@ BON_INLINE void bon_w_ctrl_vlq(bon_w_doc* B, bon_ctrl ctrl, bon_size x)
 /**/    bon_w_raw(B, buf, sizeof(buf));        \
 
 
-BON_INLINE void bon_w_begin_obj(bon_w_doc* B) {
+BON_INLINE void bon_w_obj_begin(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_OBJ_BEGIN);
 }
 
-BON_INLINE void bon_w_end_obj(bon_w_doc* B) {
+BON_INLINE void bon_w_obj_end(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_OBJ_END);
 }
 
@@ -136,11 +136,11 @@ BON_INLINE void bon_w_key(bon_w_doc* B, const char* utf8) {
 	bon_w_cstring(B, utf8);
 }
 
-BON_INLINE void bon_w_begin_list(bon_w_doc* B) {
+BON_INLINE void bon_w_list_begin(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_LIST_BEGIN);
 }
 
-BON_INLINE void bon_w_end_list(bon_w_doc* B) {
+BON_INLINE void bon_w_list_end(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_LIST_END);
 }
 

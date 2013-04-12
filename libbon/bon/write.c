@@ -161,7 +161,7 @@ void bon_w_footer(bon_w_doc* B)
 	}
 }
 
-bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_w_flags flags)
+bon_w_doc* bon_w_new(bon_w_writer_t writer, void* userData, bon_w_flags flags)
 {
 	bon_w_doc* B = BON_CALLOC_TYPE(1, bon_w_doc);
 	B->writer    = writer;
@@ -189,7 +189,7 @@ bon_w_doc* bon_w_new_doc(bon_w_writer_t writer, void* userData, bon_w_flags flag
 	return B;
 }
 
-bon_error bon_w_close_doc(bon_w_doc* B)
+bon_error bon_w_close(bon_w_doc* B)
 {
 	if ((B->flags & BON_W_FLAG_SKIP_HEADER_FOOTER) == 0) {
 		bon_w_footer(B);
@@ -207,12 +207,12 @@ void bon_w_begin_block_sized(bon_w_doc* B, bon_block_id block_id, bon_size nbyte
 	bon_w_vlq(B, nbytes);
 }
 
-void bon_w_begin_block(bon_w_doc* B, bon_block_id block_id)
+void bon_w_block_begin(bon_w_doc* B, bon_block_id block_id)
 {
 	bon_w_begin_block_sized(B, block_id, 0);
 }
 
-void bon_w_end_block(bon_w_doc* B)
+void bon_w_block_end(bon_w_doc* B)
 {
 	bon_w_raw_uint8(B, BON_CTRL_BLOCK_END);
 }
@@ -221,7 +221,7 @@ void bon_w_block(bon_w_doc* B, bon_block_id block_id, const void* data, bon_size
 {
 	bon_w_begin_block_sized(B, block_id, nbytes);
 	bon_w_raw(B, data, nbytes);
-	bon_w_end_block(B);
+	bon_w_block_end(B);
 }
 
 
@@ -261,21 +261,21 @@ void bon_w_value(bon_w_doc* B, bon_value* v)
 			
 		case BON_VALUE_LIST: {
 			bon_list* list = &v->u.list;
-			bon_w_begin_list(B);
+			bon_w_list_begin(B);
 			for (bon_size ix=0; ix<list->size; ++ix) {
 				bon_w_value(B, &list->data[ix]);
 			}
-			bon_w_end_list(B);
+			bon_w_list_end(B);
 		} break;
 			
 		case BON_VALUE_OBJ: {
 			bon_obj* obj = &v->u.obj;
-			bon_w_begin_obj(B);
+			bon_w_obj_begin(B);
 			for (bon_size ix=0; ix<obj->size; ++ix) {
 				bon_w_key(B, obj->data[ix].key);
 				bon_w_value(B, &obj->data[ix].val);
 			}
-			bon_w_end_obj(B);
+			bon_w_obj_end(B);
 		} break;
 			
 		case BON_VALUE_AGGREGATE: {

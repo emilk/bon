@@ -239,9 +239,9 @@ typedef struct {
 /*
  Usage:
  bon_byte_vec vec = {0,0,0};
- bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAGS_DEFAULT);
+ bon_w_doc* B = bon_w_new(bon_vec_writer, &vec, BON_W_FLAGS_DEFAULT);
  write_bon( B );
- bon_w_close_doc( B );
+ bon_w_close( B );
  use( vec.data );
  free(vec.data);
  */
@@ -251,9 +251,9 @@ bon_bool bon_vec_writer(void* userData, const void* data, uint64_t nbytes);
 /*
  Usage:
  FILE* fp = fopen(FILE_NAME, "wb");
- bon_w_doc* B = bon_w_new_doc(&bon_file_writer, fp, BON_W_FLAGS_DEFAULT);
+ bon_w_doc* B = bon_w_new(&bon_file_writer, fp, BON_W_FLAGS_DEFAULT);
  write_bon( B );
- bon_w_close_doc( B );
+ bon_w_close( B );
  fclose( fp );
 */
 bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
@@ -267,13 +267,13 @@ bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes);
  Low-level API for outputting BON in a serial fashion.
  You must take care to create a correct BON file. In particular:
  
- Match  bon_w_begin_obj    with  bon_w_end_obj
- Match  bon_w_begin_list   with  bon_w_end_list
- Match  bon_w_begin_block  with  bon_w_end_block  (or use bon_w_block)
+ Match  bon_w_obj_begin    with  bon_w_obj_end
+ Match  bon_w_list_begin   with  bon_w_list_end
+ Match  bon_w_block_begin  with  bon_w_block_end  (or use bon_w_block)
  
  Make sure bon_w_block_ref references a block with a larger block_id.
  
- Interleave keys and values inside of calls to bon_w_begin_obj bon_w_end_obj
+ Interleave keys and values inside of calls to bon_w_obj_begin bon_w_obj_end
  */
 
 
@@ -296,30 +296,30 @@ typedef enum {
 
 
 // Top level structure
-bon_w_doc*   bon_w_new_doc    (bon_w_writer_t writer, void* userData, bon_w_flags flags);
+bon_w_doc*   bon_w_new        (bon_w_writer_t writer, void* userData, bon_w_flags flags);
 void         bon_w_flush      (bon_w_doc* B);  // Flush writes to the writer
 
 // Writes footer and flushes. Returns final error (if any)
-bon_error    bon_w_close_doc  (bon_w_doc* B);
+bon_error    bon_w_close      (bon_w_doc* B);
 
 void              bon_w_set_error  (bon_w_doc* B, bon_error err);
 static bon_error  bon_w_error      (bon_w_doc* B);
 const char*       bon_w_err_str    (bon_w_doc* B); // Human readable error message
 
-void         bon_w_begin_block  (bon_w_doc* B, bon_block_id block_id);  // open-ended
-void         bon_w_end_block    (bon_w_doc* B);
+void         bon_w_block_begin  (bon_w_doc* B, bon_block_id block_id);  // open-ended
+void         bon_w_block_end    (bon_w_doc* B);
 void         bon_w_block        (bon_w_doc* B, bon_block_id block_id, const void* data, bon_size nbytes);
 
 
 // The different types of values:
-static void  bon_w_begin_obj   (bon_w_doc* B);
-static void  bon_w_end_obj     (bon_w_doc* B);
+static void  bon_w_obj_begin   (bon_w_doc* B);
+static void  bon_w_obj_end     (bon_w_doc* B);
 
 // you must write a value right after this.
 static void  bon_w_key         (bon_w_doc* B, const char* utf8);
 
-static void  bon_w_begin_list  (bon_w_doc* B);
-static void  bon_w_end_list    (bon_w_doc* B);
+static void  bon_w_list_begin  (bon_w_doc* B);
+static void  bon_w_list_end    (bon_w_doc* B);
 
 static void  bon_w_block_ref  (bon_w_doc* B, bon_block_id id);
 

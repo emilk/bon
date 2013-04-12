@@ -53,7 +53,7 @@ bon_bool write_obj(json_t* json, bon_w_doc* B)
 		
 	qsort(keys, size, sizeof(struct object_key), object_key_compare_serials);
 	
-	bon_w_begin_obj(B);
+	bon_w_obj_begin(B);
 	for (i = 0; i < size; ++i)
 	{
 		const char* key   = keys[i].key;
@@ -65,14 +65,14 @@ bon_bool write_obj(json_t* json, bon_w_doc* B)
 				break;
 		}
 	}
-	bon_w_end_obj(B);
+	bon_w_obj_end(B);
 	
 	free(keys);	
 #else
 	const char* key;
 	json_t* value;
 	
-	bon_w_begin_obj(B);
+	bon_w_obj_begin(B);
 	json_object_foreach(json, key, value) {
 		bon_w_key(B, key);
 		if (!write_json(value, B)) {
@@ -81,7 +81,7 @@ bon_bool write_obj(json_t* json, bon_w_doc* B)
 				break;
 		}
 	}
-	bon_w_end_obj(B);
+	bon_w_obj_end(B);
 #endif
 	
 	return success;
@@ -113,7 +113,7 @@ bon_bool write_json(json_t* json, bon_w_doc* B)
 		case JSON_ARRAY: {
 			size_t size = json_array_size(json);
 			
-			bon_w_begin_list(B);
+			bon_w_list_begin(B);
 			for (size_t ix=0; ix<size; ++ix) {
 				json_t* elem = json_array_get(json, ix);
 				if (!write_json(elem, B)) {
@@ -122,7 +122,7 @@ bon_bool write_json(json_t* json, bon_w_doc* B)
 						break;
 				}
 			}
-			bon_w_end_list(B);
+			bon_w_list_end(B);
 		} break;
 			
 			
@@ -175,7 +175,7 @@ bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
 		return BON_FALSE;
 	}
 	
-	bon_w_doc* B = bon_w_new_doc(&bon_file_writer, out, BON_W_FLAG_DEFAULT);
+	bon_w_doc* B = bon_w_new(&bon_file_writer, out, BON_W_FLAG_DEFAULT);
 	
 	if (!B) {
 		return BON_FALSE;
@@ -183,7 +183,7 @@ bon_bool handle(json_t* json, json_error_t* err, FILE* out) {
 	
 	bon_bool success = write_json(json, B);
 	
-	if (bon_w_close_doc(B) != BON_SUCCESS) {
+	if (bon_w_close(B) != BON_SUCCESS) {
 		success = BON_FALSE;
 	}
 	

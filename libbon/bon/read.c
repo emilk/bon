@@ -817,8 +817,7 @@ void bon_r_kvs(bon_reader* br, bon_obj* obj)
 		if (key->type == BON_VALUE_BLOCK_REF) {
 			key = bon_r_load_block(br->B, key->u.blockRefId);
 			if (!key) {
-				br_set_err(br, BON_ERR_BAD_KEY);
-				free(kvs.data);
+				goto error;
 				return;
 			}
 		}
@@ -827,8 +826,7 @@ void bon_r_kvs(bon_reader* br, bon_obj* obj)
 		if (key->type       != BON_VALUE_STRING ||
 			 key->u.str.size != strlen(key->u.str.ptr))
 		{
-			br_set_err(br, BON_ERR_BAD_KEY);
-			free(kvs.data);
+			goto error;
 			return;
 		}
 		
@@ -838,6 +836,13 @@ void bon_r_kvs(bon_reader* br, bon_obj* obj)
 	
 	obj->size = kvs.size;
 	obj->data = kvs.data;
+	return;
+	
+error:
+	br_set_err(br, BON_ERR_BAD_KEY);
+	free(kvs.data);
+	obj->size = 0;
+	obj->data = NULL;
 }
 
 void bon_r_header(bon_reader* br)
@@ -947,7 +952,7 @@ void bon_r_read_content(bon_reader* br)
 	}
 }
 
-void bon_r_read_doc(bon_reader* br)
+void bon_r_read(bon_reader* br)
 {
 	bon_r_doc* B = br->B;
 	B->stats.bytes_file = br->nbytes;
@@ -1018,7 +1023,7 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes, bon_r_flags flags)
 	bon_reader br_v = make_br( B, data, nbytes, BON_BAD_BLOCK_ID );
 	bon_reader* br = &br_v;
 	
-	bon_r_read_doc(br);
+	bon_r_read(br);
 	
 	if (br->error)
 	{
@@ -1086,6 +1091,7 @@ void bon_r_close(bon_r_doc* B)
 		}
 	}
 	free( B->blocks.data );
+	free( B->errstr );
 		
 	free(B);
 }
