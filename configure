@@ -1,3 +1,0 @@
-mkdir build-bon
-cd build-bon
-ccmake ..
