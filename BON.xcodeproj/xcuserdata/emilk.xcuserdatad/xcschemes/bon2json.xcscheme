@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "809FA69916BFED7A00A465A0"
+               BlueprintIdentifier = "4C5DDA147D9E4A20AD80E389"
                BuildableName = "bon2json"
                BlueprintName = "bon2json"
                ReferencedContainer = "container:BON.xcodeproj">
@@ -32,7 +32,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "809FA69916BFED7A00A465A0"
+            BlueprintIdentifier = "4C5DDA147D9E4A20AD80E389"
             BuildableName = "bon2json"
             BlueprintName = "bon2json"
             ReferencedContainer = "container:BON.xcodeproj">
@@ -44,25 +44,19 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "809FA69916BFED7A00A465A0"
+            BlueprintIdentifier = "4C5DDA147D9E4A20AD80E389"
             BuildableName = "bon2json"
             BlueprintName = "bon2json"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "basic_types.bon"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -75,7 +69,7 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "809FA69916BFED7A00A465A0"
+            BlueprintIdentifier = "4C5DDA147D9E4A20AD80E389"
             BuildableName = "bon2json"
             BlueprintName = "bon2json"
             ReferencedContainer = "container:BON.xcodeproj">

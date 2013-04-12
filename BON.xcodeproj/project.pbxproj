@@ -6,768 +6,1898 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		60C0288815C04E35A0D5D8AC /* install */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = A6F1C59B9FA647E9B2911826 /* Build configuration list for PBXAggregateTarget "install" */;
+			buildPhases = (
+				620C97355593422A80FE4247 /* CMake PostBuild Rules */,
+			);
+			dependencies = (
+				56633857B50A4A778DAD6C60 /* PBXTargetDependency */,
+			);
+			name = install;
+			productName = install;
+		};
+		C99AB2CEAC6F4D8EB791FD87 /* ALL_BUILD */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 3BD47199F355485ABD85CE08 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+			buildPhases = (
+				8570B708FF1D46679CF52322 /* CMake Rules */,
+			);
+			dependencies = (
+				5F10E558F1C54C02AFB8230F /* PBXTargetDependency */,
+				033A553B4D3C458A99DFCBEC /* PBXTargetDependency */,
+				5CCABC69669D424183525571 /* PBXTargetDependency */,
+				FEA9ED4E4225429BB79BBDC3 /* PBXTargetDependency */,
+				8DD64BF503A04E3387CE4F63 /* PBXTargetDependency */,
+				0D7E2E562F084205BE09AF40 /* PBXTargetDependency */,
+			);
+			name = ALL_BUILD;
+			productName = ALL_BUILD;
+		};
+		E2D08BA3BB034EF1B69FDA29 /* ZERO_CHECK */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = CD4ACFF16F864432AC5889FC /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+			buildPhases = (
+				864F0367832940099734E682 /* CMake Rules */,
+			);
+			dependencies = (
+			);
+			name = ZERO_CHECK;
+			productName = ZERO_CHECK;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
-		80073EFB16E94EEA007518B0 /* json2bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 80073EFA16E94EEA007518B0 /* json2bon.c */; };
-		8096DDCA171185F400F0BFCA /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
-		8096DDCB171185F400F0BFCA /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
-		8096DDCC171185F400F0BFCA /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
-		8096DDCE171185F400F0BFCA /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
-		8096DDCF171185F400F0BFCA /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
-		8096DDD0171185F400F0BFCA /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
-		8096DDD2171185F400F0BFCA /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
-		8096DDD3171185F400F0BFCA /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
-		8096DDD4171185F400F0BFCA /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
-		809FA66616BFE33D00A465A0 /* json2bon.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 809FA66516BFE33D00A465A0 /* json2bon.1 */; };
-		809FA68116BFE5B800A465A0 /* dump.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67016BFE5B800A465A0 /* dump.c */; };
-		809FA68316BFE5B800A465A0 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67116BFE5B800A465A0 /* error.c */; };
-		809FA68516BFE5B800A465A0 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67216BFE5B800A465A0 /* hashtable.c */; };
-		809FA68716BFE5B800A465A0 /* load.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67716BFE5B800A465A0 /* load.c */; };
-		809FA68916BFE5B800A465A0 /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67816BFE5B800A465A0 /* memory.c */; };
-		809FA68B16BFE5B800A465A0 /* pack_unpack.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67916BFE5B800A465A0 /* pack_unpack.c */; };
-		809FA68D16BFE5B800A465A0 /* strbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67A16BFE5B800A465A0 /* strbuffer.c */; };
-		809FA68F16BFE5B800A465A0 /* strconv.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67C16BFE5B800A465A0 /* strconv.c */; };
-		809FA69116BFE5B800A465A0 /* utf.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67D16BFE5B800A465A0 /* utf.c */; };
-		809FA69316BFE5B800A465A0 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67F16BFE5B800A465A0 /* value.c */; };
-		809FA69516BFEB4F00A465A0 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
-		809FA69D16BFED7A00A465A0 /* bon2json.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA69C16BFED7A00A465A0 /* bon2json.c */; };
-		809FA69F16BFED7A00A465A0 /* bon2json.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 809FA69E16BFED7A00A465A0 /* bon2json.1 */; };
-		809FA6A316BFF82500A465A0 /* dump.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67016BFE5B800A465A0 /* dump.c */; };
-		809FA6A416BFF82500A465A0 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67116BFE5B800A465A0 /* error.c */; };
-		809FA6A516BFF82500A465A0 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67216BFE5B800A465A0 /* hashtable.c */; };
-		809FA6A616BFF82500A465A0 /* load.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67716BFE5B800A465A0 /* load.c */; };
-		809FA6A716BFF82500A465A0 /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67816BFE5B800A465A0 /* memory.c */; };
-		809FA6A816BFF82500A465A0 /* pack_unpack.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67916BFE5B800A465A0 /* pack_unpack.c */; };
-		809FA6A916BFF82500A465A0 /* strbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67A16BFE5B800A465A0 /* strbuffer.c */; };
-		809FA6AA16BFF82500A465A0 /* strconv.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67C16BFE5B800A465A0 /* strconv.c */; };
-		809FA6AB16BFF82500A465A0 /* utf.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67D16BFE5B800A465A0 /* utf.c */; };
-		809FA6AC16BFF82500A465A0 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 809FA67F16BFE5B800A465A0 /* value.c */; };
-		809FA6AD16BFF82900A465A0 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
-		80C8D5661714DEFE00117DF4 /* bench.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80C8D5651714DEFE00117DF4 /* bench.cpp */; };
-		80D9FC9A170ED401005DBF0D /* test.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 80D9FC99170ED401005DBF0D /* test.cpp */; };
-		80D9FC9C170ED401005DBF0D /* test.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 80D9FC9B170ED401005DBF0D /* test.1 */; };
-		80D9FCA1170ED914005DBF0D /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
-		80F09127171207840000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
-		80F09128171207840000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
-		80F09129171207840000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
-		80F091431712DE320000DE29 /* util.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F091421712DE320000DE29 /* util.c */; };
-		80F091451712DE320000DE29 /* util.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 80F091441712DE320000DE29 /* util.1 */; };
-		80F091491712DE780000DE29 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
-		80F0914A1712DE7A0000DE29 /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
-		80F0914B1712DE7C0000DE29 /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
-		80F0914C1712DE7E0000DE29 /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
-		80F0914D1712DE800000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
-		80F091561712DFD30000DE29 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 806742A816BB7C8A0029D4E1 /* bon.c */; };
-		80F091571712DFD30000DE29 /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC6171185F400F0BFCA /* read.c */; };
-		80F091581712DFD30000DE29 /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC7171185F400F0BFCA /* type.c */; };
-		80F091591712DFD30000DE29 /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 8096DDC8171185F400F0BFCA /* write.c */; };
-		80F0915A1712DFD30000DE29 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 80F09125171207840000DE29 /* crc32.c */; };
+		019D2DF03C3E4D8F81B0F5A2 /* hashtable.c in Sources */ = {isa = PBXBuildFile; fileRef = 33C2B5F020154C038143915A /* hashtable.c */; settings = {COMPILER_FLAGS = ""; }; };
+		1F3830DB096C4BF9853E5B86 /* strconv.c in Sources */ = {isa = PBXBuildFile; fileRef = 0B0D07AF39944D13BA234D0F /* strconv.c */; settings = {COMPILER_FLAGS = ""; }; };
+		28F1DAB427EE4C759FB9B8FA /* utf.c in Sources */ = {isa = PBXBuildFile; fileRef = 807BD624B7B3416DB65AF809 /* utf.c */; settings = {COMPILER_FLAGS = ""; }; };
+		3860FC267CB24A2C8AA9316E /* pack_unpack.c in Sources */ = {isa = PBXBuildFile; fileRef = 9E30E91E904C4D3797B04AE3 /* pack_unpack.c */; settings = {COMPILER_FLAGS = ""; }; };
+		4E97C532C6C949A7A244285C /* memory.c in Sources */ = {isa = PBXBuildFile; fileRef = 2B71554AAC5F4215A51FA190 /* memory.c */; settings = {COMPILER_FLAGS = ""; }; };
+		5D0AED4A39514CEC9943272E /* json2bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 09E75D354E614112BF574B0B /* json2bon.c */; settings = {COMPILER_FLAGS = ""; }; };
+		7A95FE6E693C469A852DD6C5 /* error.c in Sources */ = {isa = PBXBuildFile; fileRef = 6499F04C74EC4E609B37C668 /* error.c */; settings = {COMPILER_FLAGS = ""; }; };
+		855FAF972B0C4210BC118003 /* strbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FDB4DB7EAEA488B8AC96352 /* strbuffer.c */; settings = {COMPILER_FLAGS = ""; }; };
+		88FEC2F6DCAA43399953C352 /* load.c in Sources */ = {isa = PBXBuildFile; fileRef = 2E64B77B07E04D849467B6EC /* load.c */; settings = {COMPILER_FLAGS = ""; }; };
+		92A0D1B3EFC448DEB0F85F12 /* write.c in Sources */ = {isa = PBXBuildFile; fileRef = 9DE30D5202D74894BDEAB5B0 /* write.c */; settings = {COMPILER_FLAGS = ""; }; };
+		C47B5DE237E54792AA77E6A0 /* value.c in Sources */ = {isa = PBXBuildFile; fileRef = 7AF3CE9462574E1285B84D3A /* value.c */; settings = {COMPILER_FLAGS = ""; }; };
+		D30A21602C16478291D02836 /* read.c in Sources */ = {isa = PBXBuildFile; fileRef = 2325950DE9654C3B8B9CE37D /* read.c */; settings = {COMPILER_FLAGS = ""; }; };
+		DDE4A68913A1461D99CCD596 /* type.c in Sources */ = {isa = PBXBuildFile; fileRef = 1223ACEE86CB4321B342B1E2 /* type.c */; settings = {COMPILER_FLAGS = ""; }; };
+		DEF4AC38507E4D07A5C56095 /* crc32.c in Sources */ = {isa = PBXBuildFile; fileRef = 02A0846F50654733904A19DE /* crc32.c */; settings = {COMPILER_FLAGS = ""; }; };
+		E197C4C1D6114102A0612CA0 /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = E438823366D74566B8375A0E /* bon.c */; settings = {COMPILER_FLAGS = ""; }; };
+		E7B442B1D16641C68D15C625 /* dump.c in Sources */ = {isa = PBXBuildFile; fileRef = 8B85F57D7F0A4B68A68EAF4B /* dump.c */; settings = {COMPILER_FLAGS = ""; }; };
+		F9E47508B1384DE1A5711ABE /* bon.c in Sources */ = {isa = PBXBuildFile; fileRef = 97398DEF24504A25A7CF1C8A /* bon.c */; settings = {COMPILER_FLAGS = ""; }; };
+		FF3D34D3906A4431B695CBAD /* bon2json.c in Sources */ = {isa = PBXBuildFile; fileRef = 0349C0235C324A659A66E1B9 /* bon2json.c */; settings = {COMPILER_FLAGS = ""; }; };
 /* End PBXBuildFile section */
 
-/* Begin PBXCopyFilesBuildPhase section */
-		809FA65F16BFE33D00A465A0 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-				809FA66616BFE33D00A465A0 /* json2bon.1 in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 1;
+/* Begin PBXContainerItemProxy section */
+		1252062A8BE549DE99BFEC56 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23AB965910DF42C7935D9FEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B874A29FE2634627B9C62EFB;
+			remoteInfo = jansson;
 		};
-		809FA69816BFED7A00A465A0 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-				809FA69F16BFED7A00A465A0 /* bon2json.1 in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 1;
+		4152E511BE2848E79754AA5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23AB965910DF42C7935D9FEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 577D5C0130254E64A52EE316;
+			remoteInfo = bon;
 		};
-		80D9FC95170ED401005DBF0D /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-				80D9FC9C170ED401005DBF0D /* test.1 in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 1;
+		687320479581440785CA1E5E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23AB965910DF42C7935D9FEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 68ACA8E43D6645B8BFAA229C;
+			remoteInfo = json2bon;
 		};
-		80F0913E1712DE320000DE29 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
-			files = (
-				80F091451712DE320000DE29 /* util.1 in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 1;
+		68E10EF9F28A4455BCF7CBCD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23AB965910DF42C7935D9FEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C5DDA147D9E4A20AD80E389;
+			remoteInfo = bon2json;
 		};
-/* End PBXCopyFilesBuildPhase section */
+		6C85FD46904248AC9BA225C9 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23AB965910DF42C7935D9FEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E2D08BA3BB034EF1B69FDA29;
+			remoteInfo = ZERO_CHECK;
+		};
+		ABE9A15E1FAE4BDBA3B5C493 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23AB965910DF42C7935D9FEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C99AB2CEAC6F4D8EB791FD87;
+			remoteInfo = ALL_BUILD;
+		};
+		D9728CEDC0804476806A22D3 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 23AB965910DF42C7935D9FEC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8808FB44C5304FE5B1841C53;
+			remoteInfo = libbon;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		80073EFA16E94EEA007518B0 /* json2bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; name = json2bon.c; path = ../../bon/json2bon/json2bon.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
-		801A711A1715A26600CE61F0 /* write_inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = write_inline.h; sourceTree = "<group>"; };
-		806742A016BB36970029D4E1 /* BON.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = BON.1; sourceTree = "<group>"; };
-		806742A716BB36A70029D4E1 /* bon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; lineEnding = 0; path = bon.h; sourceTree = "<group>"; };
-		806742A816BB7C8A0029D4E1 /* bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; lineEnding = 0; path = bon.c; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.c; };
-		8096DDC6171185F400F0BFCA /* read.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = read.c; sourceTree = "<group>"; };
-		8096DDC7171185F400F0BFCA /* type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = type.c; sourceTree = "<group>"; };
-		8096DDC8171185F400F0BFCA /* write.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = write.c; sourceTree = "<group>"; };
-		809FA66116BFE33D00A465A0 /* json2bon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = json2bon; sourceTree = BUILT_PRODUCTS_DIR; };
-		809FA66516BFE33D00A465A0 /* json2bon.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = json2bon.1; sourceTree = "<group>"; };
-		809FA67016BFE5B800A465A0 /* dump.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = dump.c; sourceTree = "<group>"; };
-		809FA67116BFE5B800A465A0 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = error.c; sourceTree = "<group>"; };
-		809FA67216BFE5B800A465A0 /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hashtable.c; sourceTree = "<group>"; };
-		809FA67316BFE5B800A465A0 /* hashtable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hashtable.h; sourceTree = "<group>"; };
-		809FA67416BFE5B800A465A0 /* jansson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jansson.h; sourceTree = "<group>"; };
-		809FA67516BFE5B800A465A0 /* jansson_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jansson_config.h; sourceTree = "<group>"; };
-		809FA67616BFE5B800A465A0 /* jansson_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = jansson_private.h; sourceTree = "<group>"; };
-		809FA67716BFE5B800A465A0 /* load.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = load.c; sourceTree = "<group>"; };
-		809FA67816BFE5B800A465A0 /* memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = memory.c; sourceTree = "<group>"; };
-		809FA67916BFE5B800A465A0 /* pack_unpack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pack_unpack.c; sourceTree = "<group>"; };
-		809FA67A16BFE5B800A465A0 /* strbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = strbuffer.c; sourceTree = "<group>"; };
-		809FA67B16BFE5B800A465A0 /* strbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = strbuffer.h; sourceTree = "<group>"; };
-		809FA67C16BFE5B800A465A0 /* strconv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = strconv.c; sourceTree = "<group>"; };
-		809FA67D16BFE5B800A465A0 /* utf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utf.c; sourceTree = "<group>"; };
-		809FA67E16BFE5B800A465A0 /* utf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utf.h; sourceTree = "<group>"; };
-		809FA67F16BFE5B800A465A0 /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = value.c; sourceTree = "<group>"; };
-		809FA69A16BFED7A00A465A0 /* bon2json */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bon2json; sourceTree = BUILT_PRODUCTS_DIR; };
-		809FA69C16BFED7A00A465A0 /* bon2json.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = bon2json.c; sourceTree = "<group>"; };
-		809FA69E16BFED7A00A465A0 /* bon2json.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = bon2json.1; sourceTree = "<group>"; };
-		80C8D5651714DEFE00117DF4 /* bench.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bench.cpp; sourceTree = "<group>"; };
-		80C8D5691714E08200117DF4 /* inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inline.h; sourceTree = "<group>"; };
-		80D7A1881718067800117EDD /* read_inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = read_inline.h; sourceTree = "<group>"; };
-		80D9FC97170ED401005DBF0D /* test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test; sourceTree = BUILT_PRODUCTS_DIR; };
-		80D9FC99170ED401005DBF0D /* test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = test.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
-		80D9FC9B170ED401005DBF0D /* test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = test.1; sourceTree = "<group>"; };
-		80D9FCA0170ED5A3005DBF0D /* catch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = catch.hpp; sourceTree = "<group>"; };
-		80E9B2F8171046C20095BC59 /* bon_private.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bon_private.h; sourceTree = "<group>"; };
-		80F09122171203900000DE29 /* crc32.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = crc32.h; sourceTree = "<group>"; };
-		80F09125171207840000DE29 /* crc32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crc32.c; sourceTree = "<group>"; };
-		80F0912E1712C4960000DE29 /* hello.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = hello.c; sourceTree = "<group>"; };
-		80F091351712C4B20000DE29 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		80F091371712C4B20000DE29 /* hello_bon.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = hello_bon.1; sourceTree = "<group>"; };
-		80F091401712DE320000DE29 /* bon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bon; sourceTree = BUILT_PRODUCTS_DIR; };
-		80F091421712DE320000DE29 /* util.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = util.c; sourceTree = "<group>"; };
-		80F091441712DE320000DE29 /* util.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = util.1; sourceTree = "<group>"; };
-		80F091521712DFC40000DE29 /* libbon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libbon.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		02787E8B84104C459170FE4D /* strbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = strbuffer.h; path = jansson/strbuffer.h; sourceTree = SOURCE_ROOT; };
+		02A0846F50654733904A19DE /* crc32.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = crc32.c; path = libbon/crc32.c; sourceTree = SOURCE_ROOT; };
+		0349C0235C324A659A66E1B9 /* bon2json.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bon2json.c; path = bon2json/bon2json.c; sourceTree = SOURCE_ROOT; };
+		0421BA16B07248BAA614DCF1 /* bon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = bon; sourceTree = BUILT_PRODUCTS_DIR; };
+		09E75D354E614112BF574B0B /* json2bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = json2bon.c; path = json2bon/json2bon.c; sourceTree = SOURCE_ROOT; };
+		0B0D07AF39944D13BA234D0F /* strconv.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = strconv.c; path = jansson/strconv.c; sourceTree = SOURCE_ROOT; };
+		1223ACEE86CB4321B342B1E2 /* type.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = type.c; path = libbon/type.c; sourceTree = SOURCE_ROOT; };
+		1647AB1B19C64B9DBAEF3EB4 /* json2bon */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = json2bon; sourceTree = BUILT_PRODUCTS_DIR; };
+		2325950DE9654C3B8B9CE37D /* read.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = read.c; path = libbon/read.c; sourceTree = SOURCE_ROOT; };
+		2B71554AAC5F4215A51FA190 /* memory.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = memory.c; path = jansson/memory.c; sourceTree = SOURCE_ROOT; };
+		2E64B77B07E04D849467B6EC /* load.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = load.c; path = jansson/load.c; sourceTree = SOURCE_ROOT; };
+		33C2B5F020154C038143915A /* hashtable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hashtable.c; path = jansson/hashtable.c; sourceTree = SOURCE_ROOT; };
+		36940D79C33840C38B7D120F /* bon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bon.h; path = libbon/bon.h; sourceTree = SOURCE_ROOT; };
+		6499F04C74EC4E609B37C668 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = error.c; path = jansson/error.c; sourceTree = SOURCE_ROOT; };
+		6AB86F8F7E2D48D8969A4D38 /* libbon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libbon.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7446FC330C324280B3073FB6 /* bon_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bon_private.h; path = libbon/bon_private.h; sourceTree = SOURCE_ROOT; };
+		78C1BCF0BD9F4FB7A8A7D303 /* libjansson.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libjansson.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7AF3CE9462574E1285B84D3A /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = jansson/value.c; sourceTree = SOURCE_ROOT; };
+		7BE82C1350A8485B91137477 /* crc32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = crc32.h; path = libbon/crc32.h; sourceTree = SOURCE_ROOT; };
+		807BD624B7B3416DB65AF809 /* utf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = utf.c; path = jansson/utf.c; sourceTree = SOURCE_ROOT; };
+		8B85F57D7F0A4B68A68EAF4B /* dump.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dump.c; path = jansson/dump.c; sourceTree = SOURCE_ROOT; };
+		8FDB4DB7EAEA488B8AC96352 /* strbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = strbuffer.c; path = jansson/strbuffer.c; sourceTree = SOURCE_ROOT; };
+		97398DEF24504A25A7CF1C8A /* bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bon.c; path = bon/bon.c; sourceTree = SOURCE_ROOT; };
+		9DE30D5202D74894BDEAB5B0 /* write.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = write.c; path = libbon/write.c; sourceTree = SOURCE_ROOT; };
+		9E30E91E904C4D3797B04AE3 /* pack_unpack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pack_unpack.c; path = jansson/pack_unpack.c; sourceTree = SOURCE_ROOT; };
+		AD67BB3A9ABC4E1BB662316E /* utf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = utf.h; path = jansson/utf.h; sourceTree = SOURCE_ROOT; };
+		AD91ADE6BD0F4AC2BF8E1591 /* jansson_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jansson_config.h; path = jansson/jansson_config.h; sourceTree = SOURCE_ROOT; };
+		B673B239174D40DA84B9A887 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		BE7F3D5A3854431395452168 /* jansson_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jansson_private.h; path = jansson/jansson_private.h; sourceTree = SOURCE_ROOT; };
+		E438823366D74566B8375A0E /* bon.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bon.c; path = libbon/bon.c; sourceTree = SOURCE_ROOT; };
+		E543791F434C43F39DB32E60 /* bon2json */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = bon2json; sourceTree = BUILT_PRODUCTS_DIR; };
+		ECFA10836DF34CDF8657A93B /* jansson.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jansson.h; path = jansson/jansson.h; sourceTree = SOURCE_ROOT; };
+		F2AE0CC8BA184DD4B7B1BC49 /* hashtable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hashtable.h; path = jansson/hashtable.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
-/* Begin PBXFrameworksBuildPhase section */
-		809FA65E16BFE33D00A465A0 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		809FA69716BFED7A00A465A0 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80D9FC94170ED401005DBF0D /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80F0913D1712DE320000DE29 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		80F0914F1712DFC40000DE29 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
-
 /* Begin PBXGroup section */
-		8067429216BB36970029D4E1 = {
+		062AF8733E46467F926BB34C /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				80F0912D1712C4960000DE29 /* examples */,
-				809FA66F16BFE5B800A465A0 /* jansson */,
-				8067429D16BB36970029D4E1 /* BON */,
-				809FA66216BFE33D00A465A0 /* json2bon */,
-				809FA69B16BFED7A00A465A0 /* bon2json */,
-				80D9FC98170ED401005DBF0D /* test */,
-				80F091341712C4B20000DE29 /* hello.bon */,
-				80F091411712DE320000DE29 /* util */,
-				8067429C16BB36970029D4E1 /* Products */,
 			);
+			name = Resources;
 			sourceTree = "<group>";
 		};
-		8067429C16BB36970029D4E1 /* Products */ = {
+		095A685DDD8D451CB47900E2 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
-				809FA66116BFE33D00A465A0 /* json2bon */,
-				809FA69A16BFED7A00A465A0 /* bon2json */,
-				80D9FC97170ED401005DBF0D /* test */,
-				80F091401712DE320000DE29 /* bon */,
-				80F091521712DFC40000DE29 /* libbon.a */,
+				F2AE0CC8BA184DD4B7B1BC49 /* hashtable.h */,
+				AD91ADE6BD0F4AC2BF8E1591 /* jansson_config.h */,
+				ECFA10836DF34CDF8657A93B /* jansson.h */,
+				BE7F3D5A3854431395452168 /* jansson_private.h */,
+				02787E8B84104C459170FE4D /* strbuffer.h */,
+				AD67BB3A9ABC4E1BB662316E /* utf.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		2B204209EC374C97B2049C46 /* Header Files */ = {
+			isa = PBXGroup;
+			children = (
+				36940D79C33840C38B7D120F /* bon.h */,
+				7446FC330C324280B3073FB6 /* bon_private.h */,
+				7BE82C1350A8485B91137477 /* crc32.h */,
+			);
+			name = "Header Files";
+			sourceTree = "<group>";
+		};
+		35294CB7A86444E08CDD61C3 /* CMake Rules */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "CMake Rules";
+			sourceTree = "<group>";
+		};
+		51B522E53EE5457BAE92B78C /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				E438823366D74566B8375A0E /* bon.c */,
+				02A0846F50654733904A19DE /* crc32.c */,
+				2325950DE9654C3B8B9CE37D /* read.c */,
+				1223ACEE86CB4321B342B1E2 /* type.c */,
+				9DE30D5202D74894BDEAB5B0 /* write.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		5A730894EB234346944E0E99 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0421BA16B07248BAA614DCF1 /* bon */,
+				E543791F434C43F39DB32E60 /* bon2json */,
+				78C1BCF0BD9F4FB7A8A7D303 /* libjansson.a */,
+				1647AB1B19C64B9DBAEF3EB4 /* json2bon */,
+				6AB86F8F7E2D48D8969A4D38 /* libbon.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		8067429D16BB36970029D4E1 /* BON */ = {
+		60438C06CEEC4BBC90204EDE /* CMake Rules */ = {
 			isa = PBXGroup;
 			children = (
-				806742A016BB36970029D4E1 /* BON.1 */,
-				806742A816BB7C8A0029D4E1 /* bon.c */,
-				806742A716BB36A70029D4E1 /* bon.h */,
-				80E9B2F8171046C20095BC59 /* bon_private.h */,
-				8096DDC6171185F400F0BFCA /* read.c */,
-				8096DDC7171185F400F0BFCA /* type.c */,
-				8096DDC8171185F400F0BFCA /* write.c */,
-				80F09122171203900000DE29 /* crc32.h */,
-				80F09125171207840000DE29 /* crc32.c */,
-				80C8D5691714E08200117DF4 /* inline.h */,
-				801A711A1715A26600CE61F0 /* write_inline.h */,
-				80D7A1881718067800117EDD /* read_inline.h */,
 			);
-			path = BON;
+			name = "CMake Rules";
 			sourceTree = "<group>";
 		};
-		809FA66216BFE33D00A465A0 /* json2bon */ = {
+		67576E96D2C34C97A8F9F166 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				80073EFA16E94EEA007518B0 /* json2bon.c */,
-				809FA66516BFE33D00A465A0 /* json2bon.1 */,
+				A8B08ECF909241D590AB119C /* ALL_BUILD */,
+				CD56B697FD4941B3A01116C1 /* ZERO_CHECK */,
+				8059103037934D75B5B94C77 /* bon */,
+				6932DC32F47A42B39744FBAE /* bon2json */,
+				BDD383D682D14A00A0438C62 /* jansson */,
+				D96C4E8CB21B40EF8CAC677D /* json2bon */,
+				D4A61842AE074491ACEA6B89 /* libbon */,
 			);
-			path = json2bon;
+			name = Sources;
 			sourceTree = "<group>";
 		};
-		809FA66F16BFE5B800A465A0 /* jansson */ = {
+		6932DC32F47A42B39744FBAE /* bon2json */ = {
 			isa = PBXGroup;
 			children = (
-				809FA67016BFE5B800A465A0 /* dump.c */,
-				809FA67116BFE5B800A465A0 /* error.c */,
-				809FA67216BFE5B800A465A0 /* hashtable.c */,
-				809FA67316BFE5B800A465A0 /* hashtable.h */,
-				809FA67416BFE5B800A465A0 /* jansson.h */,
-				809FA67516BFE5B800A465A0 /* jansson_config.h */,
-				809FA67616BFE5B800A465A0 /* jansson_private.h */,
-				809FA67716BFE5B800A465A0 /* load.c */,
-				809FA67816BFE5B800A465A0 /* memory.c */,
-				809FA67916BFE5B800A465A0 /* pack_unpack.c */,
-				809FA67A16BFE5B800A465A0 /* strbuffer.c */,
-				809FA67B16BFE5B800A465A0 /* strbuffer.h */,
-				809FA67C16BFE5B800A465A0 /* strconv.c */,
-				809FA67D16BFE5B800A465A0 /* utf.c */,
-				809FA67E16BFE5B800A465A0 /* utf.h */,
-				809FA67F16BFE5B800A465A0 /* value.c */,
+				8FE474E6B59D430086D61E03 /* Source Files */,
+				B673B239174D40DA84B9A887 /* CMakeLists.txt */,
 			);
-			path = jansson;
+			name = bon2json;
 			sourceTree = "<group>";
 		};
-		809FA69B16BFED7A00A465A0 /* bon2json */ = {
+		7988E67A107D43A080D6EC82 = {
 			isa = PBXGroup;
 			children = (
-				809FA69C16BFED7A00A465A0 /* bon2json.c */,
-				809FA69E16BFED7A00A465A0 /* bon2json.1 */,
+				67576E96D2C34C97A8F9F166 /* Sources */,
+				062AF8733E46467F926BB34C /* Resources */,
+				5A730894EB234346944E0E99 /* Products */,
 			);
-			path = bon2json;
 			sourceTree = "<group>";
 		};
-		80D9FC98170ED401005DBF0D /* test */ = {
+		7EF2C653609A43AB8FD365EF /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
-				80D9FCA0170ED5A3005DBF0D /* catch.hpp */,
-				80D9FC99170ED401005DBF0D /* test.cpp */,
-				80D9FC9B170ED401005DBF0D /* test.1 */,
-				80C8D5651714DEFE00117DF4 /* bench.cpp */,
+				8B85F57D7F0A4B68A68EAF4B /* dump.c */,
+				6499F04C74EC4E609B37C668 /* error.c */,
+				33C2B5F020154C038143915A /* hashtable.c */,
+				2E64B77B07E04D849467B6EC /* load.c */,
+				2B71554AAC5F4215A51FA190 /* memory.c */,
+				9E30E91E904C4D3797B04AE3 /* pack_unpack.c */,
+				8FDB4DB7EAEA488B8AC96352 /* strbuffer.c */,
+				0B0D07AF39944D13BA234D0F /* strconv.c */,
+				807BD624B7B3416DB65AF809 /* utf.c */,
+				7AF3CE9462574E1285B84D3A /* value.c */,
 			);
-			path = test;
+			name = "Source Files";
 			sourceTree = "<group>";
 		};
-		80F0912D1712C4960000DE29 /* examples */ = {
+		8059103037934D75B5B94C77 /* bon */ = {
 			isa = PBXGroup;
 			children = (
-				80F0912E1712C4960000DE29 /* hello.c */,
+				ECC11E700AD948E5BCEBF924 /* Source Files */,
+				B673B239174D40DA84B9A887 /* CMakeLists.txt */,
 			);
-			path = examples;
+			name = bon;
 			sourceTree = "<group>";
 		};
-		80F091341712C4B20000DE29 /* hello.bon */ = {
+		8FE474E6B59D430086D61E03 /* Source Files */ = {
 			isa = PBXGroup;
 			children = (
-				80F091351712C4B20000DE29 /* main.cpp */,
-				80F091371712C4B20000DE29 /* hello_bon.1 */,
+				0349C0235C324A659A66E1B9 /* bon2json.c */,
 			);
-			path = hello.bon;
+			name = "Source Files";
 			sourceTree = "<group>";
 		};
-		80F091411712DE320000DE29 /* util */ = {
+		A8B08ECF909241D590AB119C /* ALL_BUILD */ = {
 			isa = PBXGroup;
 			children = (
-				80F091421712DE320000DE29 /* util.c */,
-				80F091441712DE320000DE29 /* util.1 */,
+				35294CB7A86444E08CDD61C3 /* CMake Rules */,
+				B673B239174D40DA84B9A887 /* CMakeLists.txt */,
 			);
-			path = util;
+			name = ALL_BUILD;
+			sourceTree = "<group>";
+		};
+		BDD383D682D14A00A0438C62 /* jansson */ = {
+			isa = PBXGroup;
+			children = (
+				7EF2C653609A43AB8FD365EF /* Source Files */,
+				095A685DDD8D451CB47900E2 /* Header Files */,
+				B673B239174D40DA84B9A887 /* CMakeLists.txt */,
+			);
+			name = jansson;
+			sourceTree = "<group>";
+		};
+		CD56B697FD4941B3A01116C1 /* ZERO_CHECK */ = {
+			isa = PBXGroup;
+			children = (
+				60438C06CEEC4BBC90204EDE /* CMake Rules */,
+				B673B239174D40DA84B9A887 /* CMakeLists.txt */,
+			);
+			name = ZERO_CHECK;
+			sourceTree = "<group>";
+		};
+		D4A61842AE074491ACEA6B89 /* libbon */ = {
+			isa = PBXGroup;
+			children = (
+				51B522E53EE5457BAE92B78C /* Source Files */,
+				2B204209EC374C97B2049C46 /* Header Files */,
+				B673B239174D40DA84B9A887 /* CMakeLists.txt */,
+			);
+			name = libbon;
+			sourceTree = "<group>";
+		};
+		D96C4E8CB21B40EF8CAC677D /* json2bon */ = {
+			isa = PBXGroup;
+			children = (
+				FDCC431088D441FCA29E3E35 /* Source Files */,
+				B673B239174D40DA84B9A887 /* CMakeLists.txt */,
+			);
+			name = json2bon;
+			sourceTree = "<group>";
+		};
+		ECC11E700AD948E5BCEBF924 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				97398DEF24504A25A7CF1C8A /* bon.c */,
+			);
+			name = "Source Files";
+			sourceTree = "<group>";
+		};
+		FDCC431088D441FCA29E3E35 /* Source Files */ = {
+			isa = PBXGroup;
+			children = (
+				09E75D354E614112BF574B0B /* json2bon.c */,
+			);
+			name = "Source Files";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		80F091501712DFC40000DE29 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
-		809FA66016BFE33D00A465A0 /* json2bon */ = {
+		4C5DDA147D9E4A20AD80E389 /* bon2json */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 809FA66716BFE33D00A465A0 /* Build configuration list for PBXNativeTarget "json2bon" */;
+			buildConfigurationList = 5FC6E290BDA342A69B1A7855 /* Build configuration list for PBXNativeTarget "bon2json" */;
 			buildPhases = (
-				809FA65D16BFE33D00A465A0 /* Sources */,
-				809FA65E16BFE33D00A465A0 /* Frameworks */,
-				809FA65F16BFE33D00A465A0 /* CopyFiles */,
+				7CC44DD4F502408A80A4D8AD /* Sources */,
+				11439DCC6AAC44ADA7E28E48 /* CMake PostBuild Rules */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-			);
-			name = json2bon;
-			productName = json2bon;
-			productReference = 809FA66116BFE33D00A465A0 /* json2bon */;
-			productType = "com.apple.product-type.tool";
-		};
-		809FA69916BFED7A00A465A0 /* bon2json */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 809FA6A016BFED7A00A465A0 /* Build configuration list for PBXNativeTarget "bon2json" */;
-			buildPhases = (
-				809FA69616BFED7A00A465A0 /* Sources */,
-				809FA69716BFED7A00A465A0 /* Frameworks */,
-				809FA69816BFED7A00A465A0 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
+				5F10E558F1C54C02AFB8230F /* PBXTargetDependency */,
+				033A553B4D3C458A99DFCBEC /* PBXTargetDependency */,
+				FEA9ED4E4225429BB79BBDC3 /* PBXTargetDependency */,
 			);
 			name = bon2json;
 			productName = bon2json;
-			productReference = 809FA69A16BFED7A00A465A0 /* bon2json */;
+			productReference = E543791F434C43F39DB32E60 /* bon2json */;
 			productType = "com.apple.product-type.tool";
 		};
-		80D9FC96170ED401005DBF0D /* test */ = {
+		577D5C0130254E64A52EE316 /* bon */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 80D9FC9F170ED401005DBF0D /* Build configuration list for PBXNativeTarget "test" */;
+			buildConfigurationList = 7F57E5A3D77747BCADBD4B45 /* Build configuration list for PBXNativeTarget "bon" */;
 			buildPhases = (
-				80D9FC93170ED401005DBF0D /* Sources */,
-				80D9FC94170ED401005DBF0D /* Frameworks */,
-				80D9FC95170ED401005DBF0D /* CopyFiles */,
+				6E9A105BFAB846CB938FC0CE /* Sources */,
+				323471C02D4D4D0F8980F584 /* CMake PostBuild Rules */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-			);
-			name = test;
-			productName = test;
-			productReference = 80D9FC97170ED401005DBF0D /* test */;
-			productType = "com.apple.product-type.tool";
-		};
-		80F0913F1712DE320000DE29 /* util */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 80F091461712DE320000DE29 /* Build configuration list for PBXNativeTarget "util" */;
-			buildPhases = (
-				80F0913C1712DE320000DE29 /* Sources */,
-				80F0913D1712DE320000DE29 /* Frameworks */,
-				80F0913E1712DE320000DE29 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = util;
-			productName = util;
-			productReference = 80F091401712DE320000DE29 /* bon */;
-			productType = "com.apple.product-type.tool";
-		};
-		80F091511712DFC40000DE29 /* bon */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 80F091531712DFC40000DE29 /* Build configuration list for PBXNativeTarget "bon" */;
-			buildPhases = (
-				80F0914E1712DFC40000DE29 /* Sources */,
-				80F0914F1712DFC40000DE29 /* Frameworks */,
-				80F091501712DFC40000DE29 /* Headers */,
-			);
-			buildRules = (
-			);
-			dependencies = (
+				5F10E558F1C54C02AFB8230F /* PBXTargetDependency */,
+				033A553B4D3C458A99DFCBEC /* PBXTargetDependency */,
 			);
 			name = bon;
 			productName = bon;
-			productReference = 80F091521712DFC40000DE29 /* libbon.a */;
+			productReference = 0421BA16B07248BAA614DCF1 /* bon */;
+			productType = "com.apple.product-type.tool";
+		};
+		68ACA8E43D6645B8BFAA229C /* json2bon */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB0DF25B7C904FB3A6A4F453 /* Build configuration list for PBXNativeTarget "json2bon" */;
+			buildPhases = (
+				1A221A895C744509B945EAE6 /* Sources */,
+				BB98D84C64584484B6F212D0 /* CMake PostBuild Rules */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5F10E558F1C54C02AFB8230F /* PBXTargetDependency */,
+				033A553B4D3C458A99DFCBEC /* PBXTargetDependency */,
+				FEA9ED4E4225429BB79BBDC3 /* PBXTargetDependency */,
+			);
+			name = json2bon;
+			productName = json2bon;
+			productReference = 1647AB1B19C64B9DBAEF3EB4 /* json2bon */;
+			productType = "com.apple.product-type.tool";
+		};
+		8808FB44C5304FE5B1841C53 /* libbon */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 626387093DFA455CBC612300 /* Build configuration list for PBXNativeTarget "libbon" */;
+			buildPhases = (
+				E6E9F690B5D94A5C8CE58605 /* Sources */,
+				57FBE492975E4957B47FE044 /* CMake PostBuild Rules */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5F10E558F1C54C02AFB8230F /* PBXTargetDependency */,
+			);
+			name = libbon;
+			productName = libbon;
+			productReference = 6AB86F8F7E2D48D8969A4D38 /* libbon.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		B874A29FE2634627B9C62EFB /* jansson */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5D35A9CF34A40A5A56B71DF /* Build configuration list for PBXNativeTarget "jansson" */;
+			buildPhases = (
+				6465EA5E796F4614832EEB4A /* Sources */,
+				D4D7D258521741CBA207A1AC /* CMake PostBuild Rules */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				5F10E558F1C54C02AFB8230F /* PBXTargetDependency */,
+			);
+			name = jansson;
+			productName = jansson;
+			productReference = 78C1BCF0BD9F4FB7A8A7D303 /* libjansson.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		8067429316BB36970029D4E1 /* Project object */ = {
+		23AB965910DF42C7935D9FEC /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0460;
-				ORGANIZATIONNAME = "Emil Ernerfeldt";
+				BuildIndependentTargetsInParallel = YES;
 			};
-			buildConfigurationList = 8067429616BB36970029D4E1 /* Build configuration list for PBXProject "BON" */;
+			buildConfigurationList = 3002051291364EFDB42533C8 /* Build configuration list for PBXProject "BON" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 			);
-			mainGroup = 8067429216BB36970029D4E1;
-			productRefGroup = 8067429C16BB36970029D4E1 /* Products */;
+			mainGroup = 7988E67A107D43A080D6EC82;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				809FA66016BFE33D00A465A0 /* json2bon */,
-				809FA69916BFED7A00A465A0 /* bon2json */,
-				80D9FC96170ED401005DBF0D /* test */,
-				80F0913F1712DE320000DE29 /* util */,
-				80F091511712DFC40000DE29 /* bon */,
+				C99AB2CEAC6F4D8EB791FD87 /* ALL_BUILD */,
+				E2D08BA3BB034EF1B69FDA29 /* ZERO_CHECK */,
+				577D5C0130254E64A52EE316 /* bon */,
+				4C5DDA147D9E4A20AD80E389 /* bon2json */,
+				60C0288815C04E35A0D5D8AC /* install */,
+				B874A29FE2634627B9C62EFB /* jansson */,
+				68ACA8E43D6645B8BFAA229C /* json2bon */,
+				8808FB44C5304FE5B1841C53 /* libbon */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		11439DCC6AAC44ADA7E28E48 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/bon2json_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		323471C02D4D4D0F8980F584 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/bon_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		57FBE492975E4957B47FE044 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/libbon_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		620C97355593422A80FE4247 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/install_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		8570B708FF1D46679CF52322 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		864F0367832940099734E682 /* CMake Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		BB98D84C64584484B6F212D0 /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/json2bon_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+		D4D7D258521741CBA207A1AC /* CMake PostBuild Rules */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			name = "CMake PostBuild Rules";
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C /Users/emilk/Documents/kod/bon -f /Users/emilk/Documents/kod/bon/CMakeScripts/jansson_postBuildPhase.make$CONFIGURATION all";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
-		809FA65D16BFE33D00A465A0 /* Sources */ = {
+		1A221A895C744509B945EAE6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				809FA68116BFE5B800A465A0 /* dump.c in Sources */,
-				809FA68316BFE5B800A465A0 /* error.c in Sources */,
-				809FA68516BFE5B800A465A0 /* hashtable.c in Sources */,
-				809FA68716BFE5B800A465A0 /* load.c in Sources */,
-				809FA68916BFE5B800A465A0 /* memory.c in Sources */,
-				809FA68B16BFE5B800A465A0 /* pack_unpack.c in Sources */,
-				809FA68D16BFE5B800A465A0 /* strbuffer.c in Sources */,
-				809FA68F16BFE5B800A465A0 /* strconv.c in Sources */,
-				809FA69116BFE5B800A465A0 /* utf.c in Sources */,
-				809FA69316BFE5B800A465A0 /* value.c in Sources */,
-				809FA69516BFEB4F00A465A0 /* bon.c in Sources */,
-				80073EFB16E94EEA007518B0 /* json2bon.c in Sources */,
-				8096DDCA171185F400F0BFCA /* read.c in Sources */,
-				8096DDCE171185F400F0BFCA /* type.c in Sources */,
-				8096DDD2171185F400F0BFCA /* write.c in Sources */,
-				80F09127171207840000DE29 /* crc32.c in Sources */,
+				5D0AED4A39514CEC9943272E /* json2bon.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		809FA69616BFED7A00A465A0 /* Sources */ = {
+		6465EA5E796F4614832EEB4A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				809FA6A316BFF82500A465A0 /* dump.c in Sources */,
-				809FA6A416BFF82500A465A0 /* error.c in Sources */,
-				809FA6A516BFF82500A465A0 /* hashtable.c in Sources */,
-				809FA6A616BFF82500A465A0 /* load.c in Sources */,
-				809FA6A716BFF82500A465A0 /* memory.c in Sources */,
-				809FA6A816BFF82500A465A0 /* pack_unpack.c in Sources */,
-				809FA6A916BFF82500A465A0 /* strbuffer.c in Sources */,
-				809FA6AA16BFF82500A465A0 /* strconv.c in Sources */,
-				809FA6AB16BFF82500A465A0 /* utf.c in Sources */,
-				809FA6AC16BFF82500A465A0 /* value.c in Sources */,
-				809FA6AD16BFF82900A465A0 /* bon.c in Sources */,
-				809FA69D16BFED7A00A465A0 /* bon2json.c in Sources */,
-				8096DDCB171185F400F0BFCA /* read.c in Sources */,
-				8096DDCF171185F400F0BFCA /* type.c in Sources */,
-				8096DDD3171185F400F0BFCA /* write.c in Sources */,
-				80F09128171207840000DE29 /* crc32.c in Sources */,
+				E7B442B1D16641C68D15C625 /* dump.c in Sources */,
+				7A95FE6E693C469A852DD6C5 /* error.c in Sources */,
+				019D2DF03C3E4D8F81B0F5A2 /* hashtable.c in Sources */,
+				88FEC2F6DCAA43399953C352 /* load.c in Sources */,
+				4E97C532C6C949A7A244285C /* memory.c in Sources */,
+				3860FC267CB24A2C8AA9316E /* pack_unpack.c in Sources */,
+				855FAF972B0C4210BC118003 /* strbuffer.c in Sources */,
+				1F3830DB096C4BF9853E5B86 /* strconv.c in Sources */,
+				28F1DAB427EE4C759FB9B8FA /* utf.c in Sources */,
+				C47B5DE237E54792AA77E6A0 /* value.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		80D9FC93170ED401005DBF0D /* Sources */ = {
+		6E9A105BFAB846CB938FC0CE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				80D9FC9A170ED401005DBF0D /* test.cpp in Sources */,
-				80D9FCA1170ED914005DBF0D /* bon.c in Sources */,
-				8096DDCC171185F400F0BFCA /* read.c in Sources */,
-				8096DDD0171185F400F0BFCA /* type.c in Sources */,
-				8096DDD4171185F400F0BFCA /* write.c in Sources */,
-				80F09129171207840000DE29 /* crc32.c in Sources */,
-				80C8D5661714DEFE00117DF4 /* bench.cpp in Sources */,
+				F9E47508B1384DE1A5711ABE /* bon.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		80F0913C1712DE320000DE29 /* Sources */ = {
+		7CC44DD4F502408A80A4D8AD /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				80F091431712DE320000DE29 /* util.c in Sources */,
-				80F091491712DE780000DE29 /* bon.c in Sources */,
-				80F0914B1712DE7C0000DE29 /* type.c in Sources */,
-				80F0914C1712DE7E0000DE29 /* write.c in Sources */,
-				80F0914D1712DE800000DE29 /* crc32.c in Sources */,
-				80F0914A1712DE7A0000DE29 /* read.c in Sources */,
+				FF3D34D3906A4431B695CBAD /* bon2json.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		80F0914E1712DFC40000DE29 /* Sources */ = {
+		E6E9F690B5D94A5C8CE58605 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				80F091561712DFD30000DE29 /* bon.c in Sources */,
-				80F091571712DFD30000DE29 /* read.c in Sources */,
-				80F091581712DFD30000DE29 /* type.c in Sources */,
-				80F091591712DFD30000DE29 /* write.c in Sources */,
-				80F0915A1712DFD30000DE29 /* crc32.c in Sources */,
+				E197C4C1D6114102A0612CA0 /* bon.c in Sources */,
+				DEF4AC38507E4D07A5C56095 /* crc32.c in Sources */,
+				D30A21602C16478291D02836 /* read.c in Sources */,
+				DDE4A68913A1461D99CCD596 /* type.c in Sources */,
+				92A0D1B3EFC448DEB0F85F12 /* write.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		033A553B4D3C458A99DFCBEC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8808FB44C5304FE5B1841C53 /* libbon */;
+			targetProxy = D9728CEDC0804476806A22D3 /* PBXContainerItemProxy */;
+		};
+		0D7E2E562F084205BE09AF40 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 68ACA8E43D6645B8BFAA229C /* json2bon */;
+			targetProxy = 687320479581440785CA1E5E /* PBXContainerItemProxy */;
+		};
+		56633857B50A4A778DAD6C60 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C99AB2CEAC6F4D8EB791FD87 /* ALL_BUILD */;
+			targetProxy = ABE9A15E1FAE4BDBA3B5C493 /* PBXContainerItemProxy */;
+		};
+		5CCABC69669D424183525571 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4C5DDA147D9E4A20AD80E389 /* bon2json */;
+			targetProxy = 68E10EF9F28A4455BCF7CBCD /* PBXContainerItemProxy */;
+		};
+		5F10E558F1C54C02AFB8230F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E2D08BA3BB034EF1B69FDA29 /* ZERO_CHECK */;
+			targetProxy = 6C85FD46904248AC9BA225C9 /* PBXContainerItemProxy */;
+		};
+		8DD64BF503A04E3387CE4F63 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 577D5C0130254E64A52EE316 /* bon */;
+			targetProxy = 4152E511BE2848E79754AA5C /* PBXContainerItemProxy */;
+		};
+		FEA9ED4E4225429BB79BBDC3 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B874A29FE2634627B9C62EFB /* jansson */;
+			targetProxy = 1252062A8BE549DE99BFEC56 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
-		806742A216BB36970029D4E1 /* Debug */ = {
+		0057AC68536840DA881BEB0C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				GCC_TREAT_INCOMPATIBLE_POINTER_TYPE_WARNINGS_AS_ERRORS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
-				GCC_WARN_PEDANTIC = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_PARAMETER = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = /opt/local/include/;
-				LIBRARY_SEARCH_PATHS = /opt/local/lib/;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/Release/libbon.a,
+					/Users/emilk/Documents/kod/bon/Release/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon2json;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Release;
+		};
+		0C948F17865A4496B6CE8DEA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Debug;
+		};
+		0FD209E199834044B7F9E5BD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Release;
+		};
+		128212592BAC454DA9F738A8 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/RelWithDebInfo/libbon.a,
+					/Users/emilk/Documents/kod/bon/RelWithDebInfo/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = json2bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		1AE9E8930A4F4E1C80C75736 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				HEADER_SEARCH_PATHS = /usr/local/include/;
 				ONLY_ACTIVE_ARCH = YES;
-				OTHER_CFLAGS = (
-					"-Wall",
-					"-Wextra",
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk;
+				SYMROOT = /Users/emilk/Documents/kod/bon/build;
+			};
+			name = MinSizeRel;
+		};
+		20952690F48F4D7884A3E101 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
 				);
-				SDKROOT = macosx;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wextra",
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/Debug/libbon.a,
 				);
-			};
-			name = Debug;
-		};
-		806742A316BB36970029D4E1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_IMPLICIT_SIGN_CONVERSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_SUSPICIOUS_IMPLICIT_CONVERSION = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = YES;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				GCC_TREAT_INCOMPATIBLE_POINTER_TYPE_WARNINGS_AS_ERRORS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_MISSING_FIELD_INITIALIZERS = YES;
-				GCC_WARN_ABOUT_MISSING_NEWLINE = YES;
-				GCC_WARN_ABOUT_MISSING_PROTOTYPES = NO;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
-				GCC_WARN_PEDANTIC = YES;
-				GCC_WARN_SHADOW = YES;
-				GCC_WARN_SIGN_COMPARE = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				GCC_WARN_UNUSED_PARAMETER = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = /opt/local/include/;
-				LIBRARY_SEARCH_PATHS = /opt/local/lib/;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				OTHER_CFLAGS = (
-					"-Wall",
-					"-Wextra",
-				);
-				SDKROOT = macosx;
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wextra",
-				);
-			};
-			name = Release;
-		};
-		809FA66816BFE33D00A465A0 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		809FA66916BFE33D00A465A0 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		809FA6A116BFED7A00A465A0 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		809FA6A216BFED7A00A465A0 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		80D9FC9D170ED401005DBF0D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				OTHER_LDFLAGS = "-lmsgpack";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		80D9FC9E170ED401005DBF0D /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				OTHER_LDFLAGS = "-lmsgpack";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
-		80F091471712DE320000DE29 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
+				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
 			};
 			name = Debug;
 		};
-		80F091481712DE320000DE29 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = bon;
-			};
-			name = Release;
-		};
-		80F091541712DFC40000DE29 /* Debug */ = {
+		2ACB73FEA39344C9B14FCD4C /* MinSizeRel */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = jansson;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
 			};
-			name = Debug;
+			name = MinSizeRel;
 		};
-		80F091551712DFC40000DE29 /* Release */ = {
+		375327C36A214C848BF1DCC0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				EXECUTABLE_PREFIX = lib;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = jansson;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
 			};
 			name = Release;
+		};
+		379FB3F88D9440E5B6A24971 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/MinSizeRel/libbon.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = MinSizeRel;
+		};
+		3B7681F4E3BE48A49C793030 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Release;
+		};
+		51262A22A1CC4D7A8D450342 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Debug;
+		};
+		53065FCB5F8D4141B440FB6B /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = MinSizeRel;
+		};
+		56199042B71A4A1194F9715D /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/MinSizeRel/libbon.a,
+					/Users/emilk/Documents/kod/bon/MinSizeRel/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon2json;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = MinSizeRel;
+		};
+		568CE6F85B144E50864D5C59 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk;
+				SYMROOT = /Users/emilk/Documents/kod/bon/build;
+			};
+			name = RelWithDebInfo;
+		};
+		5B681BA1CD2C4C7FAA7E0E5F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Release;
+		};
+		67AAA97B004D4206890F1FEE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/Debug/libbon.a,
+					/Users/emilk/Documents/kod/bon/Debug/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon2json;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Debug;
+		};
+		76C1B7A5B26047659D96A83D /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/RelWithDebInfo/libbon.a,
+					/Users/emilk/Documents/kod/bon/RelWithDebInfo/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon2json;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		7715880EA4404E26B63F2AD6 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		7E32A95A6B9E49E7A5D9FDA4 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = MinSizeRel;
+		};
+		80C09BC514844B4084CDCCFD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk;
+				SYMROOT = /Users/emilk/Documents/kod/bon/build;
+			};
+			name = Release;
+		};
+		82B737EE1E2641409CED6E49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				HEADER_SEARCH_PATHS = /usr/local/include/;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk;
+				SYMROOT = /Users/emilk/Documents/kod/bon/build;
+			};
+			name = Debug;
+		};
+		83C744EDD59346C9A55F8785 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Debug;
+		};
+		8A255CFD7A384A29A2FE2FF6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = jansson;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Debug;
+		};
+		8DCB5516D02544DDA98E94D1 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		8E4CB85477BF4FDDBFB2642E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/Debug;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/Debug/libbon.a,
+					/Users/emilk/Documents/kod/bon/Debug/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = json2bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Debug;
+		};
+		B08D0C374C9D4F7BAF9FD6D4 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = MinSizeRel;
+		};
+		BE0BE7C52F944522B70CB590 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ZERO_CHECK;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Release;
+		};
+		C30E782CA66E4B17B33B8F8B /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/RelWithDebInfo;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/RelWithDebInfo/libbon.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		C7DBBE7EEE89468D8A08FCD3 /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = jansson;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		C95F54F0A47E49E79FA92555 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/Release/libbon.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Release;
+		};
+		CFDD1AAAFDA840D18842EE6F /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		DB3F9866BB4C4E54BD192374 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/Release;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/Release/libbon.a,
+					/Users/emilk/Documents/kod/bon/Release/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = json2bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Release;
+		};
+		E0B66A0D8E1C4A50BBCC4943 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CONFIGURATION_BUILD_DIR = /Users/emilk/Documents/kod/bon/bin/MinSizeRel;
+				EXECUTABLE_PREFIX = "";
+				EXECUTABLE_SUFFIX = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_SEARCH_PATHS = "";
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = (
+					"-Wl,-search_paths_first",
+					"-Wl,-headerpad_max_install_names",
+					/Users/emilk/Documents/kod/bon/MinSizeRel/libbon.a,
+					/Users/emilk/Documents/kod/bon/MinSizeRel/libjansson.a,
+				);
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = json2bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = MinSizeRel;
+		};
+		E2E4326E38994A4CB6B59E71 /* MinSizeRel */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = install;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = MinSizeRel;
+		};
+		E416F5657CCA4C228F60818B /* RelWithDebInfo */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				EXECUTABLE_SUFFIX = .a;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 2;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+				);
+				INSTALL_PATH = "";
+				LIBRARY_STYLE = STATIC;
+				OTHER_CFLAGS = (
+					"-DNDEBUG",
+					"-std=c99",
+				);
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = bon;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = RelWithDebInfo;
+		};
+		F21F8A303DEB49F99BA46361 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'";
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				HEADER_SEARCH_PATHS = (
+					/Users/emilk/Documents/kod/bon/BON,
+					/Users/emilk/Documents/kod/bon/jansson,
+					/usr/local/include/,
+				);
+				INSTALL_PATH = "";
+				OTHER_CFLAGS = "-std=c99";
+				OTHER_LDFLAGS = "";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = ALL_BUILD;
+				SECTORDER_FLAGS = "";
+				SYMROOT = /Users/emilk/Documents/kod/bon;
+				USE_HEADERMAP = NO;
+				WARNING_CFLAGS = (
+					"-Wmost",
+					"-Wno-four-char-constants",
+					"-Wno-unknown-pragmas",
+				);
+			};
+			name = Debug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8067429616BB36970029D4E1 /* Build configuration list for PBXProject "BON" */ = {
+		3002051291364EFDB42533C8 /* Build configuration list for PBXProject "BON" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				806742A216BB36970029D4E1 /* Debug */,
-				806742A316BB36970029D4E1 /* Release */,
+				82B737EE1E2641409CED6E49 /* Debug */,
+				80C09BC514844B4084CDCCFD /* Release */,
+				1AE9E8930A4F4E1C80C75736 /* MinSizeRel */,
+				568CE6F85B144E50864D5C59 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		809FA66716BFE33D00A465A0 /* Build configuration list for PBXNativeTarget "json2bon" */ = {
+		3BD47199F355485ABD85CE08 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				809FA66816BFE33D00A465A0 /* Debug */,
-				809FA66916BFE33D00A465A0 /* Release */,
+				F21F8A303DEB49F99BA46361 /* Debug */,
+				5B681BA1CD2C4C7FAA7E0E5F /* Release */,
+				53065FCB5F8D4141B440FB6B /* MinSizeRel */,
+				CFDD1AAAFDA840D18842EE6F /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		809FA6A016BFED7A00A465A0 /* Build configuration list for PBXNativeTarget "bon2json" */ = {
+		5FC6E290BDA342A69B1A7855 /* Build configuration list for PBXNativeTarget "bon2json" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				809FA6A116BFED7A00A465A0 /* Debug */,
-				809FA6A216BFED7A00A465A0 /* Release */,
+				67AAA97B004D4206890F1FEE /* Debug */,
+				0057AC68536840DA881BEB0C /* Release */,
+				56199042B71A4A1194F9715D /* MinSizeRel */,
+				76C1B7A5B26047659D96A83D /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		80D9FC9F170ED401005DBF0D /* Build configuration list for PBXNativeTarget "test" */ = {
+		626387093DFA455CBC612300 /* Build configuration list for PBXNativeTarget "libbon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				80D9FC9D170ED401005DBF0D /* Debug */,
-				80D9FC9E170ED401005DBF0D /* Release */,
+				0C948F17865A4496B6CE8DEA /* Debug */,
+				0FD209E199834044B7F9E5BD /* Release */,
+				B08D0C374C9D4F7BAF9FD6D4 /* MinSizeRel */,
+				E416F5657CCA4C228F60818B /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		80F091461712DE320000DE29 /* Build configuration list for PBXNativeTarget "util" */ = {
+		7F57E5A3D77747BCADBD4B45 /* Build configuration list for PBXNativeTarget "bon" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				80F091471712DE320000DE29 /* Debug */,
-				80F091481712DE320000DE29 /* Release */,
+				20952690F48F4D7884A3E101 /* Debug */,
+				C95F54F0A47E49E79FA92555 /* Release */,
+				379FB3F88D9440E5B6A24971 /* MinSizeRel */,
+				C30E782CA66E4B17B33B8F8B /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
-		80F091531712DFC40000DE29 /* Build configuration list for PBXNativeTarget "bon" */ = {
+		A6F1C59B9FA647E9B2911826 /* Build configuration list for PBXAggregateTarget "install" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				80F091541712DFC40000DE29 /* Debug */,
-				80F091551712DFC40000DE29 /* Release */,
+				83C744EDD59346C9A55F8785 /* Debug */,
+				3B7681F4E3BE48A49C793030 /* Release */,
+				E2E4326E38994A4CB6B59E71 /* MinSizeRel */,
+				7715880EA4404E26B63F2AD6 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
+		};
+		BB0DF25B7C904FB3A6A4F453 /* Build configuration list for PBXNativeTarget "json2bon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8E4CB85477BF4FDDBFB2642E /* Debug */,
+				DB3F9866BB4C4E54BD192374 /* Release */,
+				E0B66A0D8E1C4A50BBCC4943 /* MinSizeRel */,
+				128212592BAC454DA9F738A8 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CD4ACFF16F864432AC5889FC /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				51262A22A1CC4D7A8D450342 /* Debug */,
+				BE0BE7C52F944522B70CB590 /* Release */,
+				7E32A95A6B9E49E7A5D9FDA4 /* MinSizeRel */,
+				8DCB5516D02544DDA98E94D1 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E5D35A9CF34A40A5A56B71DF /* Build configuration list for PBXNativeTarget "jansson" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8A255CFD7A384A29A2FE2FF6 /* Debug */,
+				375327C36A214C848BF1DCC0 /* Release */,
+				2ACB73FEA39344C9B14FCD4C /* MinSizeRel */,
+				C7DBBE7EEE89468D8A08FCD3 /* RelWithDebInfo */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 8067429316BB36970029D4E1 /* Project object */;
+	rootObject = 23AB965910DF42C7935D9FEC /* Project object */;
 }

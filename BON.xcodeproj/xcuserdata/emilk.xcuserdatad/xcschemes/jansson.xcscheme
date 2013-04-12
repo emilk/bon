@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "68ACA8E43D6645B8BFAA229C"
-               BuildableName = "json2bon"
-               BlueprintName = "json2bon"
+               BlueprintIdentifier = "B874A29FE2634627B9C62EFB"
+               BuildableName = "libjansson.a"
+               BlueprintName = "jansson"
                ReferencedContainer = "container:BON.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,15 +29,6 @@
       buildConfiguration = "Debug">
       <Testables>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68ACA8E43D6645B8BFAA229C"
-            BuildableName = "json2bon"
-            BlueprintName = "json2bon"
-            ReferencedContainer = "container:BON.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </TestAction>
    <LaunchAction
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
@@ -48,15 +39,6 @@
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68ACA8E43D6645B8BFAA229C"
-            BuildableName = "json2bon"
-            BlueprintName = "json2bon"
-            ReferencedContainer = "container:BON.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -66,15 +48,6 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "68ACA8E43D6645B8BFAA229C"
-            BuildableName = "json2bon"
-            BlueprintName = "json2bon"
-            ReferencedContainer = "container:BON.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

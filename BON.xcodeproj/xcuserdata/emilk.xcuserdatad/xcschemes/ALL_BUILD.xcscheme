@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "80F0913F1712DE320000DE29"
-               BuildableName = "bon"
-               BlueprintName = "util"
+               BlueprintIdentifier = "C99AB2CEAC6F4D8EB791FD87"
+               BuildableName = "ALL_BUILD"
+               BlueprintName = "ALL_BUILD"
                ReferencedContainer = "container:BON.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -29,40 +29,16 @@
       buildConfiguration = "Debug">
       <Testables>
       </Testables>
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80F0913F1712DE320000DE29"
-            BuildableName = "bon"
-            BlueprintName = "util"
-            ReferencedContainer = "container:BON.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </TestAction>
    <LaunchAction
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
-      buildConfiguration = "Debug"
+      buildConfiguration = "Release"
       ignoresPersistentStateOnLaunch = "NO"
       debugDocumentVersioning = "YES"
       allowLocationSimulation = "YES">
-      <BuildableProductRunnable>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80F0913F1712DE320000DE29"
-            BuildableName = "bon"
-            BlueprintName = "util"
-            ReferencedContainer = "container:BON.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "parse.bon"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -72,15 +48,6 @@
       useCustomWorkingDirectory = "NO"
       buildConfiguration = "Release"
       debugDocumentVersioning = "YES">
-      <BuildableProductRunnable>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80F0913F1712DE320000DE29"
-            BuildableName = "bon"
-            BlueprintName = "util"
-            ReferencedContainer = "container:BON.xcodeproj">
-         </BuildableReference>
-      </BuildableProductRunnable>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

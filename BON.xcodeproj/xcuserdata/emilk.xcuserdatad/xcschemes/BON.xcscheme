@@ -14,8 +14,8 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "80F091511712DFC40000DE29"
-               BuildableName = "libbon.a"
+               BlueprintIdentifier = "577D5C0130254E64A52EE316"
+               BuildableName = "bon"
                BlueprintName = "bon"
                ReferencedContainer = "container:BON.xcodeproj">
             </BuildableReference>
@@ -32,8 +32,8 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80F091511712DFC40000DE29"
-            BuildableName = "libbon.a"
+            BlueprintIdentifier = "577D5C0130254E64A52EE316"
+            BuildableName = "bon"
             BlueprintName = "bon"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
@@ -51,18 +51,12 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80F091511712DFC40000DE29"
-            BuildableName = "libbon.a"
+            BlueprintIdentifier = "577D5C0130254E64A52EE316"
+            BuildableName = "bon"
             BlueprintName = "bon"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-         <CommandLineArgument
-            argument = "level.bon"
-            isEnabled = "YES">
-         </CommandLineArgument>
-      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
@@ -75,8 +69,8 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "80F091511712DFC40000DE29"
-            BuildableName = "libbon.a"
+            BlueprintIdentifier = "577D5C0130254E64A52EE316"
+            BuildableName = "bon"
             BlueprintName = "bon"
             ReferencedContainer = "container:BON.xcodeproj">
          </BuildableReference>
