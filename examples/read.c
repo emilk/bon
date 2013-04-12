@@ -1,12 +1,14 @@
-#include <bon.h>
+#include <bon/bon.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 
 int main(int argc, char* argv[]) {
-	const char* path = (argc < 2 ? "foo.bon" : argv[1]);
+	const char* path = (argc < 2 ? "hello.bon" : argv[1]);
 
 	// Read file contents:
 	size_t file_size;
-	const uint8_t* file_data = bon_read_file(&file_size, path);
+	uint8_t* file_data = bon_read_file(&file_size, path);
 
 	if (!file_data) {
 		fprintf(stderr, "Failed to read %s\n", path);
@@ -29,7 +31,7 @@ int main(int argc, char* argv[]) {
 
 	if (bon_r_is_string(B, msg)) {
 		// Print it out:
-		printf("%s", bon_r_cstr(B, msg));
+		printf("%s\n", bon_r_cstr(B, msg));
 	}
 	
 	bon_r_close(B);
