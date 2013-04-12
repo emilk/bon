@@ -7,8 +7,8 @@
 //  This is free software, under the MIT license (see LICENSE.txt for details).
 
 #include <stdio.h>
-#include "jansson.h"
-#include "bon.h"
+#include <jansson.h>
+#include <bon/bon.h>
 
 
 json_t* uint64_2_json(uint64_t u64)

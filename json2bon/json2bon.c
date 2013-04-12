@@ -8,9 +8,9 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include "jansson.h"
+#include <jansson.h>
 #include "hashtable.h" // hashtable_iter_serial
-#include "bon.h"
+#include <bon/bon.h>
 
 #define PRESERVE_ORDER 1
 #define ATTEMPT_RECOVERY 1

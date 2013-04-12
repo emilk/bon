@@ -8,8 +8,8 @@
 //
 //  Util app named 'bon' for inspecting bon files.
 
-#include "bon.h"
-#include "bon_private.h"  // bon_stats
+#include <bon/bon.h>
+#include <bon/bon_private.h>  // bon_stats
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -59,8 +59,10 @@ bon_bool open_file(const char* path) {
 	}
 	
 	B = bon_r_open(data, size, BON_R_FLAG_DEFAULT);
-	if (!B) {
-		fprintf(stderr, "Failed to parse .bon file at %s\n", path);
+	bon_error err = bon_r_error(B);
+	if (err != BON_SUCCESS) {
+		fprintf(stderr, "Failed to parse .bon file at %s: %s\n", path, bon_err_str(err));
+		bon_r_close(B);
 		return BON_FALSE;
 	}
 	
