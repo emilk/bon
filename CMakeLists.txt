@@ -7,14 +7,14 @@ endif()
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
 add_library(libbon
-	libbon/bon.c
-	libbon/bon.h
-	libbon/private.h
-	libbon/crc32.c
-	libbon/crc32.h
-	libbon/read.c
-	libbon/type.c
-	libbon/write.c)
+	libbon/bon/bon.c
+	libbon/bon/bon.h
+	libbon/bon/private.h
+	libbon/bon/crc32.c
+	libbon/bon/crc32.h
+	libbon/bon/read.c
+	libbon/bon/type.c
+	libbon/bon/write.c)
 SET_TARGET_PROPERTIES(libbon
   PROPERTIES OUTPUT_NAME bon)
 
@@ -36,8 +36,9 @@ add_library(jansson STATIC
 	jansson/utf.h
 	jansson/value.c)
 
-include_directories(${BON_SOURCE_DIR}/BON)
+include_directories(${BON_SOURCE_DIR}/libbon)
 include_directories(${BON_SOURCE_DIR}/jansson)
+
 add_executable(json2bon
 	json2bon/json2bon.c)
 target_link_libraries(json2bon libbon jansson)
@@ -60,15 +61,10 @@ install(TARGETS
 	ARCHIVE DESTINATION lib)
 
 install(FILES
-	libbon/bon.h
-	libbon/private.h
-	libbon/inline.h
-	libbon/read_inline.h
-	libbon/write_inline.h
+	libbon/bon/bon.h
+	libbon/bon/private.h
+	libbon/bon/inline.h
+	libbon/bon/read_inline.h
+	libbon/bon/write_inline.h
 	DESTINATION include/bon)
 
-install(FILES
-	libbon/BON.1
-	bon2json/bon2json.1
-	json2bon/json2bon.1
-	DESTINATION share/man)

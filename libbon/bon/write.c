@@ -43,10 +43,6 @@ bon_bool bon_file_writer(void* user, const void* data, uint64_t nbytes)
 //------------------------------------------------------------------------------
 
 
-bon_error bon_w_error(bon_w_doc* B) {
-	return B->error;
-}
-
 void bon_w_set_error(bon_w_doc* B, bon_error err)
 {
 	bon_onError(bon_err_str(err));
@@ -71,7 +67,7 @@ void bon_w_assert(bon_w_doc* B, bon_bool statement, bon_error onFail)
 
 
 // Bypass buffer
-static inline void bon_write_to_writer(bon_w_doc* B, const void* data, bon_size n)
+BON_INLINE void bon_write_to_writer(bon_w_doc* B, const void* data, bon_size n)
 {
 	if (!B->writer(B->userData, data, n)) {
 		B->error = BON_ERR_WRITE_ERROR;

@@ -14,12 +14,17 @@
 
 //#define inline
 
+
+BON_INLINE bon_error bon_w_error(bon_w_doc* B) {
+	return B->error;
+}
+
 //------------------------------------------------------------------------------
 // Util functions:
 
 void bon_w_raw_flush_buff(bon_w_doc* B, const void* data, bon_size bs);
 
-static inline void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs)
+BON_INLINE void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs)
 {
 	if (B->buff_ix + bs < B->buff_size) {
 		// Fits in the buffer
@@ -31,19 +36,19 @@ static inline void bon_w_raw(bon_w_doc* B, const void* data, bon_size bs)
 }
 
 
-static inline void bon_w_raw_uint8(bon_w_doc* B, uint8_t val) {
+BON_INLINE void bon_w_raw_uint8(bon_w_doc* B, uint8_t val) {
 	bon_w_raw(B, &val, sizeof(val));
 }
 
-static inline void bon_w_raw_uint16(bon_w_doc* B, uint16_t val) {
+BON_INLINE void bon_w_raw_uint16(bon_w_doc* B, uint16_t val) {
 	bon_w_raw(B, &val, sizeof(val));
 }
 
-static inline void bon_w_raw_uint32(bon_w_doc* B, uint32_t val) {
+BON_INLINE void bon_w_raw_uint32(bon_w_doc* B, uint32_t val) {
 	bon_w_raw(B, &val, sizeof(val));
 }
 
-static inline void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
+BON_INLINE void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
 	bon_w_raw(B, &val, sizeof(val));
 }
 
@@ -57,7 +62,7 @@ static inline void bon_w_raw_uint64(bon_w_doc* B, uint64_t val) {
 // Maximum number of bytes to encode a very large number
 #define BON_VARINT_MAX_LEN 10
 
-static inline uint32_t bon_vlq_size(bon_size x)
+BON_INLINE uint32_t bon_vlq_size(bon_size x)
 {
 	if (x < (1ULL <<  7))  return  1;
 	if (x < (1ULL << 14))  return  2;
@@ -72,7 +77,7 @@ static inline uint32_t bon_vlq_size(bon_size x)
 }
 
 // Returns number of bytes written
-static inline uint32_t bon_w_vlq_to(uint8_t* out, bon_size x)
+BON_INLINE uint32_t bon_w_vlq_to(uint8_t* out, bon_size x)
 {
 	uint32_t size = bon_vlq_size(x);
 	
@@ -86,7 +91,7 @@ static inline uint32_t bon_w_vlq_to(uint8_t* out, bon_size x)
 }
 
 #if 1
-static inline void bon_w_vlq(bon_w_doc* B, bon_size x)
+BON_INLINE void bon_w_vlq(bon_w_doc* B, bon_size x)
 {
 	uint8_t buff[BON_VARINT_MAX_LEN];
 	uint32_t size = bon_w_vlq_to(buff, x);
@@ -95,7 +100,7 @@ static inline void bon_w_vlq(bon_w_doc* B, bon_size x)
 #endif
 
 // Done often, lets do it fast:
-static inline void bon_w_ctrl_vlq(bon_w_doc* B, bon_ctrl ctrl, bon_size x)
+BON_INLINE void bon_w_ctrl_vlq(bon_w_doc* B, bon_ctrl ctrl, bon_size x)
 {
 	uint8_t buff[1 + BON_VARINT_MAX_LEN];
 	buff[0] = ctrl;
@@ -119,28 +124,28 @@ static inline void bon_w_ctrl_vlq(bon_w_doc* B, bon_ctrl ctrl, bon_size x)
 /**/    bon_w_raw(B, buf, sizeof(buf));        \
 
 
-static inline void bon_w_begin_obj(bon_w_doc* B) {
+BON_INLINE void bon_w_begin_obj(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_OBJ_BEGIN);
 }
 
-static inline void bon_w_end_obj(bon_w_doc* B) {
+BON_INLINE void bon_w_end_obj(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_OBJ_END);
 }
 
-static inline void bon_w_key(bon_w_doc* B, const char* utf8) {
+BON_INLINE void bon_w_key(bon_w_doc* B, const char* utf8) {
 	bon_w_cstring(B, utf8);
 }
 
-static inline void bon_w_begin_list(bon_w_doc* B) {
+BON_INLINE void bon_w_begin_list(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_LIST_BEGIN);
 }
 
-static inline void bon_w_end_list(bon_w_doc* B) {
+BON_INLINE void bon_w_end_list(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_LIST_END);
 }
 
 
-static inline void bon_w_block_ref(bon_w_doc* B, bon_block_id block_id)
+BON_INLINE void bon_w_block_ref(bon_w_doc* B, bon_block_id block_id)
 {
 	if (block_id < BON_SHORT_BLOCK_COUNT) {
 		bon_w_raw_uint8(B, BON_SHORT_BLOCK(block_id));
@@ -149,11 +154,11 @@ static inline void bon_w_block_ref(bon_w_doc* B, bon_block_id block_id)
 	}
 }
 
-static inline void bon_w_nil(bon_w_doc* B) {
+BON_INLINE void bon_w_nil(bon_w_doc* B) {
 	bon_w_raw_uint8(B, BON_CTRL_NIL);
 }
 
-static inline void bon_w_bool(bon_w_doc* B, bon_bool val) {
+BON_INLINE void bon_w_bool(bon_w_doc* B, bon_bool val) {
 	if (val) {
 		bon_w_raw_uint8(B, BON_CTRL_TRUE);
 	} else {
@@ -161,7 +166,7 @@ static inline void bon_w_bool(bon_w_doc* B, bon_bool val) {
 	}
 }
 
-static inline void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes) {
+BON_INLINE void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes) {
 	if (nbytes == BON_ZERO_ENDED) {
 		nbytes = strlen(utf8);
 	}
@@ -176,12 +181,12 @@ static inline void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes)
 	bon_w_raw_uint8(B, 0); // Zero-ended
 }
 
-static inline void bon_w_cstring(bon_w_doc* B, const char* utf8)
+BON_INLINE void bon_w_cstring(bon_w_doc* B, const char* utf8)
 {
 	bon_w_string(B, utf8, BON_ZERO_ENDED);
 }
 
-static inline void bon_w_uint64(bon_w_doc* B, uint64_t u64)
+BON_INLINE void bon_w_uint64(bon_w_doc* B, uint64_t u64)
 {
 	if (u64 < BON_SHORT_POS_INT_COUNT) {
 		bon_w_raw_uint8(B, (uint8_t)u64);
@@ -199,7 +204,7 @@ static inline void bon_w_uint64(bon_w_doc* B, uint64_t u64)
 	}
 }
 
-static inline void bon_w_sint64(bon_w_doc* B, int64_t s64) {
+BON_INLINE void bon_w_sint64(bon_w_doc* B, int64_t s64) {
 	if (s64 >= 0) {
 		bon_w_uint64(B, (uint64_t)s64);
 	} else if (-16 <= s64) {
@@ -219,7 +224,7 @@ static inline void bon_w_sint64(bon_w_doc* B, int64_t s64) {
 }
 
 
-static inline void bon_w_float(bon_w_doc* B, float val)
+BON_INLINE void bon_w_float(bon_w_doc* B, float val)
 {
 #if 1
 	// I think this can be optimized to testing just the exponent sign bit.
@@ -233,7 +238,7 @@ static inline void bon_w_float(bon_w_doc* B, float val)
 	BON_WRITE_QUICKLY(BON_CTRL_FLOAT, val);
 }
 
-static inline void bon_w_double(bon_w_doc* B, double val)
+BON_INLINE void bon_w_double(bon_w_doc* B, double val)
 {
 	if (!isfinite(val) || (double)(float)val == val) {
 		bon_w_float(B, (float)val);

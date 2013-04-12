@@ -12,7 +12,7 @@
 
 bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val);
 
-static inline bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
+BON_INLINE bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
 {
 	/* We should be protected from infinite recursion here,
 	 since we check all blockRefId on reading,
@@ -25,7 +25,7 @@ static inline bon_value* bon_r_follow_refs(bon_r_doc* B, bon_value* val)
 }
 
 
-static inline bon_value* follow_and_explode(bon_r_doc* B, bon_value* val)
+BON_INLINE bon_value* follow_and_explode(bon_r_doc* B, bon_value* val)
 {
 	val = bon_r_follow_refs(B, val);
 	
@@ -38,7 +38,7 @@ static inline bon_value* follow_and_explode(bon_r_doc* B, bon_value* val)
 }
 
 
-static inline double bon_r_double(bon_r_doc* B, bon_value* val)
+BON_INLINE double bon_r_double(bon_r_doc* B, bon_value* val)
 {
 	val = bon_r_follow_refs(B, val);
 	
@@ -55,12 +55,12 @@ static inline double bon_r_double(bon_r_doc* B, bon_value* val)
 	}
 }
 
-static inline float bon_r_float(bon_r_doc* B, bon_value* obj)
+BON_INLINE float bon_r_float(bon_r_doc* B, bon_value* obj)
 {
 	return (float)bon_r_double(B, obj);
 }
 
-static inline bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size ix)
+BON_INLINE bon_value* bon_r_list_elem(bon_r_doc* B, bon_value* val, bon_size ix)
 {
 	val = follow_and_explode(B, val);
 	if (!val) { return NULL; }

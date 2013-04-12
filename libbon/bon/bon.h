@@ -43,6 +43,8 @@ typedef size_t bon_size;
 typedef uint64_t bon_block_id;
 #define BON_BAD_BLOCK_ID (bon_block_id)(-1)
 
+#define BON_INLINE static inline
+
 
 //------------------------------------------------------------------------------
 
@@ -299,8 +301,8 @@ void         bon_w_flush      (bon_w_doc* B);  // Flush writes to the writer
 // Writes footer and flushes. Returns final error (if any)
 bon_error    bon_w_close_doc  (bon_w_doc* B);
 
-void         bon_w_set_error  (bon_w_doc* B, bon_error err);
-bon_error    bon_w_error      (bon_w_doc* B);
+void                       bon_w_set_error  (bon_w_doc* B, bon_error err);
+BON_INLINE bon_error    bon_w_error      (bon_w_doc* B);
 
 void         bon_w_begin_block  (bon_w_doc* B, bon_block_id block_id);  // open-ended
 void         bon_w_end_block    (bon_w_doc* B);

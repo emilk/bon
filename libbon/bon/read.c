@@ -256,7 +256,7 @@ void br_assert(bon_reader* br, bon_bool statement, bon_error onFail)
 	}
 }
 
-static inline void br_skip(bon_reader* br, size_t n) {
+BON_INLINE void br_skip(bon_reader* br, size_t n) {
 	assert(br->nbytes >= n);
 	br->data   += n;
 	br->nbytes -= n;
@@ -290,7 +290,7 @@ void br_putback(bon_reader* br) {
 	}
 }
 
-static inline bon_bool read(bon_reader* br, uint8_t* out, size_t n) {
+BON_INLINE bon_bool read(bon_reader* br, uint8_t* out, size_t n) {
 	if (br->nbytes >= n) {
 		memcpy(out, br->data, n);
 		br->data   += n;
@@ -303,7 +303,7 @@ static inline bon_bool read(bon_reader* br, uint8_t* out, size_t n) {
 }
 
 // Returns a pointer to the next 'size' bytes, or NULL if fail
-static inline const uint8_t* br_read(bon_reader* br, size_t size)
+BON_INLINE const uint8_t* br_read(bon_reader* br, size_t size)
 {
 	const uint8_t* ptr = br->data;
 	br_skip(br, size);
@@ -312,7 +312,7 @@ static inline const uint8_t* br_read(bon_reader* br, size_t size)
 }
 
 // Will swallow a token, or set error if next byte isn't this token.
-static inline void br_swallow(bon_reader* br, uint8_t token) {
+BON_INLINE void br_swallow(bon_reader* br, uint8_t token) {
 	if (br_next(br) != token) {
 		br_set_err(br, BON_ERR_MISSING_TOKEN);
 	}
@@ -320,7 +320,7 @@ static inline void br_swallow(bon_reader* br, uint8_t token) {
 
 //------------------------------------------------------------------------------
 
-static inline uint64_t br_read_vlq(bon_reader* br)
+BON_INLINE uint64_t br_read_vlq(bon_reader* br)
 {
 	uint64_t r = 0;
 	uint32_t size = 0; // Sanity check
@@ -378,7 +378,7 @@ uint64_t br_read_u64(bon_reader* br) {
 }
 
 
-static inline float br_read_float_native(bon_reader* br) {
+BON_INLINE float br_read_float_native(bon_reader* br) {
 	const uint8_t* ptr = br_read(br, sizeof(float));
 	if (ptr) {
 		return *(const float*)ptr;
