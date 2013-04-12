@@ -1,0 +1,3 @@
+> git clone https://github.com/emilk/bon.git
+> cd bon/build
+> cmake .. && make && make install

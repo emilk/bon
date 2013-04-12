@@ -24,8 +24,14 @@ Please do! The BON format is still work in progress, and so I'm looking for any 
 
 The code is all open source (under the MIT license) and implementations in other languages is most welcome.
 
-#Licence
+# Licence
 The format and code is free (as in beer and speech) under the MIT license.
+
+# Building
+
+    > git clone https://github.com/emilk/bon.git
+    > cd bon/build
+    > cmake .. && make && make install
 
 # Implementation
 I have written a C library implementation of BON which you can [read about here](https://github.com/emilk/bon/wiki/Lib).
