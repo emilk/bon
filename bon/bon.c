@@ -59,9 +59,8 @@ bon_bool open_file(const char* path) {
 	}
 	
 	B = bon_r_open(data, size, BON_R_FLAG_DEFAULT);
-	bon_error err = bon_r_error(B);
-	if (err != BON_SUCCESS) {
-		fprintf(stderr, "Failed to parse .bon file at %s: %s\n", path, bon_err_str(err));
+	if (bon_r_error(B)) {
+		fprintf(stderr, "Failed to parse .bon file at %s: %s\n", path, bon_r_err_str(B));
 		bon_r_close(B);
 		return BON_FALSE;
 	}

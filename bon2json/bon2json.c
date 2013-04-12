@@ -86,7 +86,7 @@ bon_bool handle_bon(const uint8_t* data, size_t size, size_t flags, FILE* out)
 	bon_r_doc* B = bon_r_open(data, size, BON_R_FLAG_DEFAULT);
 	
 	if (bon_r_error(B)) {
-		fprintf(stderr, "Failed to parse BON file: %s\n", bon_err_str(bon_r_error(B)));
+		fprintf(stderr, "Failed to parse BON file: %s\n", bon_r_err_str(B));
 		bon_r_close(B);
 		return BON_FALSE;
 	}

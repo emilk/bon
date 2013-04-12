@@ -893,7 +893,7 @@ TEST_CASE( "BON/crc/short/fail", "Test of CRC checking" )
 	
 	{
 		bon_r_doc* B = bon_r_open(vec.data, vec.size, BON_R_FLAG_REQUIRE_CRC);
-		REQUIRE( bon_r_error(B) == BON_ERR_BAD_CRC );
+		REQUIRE( bon_r_error(B) == BON_ERR_WRONG_CRC );
 		bon_r_close(B);
 	}
 }
@@ -995,3 +995,15 @@ TEST_CASE( "BON/pack/matrix", "Packing a rectangular matirx" )
 	);
 }
 
+
+
+TEST_CASE( "BON/bad", "Error detection when reading a bad BON file" )
+{
+	auto test_err = [](const char* file, bon_error expected) {
+		auto B = bon_r_open((const uint8_t*)file, strlen(file), BON_R_FLAG_DEFAULT);
+		REQUIRE(B->error == expected);
+		printf("Reported error (expected): %s\n", bon_r_err_str(B));
+	};
+
+	test_err("BON0{\x16}F", BON_ERR_BAD_KEY);
+}

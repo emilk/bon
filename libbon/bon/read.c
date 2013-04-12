@@ -246,6 +246,7 @@ void br_set_err(bon_reader* br, bon_error err)
 	
 	if (br->error == BON_SUCCESS) {
 		br->error = err;
+		br->err_offset = br->data;
 	}
 }
 
@@ -455,6 +456,14 @@ double br_read_double(bon_reader* br, bon_type_id t) {
 			return 0;
 	}
 }
+
+
+bon_reader make_br(bon_r_doc* B, const uint8_t* data, bon_size nbytes, bon_block_id blockid)
+{
+	bon_reader br = { B, data, nbytes, blockid, BON_SUCCESS, NULL };
+	return br;
+}
+
 
 int64_t br_read_sint64(bon_reader* br, bon_type_id t) {
 	switch (t) {
@@ -692,9 +701,7 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 		case BON_CTRL_OBJ_BEGIN:
 			val->type      = BON_VALUE_OBJ;
 			bon_r_kvs(br, &val->u.obj);
-			if (br_next(br) != BON_CTRL_OBJ_END) {
-				br_set_err(br, BON_ERR_MISSING_OBJ_END);
-			}
+			br_swallow(br, BON_CTRL_OBJ_END);
 			break;
 			
 			
@@ -889,25 +896,31 @@ void bon_r_read_content(bon_reader* br)
 			
 			if (block->payload_size >= br->nbytes) {
 				br_set_err(br, BON_ERR_BAD_BLOCK);
-				return;
 			}
+			
+			if (br->error) {
+				blocks->size--;
+				break;
+			}
+			
 			
 			block->payload         = br->data;
 			
 			if (block->payload_size == 0) {
 				// Unspecified size - forced parse:
 				
-				bon_reader block_br = {
+				bon_reader block_br = make_br(
+					br->B,
 					br->data,
 					br->nbytes,
-					br->B,
-					block->id,
-					br->error
-				};
+					block->id
+				);
 				bon_r_value(&block_br, &block->value);
 				bon_size nRead = br->nbytes - block_br.nbytes;
 				block->payload_size = nRead;
 				br_skip(br, nRead);
+				br->error      = block_br.error;
+				br->err_offset = block_br.err_offset;
 				
 				block->parsed = BON_TRUE;
 			} else {
@@ -947,10 +960,19 @@ void bon_r_read_doc(bon_reader* br)
 
 void bon_r_set_error(bon_r_doc* B, bon_error err)
 {
-	bon_onError(bon_err_str(err));
-	
-	if (B->error == BON_SUCCESS) {
+	if (err == BON_SUCCESS) {
 		B->error = err;
+		
+		if (B->errstr) {
+			free(B->errstr);
+			B->errstr = NULL;
+		}
+	} else {
+		bon_onError(bon_err_str(err));
+		
+		if (B->error == BON_SUCCESS) {
+			B->error = err;
+		}
 	}
 }
 
@@ -976,7 +998,7 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes, bon_r_flags flags)
 			 data[nbytes-1] != BON_CTRL_FOOTER_CRC ||
 			 data[nbytes-6] != BON_CTRL_FOOTER_CRC)
 		{
-			bon_r_set_error(B, BON_ERR_BAD_CRC);
+			bon_r_set_error(B, BON_ERR_MISSING_CRC);
 			return B;
 		}
 		else
@@ -987,18 +1009,35 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes, bon_r_flags flags)
 			uint32_t crc_read = le_to_uint32(crc_read_le);
 			
 			if (crc_calced != crc_read) {
-				bon_r_set_error(B, BON_ERR_BAD_CRC);
+				bon_r_set_error(B, BON_ERR_WRONG_CRC);
 				return B;
 			}
 		}
 	}
 	
-	bon_reader br_v = { data, nbytes, B, BON_BAD_BLOCK_ID, 0 };
+	bon_reader br_v = make_br( B, data, nbytes, BON_BAD_BLOCK_ID );
 	bon_reader* br = &br_v;
 	
 	bon_r_read_doc(br);
 	
-	B->error = br->error;
+	if (br->error)
+	{
+		B->error = br->error;
+		
+		const char*  str      = bon_err_str(br->error);
+		const size_t extra    = 64;
+		const int    buff_len = strlen(str) + extra;
+		
+		char* msg = malloc(buff_len);
+		strcpy(msg, str);
+		
+		if (br->err_offset) {
+			snprintf(msg + strlen(str), extra, " (around byte %ld)", br->err_offset - data);
+		}
+		
+		B->errstr = msg;
+	}
+	
 	return B;
 }
 
@@ -1070,7 +1109,7 @@ bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id)
 	
 	if (!block->parsed) {
 		// Lazy parsing:
-		bon_reader br = { block->payload, block->payload_size, B, id, 0 };
+		bon_reader br = make_br(B, block->payload, block->payload_size, id );
 		
 		bon_r_value(&br, &block->value);
 		
@@ -1104,6 +1143,20 @@ bon_value* bon_r_root(bon_r_doc* B)
 bon_error bon_r_error(bon_r_doc* B)
 {
 	return B->error;
+}
+
+const char* bon_r_err_str(bon_r_doc* B)
+{
+	if (B->error) {
+		if (B->errstr) {
+			return B->errstr;
+		} else {
+			return bon_err_str(B->error);
+		}
+	}
+	else {
+		return "No error";
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -1393,13 +1446,11 @@ bon_value* bon_exploded_aggr(bon_r_doc* B, bon_value* val)
 	bon_value_agg* agg = val->u.agg;
 	
 	if (!agg->exploded) {
-		bon_reader     br  = {
+		bon_reader br = make_br(B,
 			agg->data,
 			bon_aggregate_payload_size(&agg->type),
-			B,
-			BON_BAD_BLOCK_ID,
-			0
-		};
+			BON_BAD_BLOCK_ID
+		);
 		
 		agg->exploded = BON_ALLOC_TYPE(1, bon_value);
 		
@@ -1818,13 +1869,11 @@ bon_bool translate_struct(bon_r_doc* B,
 			const bon_size   srcValSize = bon_aggregate_payload_size(srcValType);
 			
 			if (strcmp(dst_kt->key, src_kt->key)==0) {
-				bon_reader br_val = {
+				bon_reader br_val = make_br(B,
 					br->data + src_byte_offset,
 					srcValSize,
-					B,
-					BON_BAD_BLOCK_ID,
-					br->error
-				};
+					BON_BAD_BLOCK_ID
+				);
 				
 				bon_bool win = translate_aggregate(B, srcValType, &br_val,
 															  &dst_kt->type, bw);
@@ -2075,7 +2124,7 @@ bon_bool bw_read_aggregate(bon_r_doc* B, bon_value* srcVal,
 		case BON_VALUE_AGGREGATE: {
 			const bon_value_agg* agg = srcVal->u.agg;
 			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
-			bon_reader br = { agg->data, byteSize, B, BON_BAD_BLOCK_ID, 0 };
+			bon_reader br = make_br( B, agg->data, byteSize, BON_BAD_BLOCK_ID );
 			bon_bool win = translate_aggregate(B, &agg->type, &br, dstType, bw);
 			return win && br.error==0;
 		}

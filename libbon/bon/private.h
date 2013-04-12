@@ -236,8 +236,9 @@ typedef struct {
 struct bon_r_doc {
 	bon_r_blocks   blocks;
 	bon_stats      stats;       // Info about the read file
-	bon_error      error;       // If any
 	bon_r_flags    flags;
+	bon_error      error;       // If any
+	char*          errstr;      // If applicable
 };
 
 
@@ -253,12 +254,15 @@ struct bon_kv {
 // Helper for reading a binary stream without overflowing:
 
 typedef struct {
-	const uint8_t*  data;
-	bon_size        nbytes;
 	bon_r_doc*      B;
+	const uint8_t*  data;      // Incremented as we read
+	bon_size        nbytes;    // Decremented as we read
 	bon_block_id    block_id;  // Current block being read, or BON_BAD_BLOCK_ID.
 	bon_error       error;
+	const uint8_t*  err_offset; // Where was the error triggered?
 } bon_reader;
+
+bon_reader make_br(bon_r_doc* B, const uint8_t* data, bon_size nbytes, bon_block_id blockid);
 
 
 /* Read a simple value denoted by 't', and interpret is as a signed int. */

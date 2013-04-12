@@ -54,6 +54,7 @@ uint8_t* bon_read_file(bon_size* out_size, const char* path)
 
 //------------------------------------------------------------------------------
 
+
 void bon_onError(const char* msg)
 {
 #ifdef DEBUG
@@ -79,13 +80,12 @@ const char* bon_err_str(bon_error err)
 		"BON_ERR_WRITE_ERROR",
 		"BON_ERR_BAD_AGGREGATE_SIZE",
 		
-		"BON_ERR_BAD_CRC",
+		"BON_ERR_MISSING_CRC",
+		"BON_ERR_WRONG_CRC",
 		"BON_ERR_TOO_SHORT",
 		"BON_ERR_BAD_HEADER",
 		"BON_ERR_BAD_FOOTER",
 		"BON_ERR_BAD_VLQ",
-		"BON_ERR_MISSING_LIST_END",
-		"BON_ERR_MISSING_OBJ_END",
 		"BON_ERR_BAD_CTRL",
 		"BON_ERR_BAD_KEY",
 		"BON_ERR_BAD_AGGREGATE_TYPE",
@@ -293,7 +293,7 @@ void bon_print(bon_r_doc* B, bon_value* v, FILE* out, size_t indent)
 		case BON_VALUE_AGGREGATE: {
 			bon_value_agg* agg = v->u.agg;
 			bon_size byteSize = bon_aggregate_payload_size(&agg->type);
-			bon_reader br = { agg->data, byteSize, 0, BON_BAD_BLOCK_ID, 0 };
+			bon_reader br = make_br(NULL, agg->data, byteSize,  BON_BAD_BLOCK_ID);
 			bon_print_aggr(B, &agg->type, &br, out);
 			if (br.nbytes!=0) {
 				fprintf(stderr, "Bad aggregate\n");

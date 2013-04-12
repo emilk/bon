@@ -52,6 +52,14 @@ void bon_w_set_error(bon_w_doc* B, bon_error err)
 	}
 }
 
+const char* bon_w_err_str(bon_w_doc* B)
+{
+	if (B->error) {
+		return bon_err_str(B->error);
+	} else {
+		return "No error";
+	}
+}
 
 void bon_w_assert(bon_w_doc* B, bon_bool statement, bon_error onFail)
 {

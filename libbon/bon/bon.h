@@ -58,13 +58,12 @@ typedef enum {
 	BON_ERR_BAD_AGGREGATE_SIZE, // bon_w_pack got data of the wrong size
 	
 	// Read errors:
-	BON_ERR_BAD_CRC,     // Missing or wrong
+	BON_ERR_MISSING_CRC,
+	BON_ERR_WRONG_CRC,
 	BON_ERR_TOO_SHORT,   // Premature end of file
 	BON_ERR_BAD_HEADER,  // Missing or corrupt
 	BON_ERR_BAD_FOOTER,  // Missing or corrupt
 	BON_ERR_BAD_VLQ,
-	BON_ERR_MISSING_LIST_END,
-	BON_ERR_MISSING_OBJ_END,
 	BON_ERR_BAD_CTRL,
 	BON_ERR_BAD_KEY,     // Not a string, or string with zeros
 	BON_ERR_BAD_AGGREGATE_TYPE,
@@ -305,6 +304,7 @@ bon_error    bon_w_close_doc  (bon_w_doc* B);
 
 void              bon_w_set_error  (bon_w_doc* B, bon_error err);
 static bon_error  bon_w_error      (bon_w_doc* B);
+const char*       bon_w_err_str    (bon_w_doc* B); // Human readable error message
 
 void         bon_w_begin_block  (bon_w_doc* B, bon_block_id block_id);  // open-ended
 void         bon_w_end_block    (bon_w_doc* B);
@@ -366,16 +366,21 @@ typedef struct bon_r_doc  bon_r_doc;
 typedef enum {
 	BON_R_FLAG_DEFAULT      =  0,
 	
-	// Will trigger BON_ERR_CRC If the BON file has no CRC, or it is incorrect.
+	/*
+	 Will trigger BON_ERR_MISSING_CRC If the BON file has no CRC,
+	 or BON_ERR_WRONG_CRC if it is incorrect.
+	 No further parsning of the file will be atempted.
+	 */
 	BON_R_FLAG_REQUIRE_CRC  =  1 << 0
 } bon_r_flags;
 
 
 // Will parse a BON file. use bon_r_error to query success.
-bon_r_doc*  bon_r_open  (const uint8_t* data, bon_size nbytes, bon_r_flags flags);
-void        bon_r_close (bon_r_doc* B);
-bon_value*  bon_r_root  (bon_r_doc* B); // Access the root object
-bon_error   bon_r_error (bon_r_doc* B);
+bon_r_doc*   bon_r_open   (const uint8_t* data, bon_size nbytes, bon_r_flags flags);
+void         bon_r_close  (bon_r_doc* B);
+bon_value*   bon_r_root   (bon_r_doc* B); // Access the root object
+bon_error    bon_r_error  (bon_r_doc* B);
+const char*  bon_r_err_str(bon_r_doc* B); // Human readable error message
 
 
 //------------------------------------------------------------------------------
