@@ -1,3 +1,6 @@
 > git clone https://github.com/emilk/bon.git
 > cd bon/build
 > cmake .. && make && make install
+
+To make an Xcode project:
+> cmake -G Xcode .

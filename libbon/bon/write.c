@@ -217,6 +217,71 @@ void bon_w_block(bon_w_doc* B, bon_block_id block_id, const void* data, bon_size
 }
 
 
+// Write a value read from another BON-file:
+void bon_w_value(bon_w_doc* B, bon_value* v)
+{
+	assert(v);
+	
+	switch (v->type) {
+		case BON_VALUE_NIL:
+			bon_w_nil(B);
+			break;
+			
+		case BON_VALUE_BOOL:
+			bon_w_bool(B, v->u.boolean);
+			break;
+			
+		case BON_VALUE_UINT64:
+			bon_w_uint64(B, v->u.u64);
+			break;
+			
+		case BON_VALUE_SINT64:
+			bon_w_sint64(B, v->u.s64);
+			break;
+			
+		case BON_VALUE_DOUBLE:
+			bon_w_double(B, v->u.dbl);
+			break;
+			
+		case BON_VALUE_STRING:
+			bon_w_string(B, v->u.str.ptr, v->u.str.size);
+			break;
+			
+		case BON_VALUE_BLOCK_REF:
+			bon_w_block_ref(B, v->u.blockRefId);
+			break;
+			
+		case BON_VALUE_LIST: {
+			bon_list* list = &v->u.list;
+			bon_w_begin_list(B);
+			for (bon_size ix=0; ix<list->size; ++ix) {
+				bon_w_value(B, &list->data[ix]);
+			}
+			bon_w_end_list(B);
+		} break;
+			
+		case BON_VALUE_OBJ: {
+			bon_obj* obj = &v->u.obj;
+			bon_w_begin_obj(B);
+			for (bon_size ix=0; ix<obj->size; ++ix) {
+				bon_w_key(B, obj->data[ix].key);
+				bon_w_value(B, &obj->data[ix].val);
+			}
+			bon_w_end_obj(B);
+		} break;
+			
+		case BON_VALUE_AGGREGATE: {
+			bon_value_agg* agg = v->u.agg;
+			bon_type* type = &agg->type;
+			bon_w_pack(B, agg->data, bon_aggregate_payload_size(type), type);
+		} break;
+			
+		default:
+			bon_w_set_error(B, BON_ERR_BAD_VALUE);
+	}
+}
+
+
 //------------------------------------------------------------------------------
 // Value writing
 

@@ -90,6 +90,7 @@ const char* bon_err_str(bon_error err)
 		"BON_ERR_BAD_KEY",
 		"BON_ERR_BAD_AGGREGATE_TYPE",
 		"BON_ERR_BAD_TYPE",
+		"BON_ERR_BAD_VALUE",
 		"BON_ERR_STRING_NOT_ZERO_ENDED",
 		"BON_ERR_MISSING_TOKEN",
 		

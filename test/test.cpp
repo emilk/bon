@@ -12,9 +12,9 @@
 
 
 extern "C" {
-#include "bon.h"
-#include "bon_private.h"
-#include "crc32.h"
+#include <bon/bon.h>
+#include <bon/bon_private.h>
+#include <bon/crc32.h>
 }
 
 #include <functional>
@@ -995,3 +995,4 @@ TEST_CASE( "BON/pack/matrix", "Packing a rectangular matirx" )
 		  }
 	);
 }
+

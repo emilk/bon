@@ -9,12 +9,15 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 add_library(libbon
 	libbon/bon/bon.c
 	libbon/bon/bon.h
-	libbon/bon/private.h
 	libbon/bon/crc32.c
 	libbon/bon/crc32.h
+	libbon/bon/inline.h
+	libbon/bon/private.h
 	libbon/bon/read.c
+	libbon/bon/read_inline.h
 	libbon/bon/type.c
-	libbon/bon/write.c)
+	libbon/bon/write.c
+	libbon/bon/write_inline.h)
 SET_TARGET_PROPERTIES(libbon
   PROPERTIES OUTPUT_NAME bon)
 

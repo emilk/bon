@@ -45,6 +45,7 @@ typedef uint64_t bon_block_id;
 
 #define BON_INLINE static inline
 
+typedef struct bon_value  bon_value;
 
 //------------------------------------------------------------------------------
 
@@ -68,6 +69,7 @@ typedef enum {
 	BON_ERR_BAD_KEY,     // Not a string, or string with zeros
 	BON_ERR_BAD_AGGREGATE_TYPE,
 	BON_ERR_BAD_TYPE,
+	BON_ERR_BAD_VALUE,
 	BON_ERR_STRING_NOT_ZERO_ENDED,
 	BON_ERR_MISSING_TOKEN,
 	
@@ -301,8 +303,8 @@ void         bon_w_flush      (bon_w_doc* B);  // Flush writes to the writer
 // Writes footer and flushes. Returns final error (if any)
 bon_error    bon_w_close_doc  (bon_w_doc* B);
 
-void                       bon_w_set_error  (bon_w_doc* B, bon_error err);
-BON_INLINE bon_error    bon_w_error      (bon_w_doc* B);
+void              bon_w_set_error  (bon_w_doc* B, bon_error err);
+static bon_error  bon_w_error      (bon_w_doc* B);
 
 void         bon_w_begin_block  (bon_w_doc* B, bon_block_id block_id);  // open-ended
 void         bon_w_end_block    (bon_w_doc* B);
@@ -332,6 +334,9 @@ static void  bon_w_sint64     (bon_w_doc* B, int64_t val);
 static void  bon_w_float      (bon_w_doc* B, float val);
 static void  bon_w_double     (bon_w_doc* B, double val);
 
+// Write a value read from another BON-file:
+void         bon_w_value     (bon_w_doc* B, bon_value* val);
+
 
 // Writing coherent data
 // nbytes == number of bytes implied by 'type', but required for extra safety
@@ -355,7 +360,6 @@ void         bon_w_pack_array(bon_w_doc* B, const void* data, bon_size nbytes,
 uint8_t* bon_read_file(bon_size* out_size, const char* path);
 
 
-typedef struct bon_value  bon_value;
 typedef struct bon_r_doc  bon_r_doc;
 
 

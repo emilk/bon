@@ -7,3 +7,4 @@ examples/hello
 examples/read
 BON.build
 install_manifest.txt
+BON.xcodeproj
