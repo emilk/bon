@@ -258,9 +258,12 @@ void br_assert(bon_reader* br, bon_bool statement, bon_error onFail)
 }
 
 BON_INLINE void br_skip(bon_reader* br, size_t n) {
-	assert(br->nbytes >= n);
-	br->data   += n;
-	br->nbytes -= n;
+	if (br->nbytes < n) {
+		br_set_err(br, BON_ERR_TOO_SHORT);
+	} else {
+		br->data   += n;
+		br->nbytes -= n;
+	}
 }
 
 // next byte [0,255] or -1
@@ -575,7 +578,7 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 		type->id = ctrl;
 	} else {
 		// not array, not tuple, not atomic type? Error!
-		br_set_err(br, BON_ERR_BAD_AGGREGATE_TYPE);
+		br_set_err(br, BON_ERR_BAD_PACKED_TYPE);
 	}
 }
 
@@ -879,6 +882,10 @@ void bon_r_footer(bon_reader* br)
 		br_skip(br, 4); // ignore crc
 		br_swallow(br, BON_CTRL_FOOTER_CRC);
 	}
+	else
+	{
+		br_set_err(br, BON_ERR_BAD_FOOTER);
+	}
 	
 	br_assert(br, br->nbytes==0, BON_ERR_TRAILING_DATA);
 }
@@ -1112,6 +1119,8 @@ bon_r_block* bon_r_find_block(bon_r_doc* B, uint64_t id)
 bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id)
 {
 	bon_r_block* block = bon_r_find_block(B, id);
+	
+	if (!block) { return NULL; }
 	
 	if (!block->parsed) {
 		// Lazy parsing:
@@ -1436,7 +1445,7 @@ bon_bool bon_explode_aggr(bon_r_doc* B, bon_value* dst,
 			
 			
 		default: {
-			br_set_err(br, BON_ERR_BAD_AGGREGATE_TYPE);
+			br_set_err(br, BON_ERR_BAD_PACKED_TYPE);
 			return BON_FALSE;
 		}
 	}

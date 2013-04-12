@@ -57,24 +57,28 @@ typedef enum {
 	BON_ERR_WRITE_ERROR,        // Writer refused
 	BON_ERR_BAD_AGGREGATE_SIZE, // bon_w_pack got data of the wrong size
 	
-	// Read errors:
-	BON_ERR_MISSING_CRC,
-	BON_ERR_WRONG_CRC,
-	BON_ERR_TOO_SHORT,   // Premature end of file
-	BON_ERR_BAD_HEADER,  // Missing or corrupt
-	BON_ERR_BAD_FOOTER,  // Missing or corrupt
-	BON_ERR_BAD_VLQ,
-	BON_ERR_BAD_CTRL,
-	BON_ERR_BAD_KEY,     // Not a string, or string with zeros
-	BON_ERR_BAD_AGGREGATE_TYPE,
-	BON_ERR_BAD_TYPE,
-	BON_ERR_BAD_VALUE,
-	BON_ERR_STRING_NOT_ZERO_ENDED,
-	BON_ERR_MISSING_TOKEN,
-	
-	BON_ERR_TRAILING_DATA,  // Data trailing the document
-	BON_ERR_BAD_BLOCK,
-	BON_ERR_BAD_BLOCK_REF,  // Referring a block with an ID smaller or equal to own
+	/*
+	 bon_r:
+	 Detailed errors when reading.
+	 All read errors are due to corrupt BON file.
+	 These can help debug a BON encoder.
+	 */
+	BON_ERR_MISSING_CRC,            
+	BON_ERR_WRONG_CRC,              
+	BON_ERR_TOO_SHORT,              // Premature end of file
+	BON_ERR_BAD_HEADER,             // Missing or corrupt
+	BON_ERR_BAD_FOOTER,             // Missing or corrupt
+	BON_ERR_BAD_VLQ,                
+	BON_ERR_BAD_CTRL,               
+	BON_ERR_BAD_KEY,                // Not a string, or string with zeros
+	BON_ERR_BAD_PACKED_TYPE,        
+	BON_ERR_BAD_TYPE,               // Never triggers
+	BON_ERR_BAD_VALUE,              
+	BON_ERR_STRING_NOT_ZERO_ENDED,  
+	BON_ERR_MISSING_TOKEN,          
+	BON_ERR_TRAILING_DATA,          // Data trailing the document
+	BON_ERR_BAD_BLOCK,              
+	BON_ERR_BAD_BLOCK_REF,          // Referring a block with an ID smaller or equal to own
 	
 	// bw_read_aggregate etc:
 	BON_ERR_NARROWING,

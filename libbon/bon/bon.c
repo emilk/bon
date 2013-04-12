@@ -57,7 +57,7 @@ uint8_t* bon_read_file(bon_size* out_size, const char* path)
 
 void bon_onError(const char* msg)
 {
-#ifdef DEBUG
+#ifndef NDEBUG
 	fprintf(stderr, "BON error: %s\n", msg);
 	
 	//__asm__("int $3\n" : : );  // breakpoint
@@ -88,7 +88,7 @@ const char* bon_err_str(bon_error err)
 		"BON_ERR_BAD_VLQ",
 		"BON_ERR_BAD_CTRL",
 		"BON_ERR_BAD_KEY",
-		"BON_ERR_BAD_AGGREGATE_TYPE",
+		"BON_ERR_BAD_PACKED_TYPE",
 		"BON_ERR_BAD_TYPE",
 		"BON_ERR_BAD_VALUE",
 		"BON_ERR_STRING_NOT_ZERO_ENDED",
