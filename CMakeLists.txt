@@ -9,7 +9,7 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 add_library(libbon
 	libbon/bon.c
 	libbon/bon.h
-	libbon/bon_private.h
+	libbon/private.h
 	libbon/crc32.c
 	libbon/crc32.h
 	libbon/read.c
@@ -61,7 +61,7 @@ install(TARGETS
 
 install(FILES
 	libbon/bon.h
-	libbon/bon_private.h
+	libbon/private.h
 	libbon/inline.h
 	libbon/read_inline.h
 	libbon/write_inline.h

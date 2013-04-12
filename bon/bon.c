@@ -9,7 +9,7 @@
 //  Util app named 'bon' for inspecting bon files.
 
 #include <bon/bon.h>
-#include <bon/bon_private.h>  // bon_stats
+#include <bon/private.h>  // bon_stats
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

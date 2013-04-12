@@ -1,13 +1,13 @@
 //
-//  bon_private.h
+//  private.h
 //  BON
 //
 //  Written 2013 by Emil Ernerfeldt.
 //  Copyright (c) 2013 Emil Ernerfeldt <emil.ernerfeldt@gmail.com>
 //  This is free software, under the MIT license (see LICENSE.txt for details).
 
-#ifndef BON_bon_private_h
-#define BON_bon_private_h
+#ifndef BON_private_h
+#define BON_private_h
 
 #include <stdarg.h>
 

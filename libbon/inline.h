@@ -10,7 +10,7 @@
 #define BON_inline_h
 
 #include <string.h> // memcpy
-#include "bon_private.h"
+#include "private.h"
 
 /*
  Inlining functions gives us speedups of 3x in some cases!

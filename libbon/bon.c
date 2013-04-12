@@ -8,7 +8,7 @@
 
 
 #include "bon.h"
-#include "bon_private.h"
+#include "private.h"
 #include <math.h>      // isnan, isinf
 #include <stdlib.h>    // malloc
 

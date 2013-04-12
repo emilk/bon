@@ -138,7 +138,7 @@
 		36940D79C33840C38B7D120F /* bon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bon.h; path = libbon/bon.h; sourceTree = SOURCE_ROOT; };
 		6499F04C74EC4E609B37C668 /* error.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = error.c; path = jansson/error.c; sourceTree = SOURCE_ROOT; };
 		6AB86F8F7E2D48D8969A4D38 /* libbon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libbon.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		7446FC330C324280B3073FB6 /* bon_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bon_private.h; path = libbon/bon_private.h; sourceTree = SOURCE_ROOT; };
+		7446FC330C324280B3073FB6 /* private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = private.h; path = libbon/private.h; sourceTree = SOURCE_ROOT; };
 		78C1BCF0BD9F4FB7A8A7D303 /* libjansson.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libjansson.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AF3CE9462574E1285B84D3A /* value.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = value.c; path = jansson/value.c; sourceTree = SOURCE_ROOT; };
 		7BE82C1350A8485B91137477 /* crc32.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = crc32.h; path = libbon/crc32.h; sourceTree = SOURCE_ROOT; };
@@ -183,7 +183,7 @@
 			isa = PBXGroup;
 			children = (
 				36940D79C33840C38B7D120F /* bon.h */,
-				7446FC330C324280B3073FB6 /* bon_private.h */,
+				7446FC330C324280B3073FB6 /* private.h */,
 				7BE82C1350A8485B91137477 /* crc32.h */,
 			);
 			name = "Header Files";

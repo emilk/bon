@@ -7,7 +7,7 @@
 //  This is free software, under the MIT license (see LICENSE.txt for details).
 
 #include "bon.h"
-#include "bon_private.h"
+#include "private.h"
 #include "crc32.h"
 #include <assert.h>
 #include <stdarg.h>       // va_list, va_start, va_arg, va_end
