@@ -1,0 +1,12 @@
+CMakeFiles
+*.a
+
+bin/bon2json
+
+bin/json2bon
+
+*.out
+
+examples/hello
+
+examples/read

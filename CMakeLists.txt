@@ -54,7 +54,11 @@ install(TARGETS
 
 install(FILES
 	BON/bon.h
-	DESTINATION include)
+	BON/bon_private.h
+	BON/inline.h
+	BON/read_inline.h
+	BON/write_inline.h
+	DESTINATION include/bon)
 
 install(FILES
 	BON/BON.1

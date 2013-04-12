@@ -138,6 +138,7 @@
 		809FA69E16BFED7A00A465A0 /* bon2json.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = bon2json.1; sourceTree = "<group>"; };
 		80C8D5651714DEFE00117DF4 /* bench.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = bench.cpp; sourceTree = "<group>"; };
 		80C8D5691714E08200117DF4 /* inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = inline.h; sourceTree = "<group>"; };
+		80D7A1881718067800117EDD /* read_inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = read_inline.h; sourceTree = "<group>"; };
 		80D9FC97170ED401005DBF0D /* test */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = test; sourceTree = BUILT_PRODUCTS_DIR; };
 		80D9FC99170ED401005DBF0D /* test.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = test.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		80D9FC9B170ED401005DBF0D /* test.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = test.1; sourceTree = "<group>"; };
@@ -234,6 +235,7 @@
 				80F09125171207840000DE29 /* crc32.c */,
 				80C8D5691714E08200117DF4 /* inline.h */,
 				801A711A1715A26600CE61F0 /* write_inline.h */,
+				80D7A1881718067800117EDD /* read_inline.h */,
 			);
 			path = BON;
 			sourceTree = "<group>";
