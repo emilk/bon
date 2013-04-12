@@ -4,6 +4,7 @@ project(BON)
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	add_definitions("-std=c99")
 endif()
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
 add_library(BON
 	BON/bon.c
