@@ -10,3 +10,5 @@ bin/json2bon
 examples/hello
 
 examples/read
+
+bin/bon

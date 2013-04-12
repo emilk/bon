@@ -6,7 +6,7 @@ if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 endif()
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
-add_library(BON
+add_library(libbon
 	BON/bon.c
 	BON/bon.h
 	BON/bon_private.h
@@ -38,16 +38,21 @@ include_directories(${BON_SOURCE_DIR}/BON)
 include_directories(${BON_SOURCE_DIR}/jansson)
 add_executable(json2bon
 	json2bon/json2bon.c)
-target_link_libraries(json2bon BON jansson)
+target_link_libraries(json2bon libbon jansson)
 
 add_executable(bon2json
 	bon2json/bon2json.c)
-target_link_libraries(bon2json BON jansson)
+target_link_libraries(bon2json libbon jansson)
+
+add_executable(bon
+	util/util)
+target_link_libraries(bon libbon)
 
 install(TARGETS
-	BON
+	libbon
 	json2bon
 	bon2json
+	bon
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib)
