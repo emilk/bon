@@ -65,6 +65,7 @@ install(TARGETS
 
 install(FILES
 	libbon/bon/bon.h
+	libbon/bon/crc32.h
 	libbon/bon/private.h
 	libbon/bon/inline.h
 	libbon/bon/read_inline.h

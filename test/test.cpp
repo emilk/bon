@@ -10,10 +10,9 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
-
 extern "C" {
 #include <bon/bon.h>
-#include <bon/bon_private.h>
+#include <bon/private.h>
 #include <bon/crc32.h>
 }
 
