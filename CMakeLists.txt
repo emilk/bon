@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 project(BON)
 
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	add_definitions("-std=c99")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
 endif()
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
@@ -53,6 +54,12 @@ target_link_libraries(bon2json libbon jansson)
 add_executable(bon
 	bon/bon.c)
 target_link_libraries(bon libbon)
+ 
+add_executable(test-core
+	test/test.cpp)
+target_link_libraries(test-core libbon)
+ 
+add_test(core bin/test-core)
 
 install(TARGETS
 	libbon
