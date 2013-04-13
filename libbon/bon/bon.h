@@ -402,20 +402,20 @@ typedef enum {
 	BON_LOGICAL_OBJECT
 } bon_logical_type;
 
-bon_logical_type  bon_r_value_type(bon_r_doc* B, bon_value* val);
+static bon_logical_type  bon_r_value_type(bon_r_doc* B, bon_value* val);
 
 // Inspeciting values. Use these before attemting to read a value.
 // Passing NULL as 'val' will make all these functions return BON_FALSE.
 
 // val==NULL  ->  BON_FALSE;
-bon_bool  bon_r_is_nil     (bon_r_doc* B, bon_value* val);  // note: bon_r_is_nil(B,NULL) == BON_FALSE
-bon_bool  bon_r_is_bool    (bon_r_doc* B, bon_value* val);
-bon_bool  bon_r_is_int     (bon_r_doc* B, bon_value* val);  // signed or unsigned
-bon_bool  bon_r_is_number  (bon_r_doc* B, bon_value* val);  // int or double
-bon_bool  bon_r_is_double  (bon_r_doc* B, bon_value* val);  // Specifically double
-bon_bool  bon_r_is_string  (bon_r_doc* B, bon_value* val);
-bon_bool  bon_r_is_list    (bon_r_doc* B, bon_value* val);
-bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
+static bon_bool  bon_r_is_nil     (bon_r_doc* B, bon_value* val);  // note: bon_r_is_nil(B,NULL) == BON_FALSE
+static bon_bool  bon_r_is_bool    (bon_r_doc* B, bon_value* val);
+static bon_bool  bon_r_is_int     (bon_r_doc* B, bon_value* val);  // signed or unsigned
+static bon_bool  bon_r_is_number  (bon_r_doc* B, bon_value* val);  // int or double
+static bon_bool  bon_r_is_double  (bon_r_doc* B, bon_value* val);  // Specifically double
+static bon_bool  bon_r_is_string  (bon_r_doc* B, bon_value* val);
+static bon_bool  bon_r_is_list    (bon_r_doc* B, bon_value* val);
+static bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
 
 
 
@@ -423,31 +423,31 @@ bon_bool  bon_r_is_object  (bon_r_doc* B, bon_value* val);
 // Reading values.
 
 // Returns true iff 'val' is a bool and is true. False on fail. No implicit conversion.
-bon_bool  bon_r_bool    (bon_r_doc* B, bon_value* val);
+static bon_bool  bon_r_bool    (bon_r_doc* B, bon_value* val);
 
 // Will return zero if of the wrong type. Double/ints are converted to each other.
-uint64_t         bon_r_uint    (bon_r_doc* B, bon_value* val);
-int64_t          bon_r_int     (bon_r_doc* B, bon_value* val);
+static uint64_t  bon_r_uint    (bon_r_doc* B, bon_value* val);
+static int64_t   bon_r_int     (bon_r_doc* B, bon_value* val);
 static float     bon_r_float   (bon_r_doc* B, bon_value* val);
 static double    bon_r_double  (bon_r_doc* B, bon_value* val);
 
 // Returns NULL if wrong type
-const char*  bon_r_cstr  (bon_r_doc* B, bon_value* val);  // zero-ended UTF-8
-bon_size     bon_r_strlen(bon_r_doc* B, bon_value* val);  // in bytes (UTF-8)
+static const char*  bon_r_cstr  (bon_r_doc* B, bon_value* val);  // zero-ended UTF-8
+static bon_size     bon_r_strlen(bon_r_doc* B, bon_value* val);  // in bytes (UTF-8)
 
 // Returns 0 if it is not a list.
-bon_size    bon_r_list_size(bon_r_doc* B, bon_value* list);
+static bon_size    bon_r_list_size(bon_r_doc* B, bon_value* list);
 static bon_value*  bon_r_list_elem(bon_r_doc* B, bon_value* list, bon_size ix);
 
 // Number of keys-value pairs in an object
-bon_size     bon_r_obj_size(bon_r_doc* B, bon_value* val);
+static bon_size     bon_r_obj_size(bon_r_doc* B, bon_value* val);
 
 // Return NULL if 'val' is not an object, or ix is out of range.
-const char*  bon_r_obj_key  (bon_r_doc* B, bon_value* val, bon_size ix);
-bon_value*   bon_r_obj_value(bon_r_doc* B, bon_value* val, bon_size ix);
+static const char*  bon_r_obj_key  (bon_r_doc* B, bon_value* val, bon_size ix);
+static bon_value*   bon_r_obj_value(bon_r_doc* B, bon_value* val, bon_size ix);
 
 // Returns NULL if 'val' is not an object or does not have the given key.
-bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
+static bon_value*  bon_r_get_key(bon_r_doc* B, bon_value* val, const char* key);
 
 
 //------------------------------------------------------------------------------
