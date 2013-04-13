@@ -14,6 +14,12 @@
 
 //#define inline
 
+#define BON_INLINE static inline
+
+#ifndef isfinite
+BON_INLINE int isfinite(double x) { return x-x == 0.0; }
+#endif
+
 
 BON_INLINE bon_error bon_w_error(bon_w_doc* B) {
 	return B->error;
