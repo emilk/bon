@@ -2,9 +2,14 @@ cmake_minimum_required(VERSION 2.8)
 project(BON)
 
 if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+        if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -stdlib=libc++")
+        else()
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+        endif()
 endif()
+
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY bin)
 
 add_library(libbon
