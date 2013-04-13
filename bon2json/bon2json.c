@@ -119,19 +119,22 @@ bon_bool handle_file(const char* path, size_t flags, FILE* out)
 	return win;
 }
 
-
 uint8_t* readEntireFile(size_t* outSize, FILE* fp)
 {
 	uint8_t*  buff       = NULL;
 	size_t    chunkSize  = 1024*128;
 	size_t    nRead      = 0;
 	
-	while (!feof(fp))
+	for (;;)
 	{
 		buff = realloc(buff, nRead + chunkSize);
 		
 		size_t n = fread(buff + nRead, 1, chunkSize, fp);
 		nRead += n;
+		
+		if (n < chunkSize) {
+			break; // Error or eof. Either way.
+		}
 		
 		chunkSize *= 2; // Read progressively larger chunks
 	}

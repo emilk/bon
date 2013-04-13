@@ -43,8 +43,6 @@ typedef size_t bon_size;
 typedef uint64_t bon_block_id;
 #define BON_BAD_BLOCK_ID (bon_block_id)(-1)
 
-#define BON_INLINE static inline
-
 typedef struct bon_value  bon_value;
 
 //------------------------------------------------------------------------------

@@ -3,5 +3,5 @@
 > cmake .. && make && make install
 
 To make an Xcode project:
-> cmake -G Xcode .
+> cmake -G Xcode ..
 

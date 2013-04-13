@@ -258,8 +258,11 @@ typedef struct {
 	const uint8_t*  data;      // Incremented as we read
 	bon_size        nbytes;    // Decremented as we read
 	bon_block_id    block_id;  // Current block being read, or BON_BAD_BLOCK_ID.
+	
+	// For quick access
 	bon_error       error;
 	const uint8_t*  err_offset; // Where was the error triggered?
+	bon_r_flags     flags;
 } bon_reader;
 
 bon_reader make_br(bon_r_doc* B, const uint8_t* data, bon_size nbytes, bon_block_id blockid);
