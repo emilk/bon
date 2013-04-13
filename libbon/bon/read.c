@@ -463,8 +463,13 @@ double br_read_double(bon_reader* br, bon_type_id t) {
 
 bon_reader make_br(bon_r_doc* B, const uint8_t* data, bon_size nbytes, bon_block_id blockid)
 {
-	bon_reader br = { B, data, nbytes, blockid, BON_SUCCESS, NULL };
-	return br;
+	if (B) {
+		bon_reader br = { B, data, nbytes, blockid, B->error, NULL, B->flags };
+		return br;
+	} else {
+		bon_reader br = { NULL, data, nbytes, blockid, BON_SUCCESS, NULL, BON_R_FLAG_DEFAULT };
+		return br;
+	}
 }
 
 
@@ -500,8 +505,40 @@ uint64_t br_read_uint64(bon_reader* br, bon_type_id t) {
 	}
 }
 
-void bon_r_value(bon_reader* br, bon_value* val);
-void parse_aggr_type(bon_reader* br, bon_type* type);
+
+void        bon_r_value(bon_reader* br, bon_value* val);
+void        parse_aggr_type(bon_reader* br, bon_type* type);
+bon_value*  bon_r_load_block(bon_r_doc* B, uint64_t id);
+
+
+// NULL on fail
+const char* bon_r_key(bon_reader* br)
+{
+	bon_value keyVal;
+	bon_r_value(br, &keyVal);
+	
+	const bon_value* key = &keyVal;
+	
+	if (key->type == BON_VALUE_BLOCK_REF) {
+		key = bon_r_load_block(br->B, key->u.blockRefId);
+		if (!key) {
+			goto error;
+		}
+	}
+	
+	// Check key is string without hidden zeros:
+	if (key->type       != BON_VALUE_STRING ||
+		 key->u.str.size != strlen(key->u.str.ptr))
+	{
+		goto error;
+	}
+	
+	return key->u.str.ptr;
+	
+error:
+	br_set_err(br, BON_ERR_BAD_KEY);
+	return NULL;
+}
 
 void parse_array_type(bon_reader* br, bon_type* type, bon_size arraySize)
 {
@@ -522,15 +559,8 @@ void parse_struct_type(bon_reader* br, bon_type* type, bon_size structSize)
 	strct->kts    = BON_ALLOC_TYPE(structSize, bon_kt);
 	
 	for (bon_size ti=0; ti<strct->size; ++ti) {
-		bon_value key;
-		bon_r_value(br, &key);
-		if (key.type != BON_VALUE_STRING) {
-			br_set_err(br, BON_ERR_BAD_KEY);
-			return;
-		}
-		
 		bon_kt* kt = &strct->kts[ti];
-		kt->key = (const char*)key.u.str.ptr;
+		kt->key = bon_r_key(br);
 		parse_aggr_type(br, &kt->type);
 	}
 }
@@ -788,8 +818,6 @@ void bon_r_list_values(bon_reader* br, bon_list* vals)
 }
 
 
-bon_value* bon_r_load_block(bon_r_doc* B, uint64_t id);
-
 
 void bon_r_kvs(bon_reader* br, bon_obj* obj)
 {
@@ -812,28 +840,10 @@ void bon_r_kvs(bon_reader* br, bon_obj* obj)
 		
 		bon_kv* kv = kvs.data + kvs.size - 1;
 		
-		bon_value keyVal;
-		bon_r_value(br, &keyVal);
+		kv->key = bon_r_key(br);
 		
-		const bon_value* key = &keyVal;
+		if (!kv->key) { goto error; }
 		
-		if (key->type == BON_VALUE_BLOCK_REF) {
-			key = bon_r_load_block(br->B, key->u.blockRefId);
-			if (!key) {
-				goto error;
-				return;
-			}
-		}
-		
-		// Check key is string without hidden zeros:
-		if (key->type       != BON_VALUE_STRING ||
-			 key->u.str.size != strlen(key->u.str.ptr))
-		{
-			goto error;
-			return;
-		}
-		
-		kv->key = key->u.str.ptr;
 		bon_r_value(br, &kv->val);
 	}
 	
@@ -842,7 +852,6 @@ void bon_r_kvs(bon_reader* br, bon_obj* obj)
 	return;
 	
 error:
-	br_set_err(br, BON_ERR_BAD_KEY);
 	free(kvs.data);
 	obj->size = 0;
 	obj->data = NULL;
