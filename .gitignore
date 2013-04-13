@@ -8,3 +8,6 @@ examples/read
 BON.build
 install_manifest.txt
 BON.xcodeproj
+test/*.bon
+test/test
+
