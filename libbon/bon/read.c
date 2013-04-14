@@ -526,14 +526,21 @@ const char* bon_r_key(bon_reader* br)
 		}
 	}
 	
-	// Check key is string without hidden zeros:
-	if (key->type       != BON_VALUE_STRING ||
-		 key->u.str.size != strlen(key->u.str.ptr))
-	{
+	if (key->type != BON_VALUE_STRING) {
 		goto error;
 	}
 	
-	return key->u.str.ptr;
+	const char* str = key->u.str.ptr;
+	
+	if ((br->flags & BON_R_FLAG_SKIP_STRING_CHECKS) == 0)
+	{
+		if (strlen(str) != key->u.str.size) {
+			// Hidden zeros explciitly forbidden for keys!
+			goto error;
+		}
+	}
+	
+	return str;
 	
 error:
 	br_set_err(br, BON_ERR_BAD_KEY);

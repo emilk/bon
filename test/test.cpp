@@ -512,106 +512,124 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 			{64,128,196,255}
 		}
 	};
-	
-	test("parse",
-		  
-		  // Write
-		  [=](bon_w_doc* B) {
-			  bon_w_obj_begin(B);
-			  
-			  bon_w_key(B, "vecs");
-			  bon_w_pack_fmt(B, inVecs, sizeof(inVecs),
-								  "[#{$[3d]$[3f]$[4u8]}]", NVecs, "pos", "normal", "color");
-			  
-			  bon_w_obj_end(B);
-		  },
-		  
-		  [=](Verifier& p) {
-			  p( BON_CTRL_OBJ_BEGIN );
-			  
-			  p( BON_SHORT_STRING(4), "vecs", 0  );
-			  p( BON_SHORT_ARRAY(2)              );
-			  
-			  p( BON_SHORT_STRUCT(3) );
-			  p( BON_SHORT_STRING(3), "pos", 0);
-			  p( BON_SHORT_ARRAY(3), BON_CTRL_DOUBLE );
-			  p( BON_SHORT_STRING(6), "normal", 0);
-			  p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT );
-			  p( BON_SHORT_STRING(5), "color", 0);
-			  p( BON_SHORT_BYTE_ARRAY(4) );
-			  
-			  p( 1.0,  2.0,  3.0  );
-			  p( 0.0f, 0.0f, 1.0f );
-			  p( 255,196,128,64 );
-			  
-			  p( 4.0 , 5.0 , 6.0  );
-			  p( 1.0f, 0.0f, 0.0f );
-			  p( 64,128,196,255 );
-			  
-			  p( BON_CTRL_OBJ_END );
-		  },
-		  
-		  [=](bon_r_doc* B) {
-			  REQUIRE( bon_r_error(B) == BON_SUCCESS );
-			  auto root = bon_r_root(B);
-			  REQUIRE( root );
-			  
-			  // ------------------------------------------------
-			  
-			  auto vecs  = read_key(B, root, "vecs");
-			  REQUIRE( bon_r_is_list(B, vecs) );
-			  REQUIRE( bon_r_list_size(B, vecs) == (bon_size)NVecs );
-			  
-			  // ------------------------------------------------
-			  // Read using aggregate API:
-			  
-			  {
-				  auto vertPtr = (const InVert*)bon_r_unpack_ptr_fmt(B, vecs, 2*sizeof(InVert),
-																					"[#{$[3d]$[3f]$[4u8]}]",
-																				   NVecs, "pos", "normal", "color");
-				  REQUIRE( vertPtr );
-				  REQUIRE( vertPtr[1].color[0] == 64 );
-			  }
-			  
-			  {
-				  struct OutVert {
-					  uint8_t   color[4];
-					  float     pos[3];
-				  };
-				  
-				  static_assert(sizeof(OutVert) == 4 + 3 * sizeof(OutVert::pos[0]), "pack");
-				  
-				  OutVert outVerts[NVecs];
-				  
-				  bool win = bon_r_unpack_fmt(B, vecs, outVerts, sizeof(outVerts),
-															"[2{$[4u8]$[3f]}]", "color", "pos");
-				  REQUIRE( win );
-				  REQUIRE( outVerts[0].color[0]  == 255  );
-				  REQUIRE( outVerts[0].pos[0]    == 1.0f );
-				  REQUIRE( outVerts[1].pos[2]    == 6.0f );
-			  }
-			  
-			  // ------------------------------------------------
-			  // Read using tradional API (will convert aggregate):
-			  
-			  auto v1    = bon_r_list_elem(B, vecs, 1);
-			  
-			  auto pos   = read_key(B, v1, "pos");
-			  REQUIRE( bon_r_is_list(B, pos) );
-			  REQUIRE( bon_r_list_size(B, pos) == (bon_size)3 );
-			  test_val_float(B, bon_r_list_elem(B, pos, 0), 4.0f);
-			  test_val_float(B, bon_r_list_elem(B, pos, 1), 5.0f);
-			  test_val_float(B, bon_r_list_elem(B, pos, 2), 6.0f);
-			  
-			  auto color   = read_key(B, v1, "color");
-			  REQUIRE( bon_r_is_list(B, color) );
-			  REQUIRE( bon_r_list_size(B, color) == (bon_size)4 );
-			  test_val_int(B, bon_r_list_elem(B, color, 0), 64);
-			  test_val_int(B, bon_r_list_elem(B, color, 1), 128);
-			  test_val_int(B, bon_r_list_elem(B, color, 2), 196);
-			  test_val_int(B, bon_r_list_elem(B, color, 3), 255);
-		  }
-		  );
+
+	for (int iter=0; iter<2; ++iter) {
+		test("parse",
+
+			  // Write
+			[=](bon_w_doc* B) {
+				bon_w_obj_begin(B);
+
+				bon_w_key(B, "vecs");
+
+				if (iter==0) {
+					bon_w_pack_fmt(B, inVecs, sizeof(inVecs),
+						"[#{$[3d]$[3f]$[4u8]}]", NVecs, "pos", "normal", "color");
+				} else {		
+					const char*  names[3] = { "pos", "normal", "color" };
+					bon_type*    types[3] = {
+						bon_new_type_simple_array( 3, BON_TYPE_DOUBLE ),
+						bon_new_type_simple_array( 3, BON_TYPE_FLOAT ),
+						bon_new_type_simple_array( 4, BON_TYPE_UINT8 )
+					};
+					bon_type* vec_type = bon_new_type_struct(3, names, types);
+					bon_type* type = bon_new_type_array(NVecs, vec_type);
+
+					bon_w_pack(B, inVecs, sizeof(inVecs), type);
+
+					bon_free_type( type );
+				}
+
+				bon_w_obj_end(B);
+			},
+
+			[=](Verifier& p) {
+				p( BON_CTRL_OBJ_BEGIN );
+
+				p( BON_SHORT_STRING(4), "vecs", 0  );
+				p( BON_SHORT_ARRAY(2)              );
+
+				p( BON_SHORT_STRUCT(3) );
+				p( BON_SHORT_STRING(3), "pos", 0);
+				p( BON_SHORT_ARRAY(3), BON_CTRL_DOUBLE );
+				p( BON_SHORT_STRING(6), "normal", 0);
+				p( BON_SHORT_ARRAY(3), BON_CTRL_FLOAT );
+				p( BON_SHORT_STRING(5), "color", 0);
+				p( BON_SHORT_BYTE_ARRAY(4) );
+
+				p( 1.0,  2.0,  3.0  );
+				p( 0.0f, 0.0f, 1.0f );
+				p( 255,196,128,64 );
+
+				p( 4.0 , 5.0 , 6.0  );
+				p( 1.0f, 0.0f, 0.0f );
+				p( 64,128,196,255 );
+
+				p( BON_CTRL_OBJ_END );
+			},
+
+			[=](bon_r_doc* B) {
+				REQUIRE( bon_r_error(B) == BON_SUCCESS );
+				auto root = bon_r_root(B);
+				REQUIRE( root );
+
+				  // ------------------------------------------------
+
+				auto vecs  = read_key(B, root, "vecs");
+				REQUIRE( bon_r_is_list(B, vecs) );
+				REQUIRE( bon_r_list_size(B, vecs) == (bon_size)NVecs );
+
+				  // ------------------------------------------------
+				  // Read using aggregate API:
+
+				{
+					auto vertPtr = (const InVert*)bon_r_unpack_ptr_fmt(B, vecs, 2*sizeof(InVert),
+						"[#{$[3d]$[3f]$[4u8]}]",
+						NVecs, "pos", "normal", "color");
+					REQUIRE( vertPtr );
+					REQUIRE( vertPtr[1].color[0] == 64 );
+				}
+
+				{
+					struct OutVert {
+						uint8_t   color[4];
+						float     pos[3];
+					};
+
+					static_assert(sizeof(OutVert) == 4 + 3 * sizeof(OutVert::pos[0]), "pack");
+
+					OutVert outVerts[NVecs];
+
+					bool win = bon_r_unpack_fmt(B, vecs, outVerts, sizeof(outVerts),
+						"[2{$[4u8]$[3f]}]", "color", "pos");
+					REQUIRE( win );
+					REQUIRE( outVerts[0].color[0]  == 255  );
+					REQUIRE( outVerts[0].pos[0]    == 1.0f );
+					REQUIRE( outVerts[1].pos[2]    == 6.0f );
+				}
+
+				  // ------------------------------------------------
+				  // Read using tradional API (will convert aggregate):
+
+				auto v1    = bon_r_list_elem(B, vecs, 1);
+
+				auto pos   = read_key(B, v1, "pos");
+				REQUIRE( bon_r_is_list(B, pos) );
+				REQUIRE( bon_r_list_size(B, pos) == (bon_size)3 );
+				test_val_float(B, bon_r_list_elem(B, pos, 0), 4.0f);
+				test_val_float(B, bon_r_list_elem(B, pos, 1), 5.0f);
+				test_val_float(B, bon_r_list_elem(B, pos, 2), 6.0f);
+
+				auto color   = read_key(B, v1, "color");
+				REQUIRE( bon_r_is_list(B, color) );
+				REQUIRE( bon_r_list_size(B, color) == (bon_size)4 );
+				test_val_int(B, bon_r_list_elem(B, color, 0), 64);
+				test_val_int(B, bon_r_list_elem(B, color, 1), 128);
+				test_val_int(B, bon_r_list_elem(B, color, 2), 196);
+				test_val_int(B, bon_r_list_elem(B, color, 3), 255);
+			}
+			);
+}
 }
 
 
@@ -1033,4 +1051,19 @@ TEST_CASE( "BON/bad", "Error detection when reading a bad BON file" )
 	test_err(BON_ERR_TRAILING_DATA,          "BON0{}Fx"                                                       );
 	test_err(BON_ERR_BAD_BLOCK,              "BON0 D\0\x01d F"                                                );
 	test_err(BON_ERR_BAD_BLOCK_REF,          "BON0 D\2\1 \x81 d F"                                            );  // Block 2 reffering to block 1
+}
+
+TEST_CASE( "BON/pack", "just testing packing of structs" )
+{
+	struct Foo {
+		uint8_t byte;
+		float flt;
+	};
+	static_assert(sizeof(Foo) == 8, "pack");
+
+	struct FooPacked {
+		uint8_t byte;
+		float flt;
+	} __attribute__((packed));
+	static_assert(sizeof(FooPacked) == 5, "pack");
 }

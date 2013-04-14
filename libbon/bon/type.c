@@ -29,6 +29,7 @@ void bon_free_type_insides(bon_type* t)
 			for (bon_size ti=0; ti < t->u.strct->size; ++ti) {
 				bon_free_type_insides( &t->u.strct->kts[ti].type );
 			}
+			free(t->u.strct->kts);
 			free(t->u.strct);
 		} break;
 			
@@ -61,19 +62,23 @@ bon_type* bon_new_type_array(bon_size n, bon_type* type) {
 	return t;
 }
 
-#if 0
 bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types) {
+	
+	bon_type_struct* strct = BON_ALLOC_TYPE(1, bon_type_struct);;
+	strct->size = n;
+	strct->kts = BON_ALLOC_TYPE(n, bon_kt);
+	
+	for (bon_size i=0; i<n; ++i) {
+		strct->kts[i].key   = names[i];
+		strct->kts[i].type  = *types[i];
+		free( types[i] );
+	}
 	
 	bon_type* t        =  BON_ALLOC_TYPE(1, bon_type);
 	t->id              =  BON_TYPE_STRUCT;
-	t->u.strct         =  BON_ALLOC_TYPE(1, bon_type_struct);
-	t->u.strct->size   =  n;
-	t->u.strct->keys   =  names;  // TODO: copy
-	t->u.strct->types  =  types;  // TODO: copy
+	t->u.strct         =  strct;
 	return t;
 }
-#endif
-
 
 bon_type* bon_new_type_fmt_ap_obj(const char** fmt, va_list* ap)
 {

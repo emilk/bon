@@ -210,6 +210,29 @@ bon_type* bon_new_type_simple_array(bon_size n, bon_type_id id);
 bon_type* bon_new_type_array(bon_size n, bon_type* type);
 
 /*
+ 'names' and 'types' are arrays of size 'n'.
+ 'names' points either to string literals, or to some other string whose lifetime EXCEEDS that of the returned type. I repeat: the strings pointed to by the elements of 'names' MUST NOT BEE FREED OR MODIFIED while the returned bon_type is in use.
+ Ovnership of the bon_type:s pointed to by 'types' are given over to the returned bon_type.
+ 
+ The arrays 'names' and 'types' may be freed after this call, but not what their elements point to.
+ 
+ Use case:
+ 
+ struct Foo { float bar[3]; double baz; }
+ 
+ bon_type* greateFooType() {
+     const char*  names[2] = { "bar", "baz" };
+     bon_type*    types[2] = {
+         bon_new_type_simple_array( 3, BON_TYPE_FLOAT ),
+         bon_new_type_simple( BON_TYPE_DOUBLE )
+     };
+     return bon_new_type_struct(2, names, types);
+ }
+ */
+bon_type* bon_new_type_struct(bon_size n, const char** names, bon_type** types);
+
+
+/*
  struct Vert { float pos[3]; uint8_t color[4]; }
  bon_type* bon_new_type_fmt("{$[3f]$[4u8]}", "pos", "color")
  
@@ -292,8 +315,15 @@ typedef struct bon_w_doc bon_w_doc;
 
 typedef enum {
 	BON_W_FLAG_DEFAULT             =  0,
+	
+	// Compute CRC-32, and add to footer.
 	BON_W_FLAG_CRC                 =  1 << 0,
-	BON_W_FLAG_SKIP_HEADER_FOOTER  =  1 << 1
+	
+	// Don't write header nor footer.
+	BON_W_FLAG_SKIP_HEADER_FOOTER  =  1 << 1,
+	
+	// Save cpu by not checking strings for utf8 correctness
+	BON_W_FLAG_SKIP_STRING_CHECKS   =  1 << 2
 } bon_w_flags;
 
 
@@ -373,7 +403,10 @@ typedef enum {
 	 or BON_ERR_WRONG_CRC if it is incorrect.
 	 No further parsning of the file will be atempted.
 	 */
-	BON_R_FLAG_REQUIRE_CRC  =  1 << 0
+	BON_R_FLAG_REQUIRE_CRC  =  1 << 0,
+	
+	// Save cpu by not checking strings for utf8 correctness
+	BON_R_FLAG_SKIP_STRING_CHECKS   =  1 << 2
 } bon_r_flags;
 
 
