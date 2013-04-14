@@ -100,6 +100,8 @@ const char* bon_err_str(bon_error err)
 		
 		"BON_ERR_NARROWING",
 		"BON_ERR_NULL_OBJ",
+		
+		"BON_ERR_NOT_UTF8"
 	};
 	
 	return err_str[err];

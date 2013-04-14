@@ -23,7 +23,9 @@ add_library(libbon
 	libbon/bon/read_inline.h
 	libbon/bon/type.c
 	libbon/bon/write.c
-	libbon/bon/write_inline.h)
+	libbon/bon/write_inline.h
+	jansson/utf.c
+	jansson/utf.h)
 SET_TARGET_PROPERTIES(libbon
   PROPERTIES OUTPUT_NAME bon)
 
@@ -82,5 +84,6 @@ install(FILES
 	libbon/bon/inline.h
 	libbon/bon/read_inline.h
 	libbon/bon/write_inline.h
+	jansson/utf.h
 	DESTINATION include/bon)
 

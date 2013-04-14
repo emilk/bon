@@ -11,6 +11,7 @@
 
 #include <assert.h>
 #include <math.h>     // isfinite
+#include "utf.h"      // utf8_check_string
 
 //#define inline
 
@@ -108,10 +109,16 @@ BON_INLINE void bon_w_vlq(bon_w_doc* B, bon_size x)
 // Done often, lets do it fast:
 BON_INLINE void bon_w_ctrl_vlq(bon_w_doc* B, bon_ctrl ctrl, bon_size x)
 {
-	uint8_t buff[1 + BON_VARINT_MAX_LEN];
-	buff[0] = ctrl;
-	uint32_t size = bon_w_vlq_to(1 + buff, x);
-	bon_w_raw(B, buff, 1 + size);
+	if (x < 128) {
+		// Common case optimization
+		uint8_t buff[2] = { (uint8_t)ctrl, (uint8_t)x };
+		bon_w_raw(B, buff, 2);
+	} else {
+		uint8_t buff[1 + BON_VARINT_MAX_LEN];
+		buff[0] = ctrl;
+		uint32_t size = bon_w_vlq_to(1 + buff, x);
+		bon_w_raw(B, buff, 1 + size);
+	}
 }
 
 //------------------------------------------------------------------------------
@@ -175,6 +182,14 @@ BON_INLINE void bon_w_bool(bon_w_doc* B, bon_bool val) {
 BON_INLINE void bon_w_string(bon_w_doc* B, const char* utf8, bon_size nbytes) {
 	if (nbytes == BON_ZERO_ENDED) {
 		nbytes = strlen(utf8);
+	}
+	
+	if ((B->flags & BON_W_FLAG_SKIP_STRING_CHECKS) == 0)
+	{
+		if (!utf8_check_string(utf8, nbytes)) {
+			// Invalid UTF-8.
+			bon_w_set_error(B, BON_ERR_NOT_UTF8);
+		}
 	}
 	
 	if (nbytes < BON_SHORT_STRING_COUNT) {

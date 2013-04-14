@@ -9,6 +9,7 @@
 #include "bon.h"
 #include "private.h"
 #include "crc32.h"
+#include "utf.h"         // utf8_check_string
 #include <assert.h>
 #include <stdarg.h>       // va_list, va_start, va_arg, va_end
 #include <stdlib.h>       // malloc, free etc
@@ -530,17 +531,17 @@ const char* bon_r_key(bon_reader* br)
 		goto error;
 	}
 	
-	const char* str = key->u.str.ptr;
+	const bon_value_str* str = &key->u.str;
 	
 	if ((br->flags & BON_R_FLAG_SKIP_STRING_CHECKS) == 0)
 	{
-		if (strlen(str) != key->u.str.size) {
+		if (strlen(str->ptr) != str->size) {
 			// Hidden zeros explciitly forbidden for keys!
 			goto error;
 		}
 	}
 	
-	return str;
+	return str->ptr;
 	
 error:
 	br_set_err(br, BON_ERR_BAD_KEY);
@@ -640,14 +641,24 @@ void bon_r_unpack_value(bon_reader* br, bon_value* val)
 
 void bon_r_string_sized(bon_reader* br, bon_value* val, size_t strLen)
 {
-	val->type       = BON_VALUE_STRING;
-	val->u.str.size = strLen;
-	val->u.str.ptr  = (const char*)br->data;
+	val->type = BON_VALUE_STRING;
+	bon_value_str* str = &val->u.str;
+	
+	str->size = strLen;
+	str->ptr  = (const char*)br->data;
 	br_skip(br, strLen);
 	int zero = br_next(br);
 	
 	if (zero != 0) {
 		br_set_err(br, BON_ERR_STRING_NOT_ZERO_ENDED);
+	};
+	
+	if ((br->flags & BON_R_FLAG_SKIP_STRING_CHECKS) == 0)
+	{
+		if (!utf8_check_string(str->ptr, str->size)) {
+			// Invalid UTF-8.
+			br_set_err(br, BON_ERR_NOT_UTF8);
+		}
 	}
 	
 	if (br->B) {

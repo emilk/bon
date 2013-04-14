@@ -72,7 +72,7 @@ typedef enum {
 	BON_ERR_BAD_PACKED_TYPE,        
 	BON_ERR_BAD_TYPE,               // Never triggers
 	BON_ERR_BAD_VALUE,              
-	BON_ERR_STRING_NOT_ZERO_ENDED,  
+	BON_ERR_STRING_NOT_ZERO_ENDED,
 	BON_ERR_MISSING_TOKEN,          
 	BON_ERR_TRAILING_DATA,          // Data trailing the document
 	BON_ERR_BAD_BLOCK,              
@@ -81,6 +81,8 @@ typedef enum {
 	// bw_read_aggregate etc:
 	BON_ERR_NARROWING,
 	BON_ERR_NULL_OBJ,
+	
+	BON_ERR_NOT_UTF8,               // Key or string not UTF8 when reading OR writing
 	
 	BON_NUM_ERR
 } bon_error;

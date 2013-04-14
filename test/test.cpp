@@ -525,7 +525,8 @@ TEST_CASE( "BON/parse", "Writing and parsing aggregates" )
 				if (iter==0) {
 					bon_w_pack_fmt(B, inVecs, sizeof(inVecs),
 						"[#{$[3d]$[3f]$[4u8]}]", NVecs, "pos", "normal", "color");
-				} else {		
+				} else {
+					// Alternative explicit format:
 					const char*  names[3] = { "pos", "normal", "color" };
 					bon_type*    types[3] = {
 						bon_new_type_simple_array( 3, BON_TYPE_DOUBLE ),
@@ -1015,7 +1016,7 @@ TEST_CASE( "BON/pack/matrix", "Packing a rectangular matirx" )
 
 
 template<size_t N>
-void test_err(bon_error expected, const char (&arr)[N], int flags = BON_R_FLAG_DEFAULT) {
+void test_err(int line, bon_error expected, const char (&arr)[N], int flags = BON_R_FLAG_DEFAULT) {
 	
 	// HACK: 'Z' encodes \0
 	std::string str( arr, N - 1 );
@@ -1026,31 +1027,38 @@ void test_err(bon_error expected, const char (&arr)[N], int flags = BON_R_FLAG_D
 	
 	auto B = bon_r_open((const uint8_t*)file, size, (bon_r_flags)flags);
 	bon_r_get_block(B, 2); // HACK for BON_ERR_BAD_BLOCK_REF test case
+	if (B->error != expected) {
+		printf("ERROR, line %d: exptected error %s, got %s\n", line, bon_err_str(expected), bon_r_err_str(B));
+	}
 	REQUIRE(B->error == expected);
-	printf("Reported error (expected): %s\n\n", bon_r_err_str(B));
+	//printf("Reported error (expected): %s\n\n", bon_r_err_str(B));
 	bon_r_close(B);
 };
 
 TEST_CASE( "BON/bad", "Error detection when reading a bad BON file" )
 {
 	// Triggers for all possible errors
-	test_err(BON_ERR_MISSING_CRC,            "BON0{}F",       BON_R_FLAG_REQUIRE_CRC                          );
-	test_err(BON_ERR_WRONG_CRC,              "BON0{}f0000f",  BON_R_FLAG_REQUIRE_CRC                          );
-	test_err(BON_ERR_TOO_SHORT,              "BON0{"                                                          );
-	test_err(BON_ERR_BAD_HEADER,             "{}"                                                             );
-	test_err(BON_ERR_BAD_HEADER,             "BOn0{}F"                                                        );
-	test_err(BON_ERR_BAD_FOOTER,             "BON0{}x"                                                        );
-	test_err(BON_SUCCESS,                    "BON0{`\x80\x80\x80\x80\x80\x80\x80\x80\x80\x03key\0 \1 }F"      );
-	test_err(BON_ERR_BAD_VLQ,                "BON0{`\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x03key\0 \1 }F"  );
-	test_err(BON_ERR_BAD_CTRL,               "BON0{\x42}Fx"                                                   );
-	test_err(BON_ERR_BAD_KEY,                "BON0{\x16}F"                                                    );
-	test_err(BON_ERR_BAD_KEY,                "BON0{`\1\0\0}F"                                                 );
-	test_err(BON_ERR_BAD_PACKED_TYPE,        "BON0{`\1K\0 A\1\1 }F"                                           );  // Bad array typev
-	test_err(BON_ERR_STRING_NOT_ZERO_ENDED,  "BON0{`\1K \1 }F"                                                );
-	test_err(BON_ERR_MISSING_TOKEN,          "BON0 D\0\0\1 F"                                                 );  // Bock with no end
-	test_err(BON_ERR_TRAILING_DATA,          "BON0{}Fx"                                                       );
-	test_err(BON_ERR_BAD_BLOCK,              "BON0 D\0\x01d F"                                                );
-	test_err(BON_ERR_BAD_BLOCK_REF,          "BON0 D\2\1 \x81 d F"                                            );  // Block 2 reffering to block 1
+	test_err(__LINE__, BON_ERR_MISSING_CRC,            "BON0{}F",       BON_R_FLAG_REQUIRE_CRC                          );
+	test_err(__LINE__, BON_ERR_WRONG_CRC,              "BON0{}f0000f",  BON_R_FLAG_REQUIRE_CRC                          );
+	test_err(__LINE__, BON_ERR_TOO_SHORT,              "BON0{"                                                          );
+	test_err(__LINE__, BON_ERR_BAD_HEADER,             "{}"                                                             );
+	test_err(__LINE__, BON_ERR_BAD_HEADER,             "BOn0{}F"                                                        );
+	test_err(__LINE__, BON_ERR_BAD_FOOTER,             "BON0{}x"                                                        );
+	test_err(__LINE__, BON_SUCCESS,                    "BON0{`\x80\x80\x80\x80\x80\x80\x80\x80\x80\x03key\0 \1 }F"      );
+	test_err(__LINE__, BON_ERR_BAD_VLQ,                "BON0{`\x80\x80\x80\x80\x80\x80\x80\x80\x80\x80\x03key\0 \1 }F"  );
+	test_err(__LINE__, BON_ERR_BAD_CTRL,               "BON0{\x42}Fx"                                                   );
+	test_err(__LINE__, BON_ERR_BAD_KEY,                "BON0{\x16}F"                                                    );
+	test_err(__LINE__, BON_ERR_BAD_KEY,                "BON0{`\1\0\0}F"                                                 );
+	test_err(__LINE__, BON_ERR_BAD_PACKED_TYPE,        "BON0{`\1K\0 A\1\1 }F"                                           );  // Bad array typev
+	test_err(__LINE__, BON_ERR_STRING_NOT_ZERO_ENDED,  "BON0{`\1K \1 }F"                                                );
+	test_err(__LINE__, BON_ERR_MISSING_TOKEN,          "BON0 D\0\0\1 F"                                                 );  // Bock with no end
+	test_err(__LINE__, BON_ERR_TRAILING_DATA,          "BON0{}Fx"                                                       );
+	test_err(__LINE__, BON_ERR_BAD_BLOCK,              "BON0 D\0\x01d F"                                                );
+	test_err(__LINE__, BON_ERR_BAD_BLOCK_REF,          "BON0 D\2\1 \x81 d F"                                            );
+	test_err(__LINE__, BON_ERR_NOT_UTF8,               "BON0{ `\1\x80\0 `\1\x80\0 }F"                                   );
+	test_err(__LINE__, BON_ERR_NOT_UTF8,               "BON0{ `\1\a\0   `\1\x80\0 }F"                                   );
+	test_err(__LINE__, BON_SUCCESS,                    "BON0{ `\1\x80\0 `\1\x80\0 }F",   BON_R_FLAG_SKIP_STRING_CHECKS  );
+	test_err(__LINE__, BON_SUCCESS,                    "BON0{ `\1\a\0   `\1\x80\0 }F",   BON_R_FLAG_SKIP_STRING_CHECKS  );
 }
 
 TEST_CASE( "BON/pack", "just testing packing of structs" )

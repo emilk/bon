@@ -34,6 +34,9 @@ int utf8_check_first(char byte);
 int utf8_check_full(const char *buffer, int size, int32_t *codepoint);
 const char *utf8_iterate(const char *buffer, int32_t *codepoint);
 
+/*
+ 1 iff valid utf8, 0 else.
+ */
 int utf8_check_string(const char *string, int length);
 
 #endif
