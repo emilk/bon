@@ -6,13 +6,14 @@
 //  Copyright (c) 2013 Emil Ernerfeldt. All rights reserved.
 //
 
+#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
 
 extern "C" {
-#include "bon.h"
-#include "bon_private.h"
-#include "crc32.h"
+#include <bon/bon.h>
+#include <bon/private.h>
+#include <bon/crc32.h>
 }
 
 #include <iostream>
@@ -131,7 +132,7 @@ void time_n(unsigned n, const Fun& fun)
 	time_n(n, fun, [](){});
 }
 	
-#if 0
+#if 1
 
 TEST_CASE( "BON/bench/writing/msgpack", "MsgPack speed of writing floats")
 {
@@ -169,7 +170,7 @@ TEST_CASE( "BON/bench/writing/msgpack", "MsgPack speed of writing floats")
 
 #endif
 
-#if 0
+#if 1
 
 TEST_CASE( "BON/bench/writing", "Speed of bon_w_float")
 {
@@ -180,16 +181,17 @@ TEST_CASE( "BON/bench/writing", "Speed of bon_w_float")
 	
 	printf("Writing... ");
 	time_n_plus_one(16, [&]() {		
-		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
-		bon_w_begin_obj(B);
+		bon_w_doc* B = bon_w_new(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
+		bon_w_obj_begin(B);
 		bon_w_key(B, "list");
-		bon_w_begin_list(B);
+
+		bon_w_list_sized(B, src.size());
 		for (auto f : src) {
 			bon_w_float(B, f);
 		}
-		bon_w_end_list(B);
-		bon_w_end_obj(B);
-		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+
+		bon_w_obj_end(B);
+		REQUIRE( bon_w_close(B) == BON_SUCCESS );
 	}, [&](){
 		free(vec.data);
 		memset(&vec, 0, sizeof(vec));
@@ -214,7 +216,7 @@ TEST_CASE( "BON/bench/writing", "Speed of bon_w_float")
 #endif 
 
 
-#if 0
+#if 1
 
 template<class SrcType, class DstType>
 void run_float_benchmark(bool packed)
@@ -226,8 +228,8 @@ void run_float_benchmark(bool packed)
 	
 	printf("Writing... ");
 	time([&]() {
-		bon_w_doc* B = bon_w_new_doc(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
-		bon_w_begin_obj(B);
+		bon_w_doc* B = bon_w_new(bon_vec_writer, &vec, BON_W_FLAG_DEFAULT);
+		bon_w_obj_begin(B);
 		bon_w_key(B, "list");
 		if (packed) {
 			if (std::is_same<SrcType, float>::value) {
@@ -236,7 +238,7 @@ void run_float_benchmark(bool packed)
 				bon_w_pack_array(B, src.data(), sizeof(SrcType)*NUM_VALS, NUM_VALS, BON_TYPE_DOUBLE);
 			}
 		} else {
-			bon_w_begin_list(B);
+			bon_w_list_sized(B, src.size());
 			if (std::is_same<SrcType, float>::value) {
 			for (auto f : src) {
 					bon_w_float(B, f);
@@ -246,10 +248,9 @@ void run_float_benchmark(bool packed)
 					bon_w_double(B, f);
 				}
 			}
-			bon_w_end_list(B);
 		}
-		bon_w_end_obj(B);
-		REQUIRE( bon_w_close_doc(B) == BON_SUCCESS );
+		bon_w_obj_end(B);
+		REQUIRE( bon_w_close(B) == BON_SUCCESS );
 	});
 	
 	bon_r_doc* B;

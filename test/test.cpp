@@ -228,11 +228,13 @@ TEST_CASE( "BON/control codes", "control codes" ) {
 		BON_CTRL_BLOCK_REF,      BON_CTRL_STRING_VLQ,
 		BON_CTRL_ARRAY_VLQ,      
 		BON_CTRL_HEADER,         
-		BON_CTRL_TUPLE_VLQ,      BON_CTRL_STRUCT_VLQ,
+		BON_CTRL_STRUCT_VLQ,
 		BON_CTRL_BLOCK_BEGIN,    BON_CTRL_BLOCK_END,
 		BON_CTRL_TRUE,           BON_CTRL_FALSE,
 		BON_CTRL_FOOTER,         BON_CTRL_FOOTER_CRC,
-		BON_CTRL_NIL,            
+		BON_CTRL_LIST_VLQ,
+		BON_CTRL_NIL,
+		BON_CTRL_OBJ_VLQ,
 		BON_CTRL_SINT8,          
 		BON_CTRL_UINT8,          
 		BON_CTRL_SINT16_LE,      BON_CTRL_SINT16_BE,
@@ -241,10 +243,10 @@ TEST_CASE( "BON/control codes", "control codes" ) {
 		BON_CTRL_UINT32_LE,      BON_CTRL_UINT32_BE,
 		BON_CTRL_SINT64_LE,      BON_CTRL_SINT64_BE,
 		BON_CTRL_UINT64_LE,      BON_CTRL_UINT64_BE,
-		BON_CTRL_FLOAT_LE,     BON_CTRL_FLOAT_BE,
-		BON_CTRL_DOUBLE_LE,     BON_CTRL_DOUBLE_BE,
-		BON_CTRL_LIST_BEGIN,     BON_CTRL_LIST_END,    // 0x5B   0x5D
-		BON_CTRL_OBJ_BEGIN,      BON_CTRL_OBJ_END,     // 0x7B   0x7D
+		BON_CTRL_FLOAT_LE,       BON_CTRL_FLOAT_BE,
+		BON_CTRL_DOUBLE_LE,      BON_CTRL_DOUBLE_BE,
+		BON_CTRL_LIST_BEGIN,     BON_CTRL_LIST_END,
+		BON_CTRL_OBJ_BEGIN,      BON_CTRL_OBJ_END
 	};
 	
 	for (auto c : codes) {
@@ -385,11 +387,16 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 			  
 			  bon_w_key(B, "lists");
 			  bon_w_list_begin(B);
-			  bon_w_uint64(B, 1);
-			  bon_w_list_begin(B);
-			  bon_w_uint64(B, 2);
-			  bon_w_uint64(B, 3);
-			  bon_w_list_end(B);
+				  bon_w_uint64(B, 1);
+
+				  bon_w_list_sized(B, 2);
+					  bon_w_uint64(B, 2);
+					  bon_w_uint64(B, 3);
+
+				  bon_w_obj_sized(B, 1);
+					  bon_w_key(B, "key");
+					  bon_w_float(B, 3.14f);
+
 			  bon_w_list_end(B);
 			  
 			  bon_w_obj_end(B);
@@ -402,9 +409,13 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 			  
 			  p( BON_CTRL_LIST_BEGIN                           );
 			  p( 1                                             );
-			  p( BON_CTRL_LIST_BEGIN, 2, 3, BON_CTRL_LIST_END  );
-			  p( BON_CTRL_LIST_END                             );
+			  p( BON_CTRL_LIST_VLQ, 2,  2, 3                   );
+
+			  p( BON_CTRL_OBJ_VLQ, 1 );
+			  p( BON_SHORT_STRING(3), "key", 0 );
+			  p( BON_CTRL_FLOAT, 3.14f );
 			  
+			  p( BON_CTRL_LIST_END                             );
 			  p( BON_CTRL_OBJ_END );
 		  },
 		  
@@ -416,7 +427,7 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 			  
 			  auto lists = read_key(B,  root, "lists" );
 			  REQUIRE( bon_r_is_list(B, lists) );
-			  REQUIRE( bon_r_list_size(B, lists) == (bon_size)2 );
+			  REQUIRE( bon_r_list_size(B, lists) == (bon_size)3 );
 			  test_val_int( B, bon_r_list_elem(B, lists, 0), 1 );
 			  
 			  auto inner = bon_r_list_elem(B, lists, 1);
@@ -424,6 +435,13 @@ TEST_CASE( "BON/lists & objects", "Tests nested lists and objects" )
 			  REQUIRE( bon_r_list_size(B, inner) == (bon_size)2 );
 			  test_val_int( B, bon_r_list_elem(B, inner, 0), 2 );
 			  test_val_int( B, bon_r_list_elem(B, inner, 1), 3 );
+
+			  auto obj = bon_r_list_elem(B, lists, 2);
+			  REQUIRE( bon_r_is_object(B, obj) );
+			  REQUIRE( bon_r_obj_size(B, obj) == (bon_size)1 );
+			  auto pi = read_key(B,  obj, "key" );
+			  REQUIRE( bon_r_is_number(B, pi) );
+			  REQUIRE( bon_r_float(B, pi) == 3.14f );
 		  }
 		);
 }

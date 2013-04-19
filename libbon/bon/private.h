@@ -98,13 +98,6 @@ struct bon_type_array {
 	bon_type*  type;
 };
 
-/*
- struct bon_type_tuple {
- bon_size size;
- bon_type** types;
- };
- */
-
 typedef struct bon_type_struct bon_type_struct;
 struct bon_type_struct {
 	bon_size  size;  // size of 'kts'

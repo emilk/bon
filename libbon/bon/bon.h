@@ -95,17 +95,20 @@ const char* bon_err_str(bon_error err);
 //------------------------------------------------------------------------------
 
 
-/* The control codes are all in [0x08, 0x10)
+/* The control codes are all in [0x40, 0x80)
  */
 typedef enum {
 	BON_CTRL_BLOCK_REF   = 0x40,   BON_CTRL_STRING_VLQ  = 0x60,  // @   `
 	BON_CTRL_ARRAY_VLQ   = 'A',
 	BON_CTRL_HEADER      = 'B',
-	BON_CTRL_TUPLE_VLQ   = 'C',    BON_CTRL_STRUCT_VLQ  = 'c',
+	BON_CTRL_STRUCT_VLQ  = 'C',
 	BON_CTRL_BLOCK_BEGIN = 'D',    BON_CTRL_BLOCK_END   = 'd',
 	BON_CTRL_TRUE        = 'E',    BON_CTRL_FALSE       = 'e',
 	BON_CTRL_FOOTER      = 'F',    BON_CTRL_FOOTER_CRC  = 'f',
+	
+	BON_CTRL_LIST_VLQ    = 'L',
 	BON_CTRL_NIL         = 'N',
+	BON_CTRL_OBJ_VLQ     = 'O',
 	
 	BON_CTRL_SINT8       = 'P',
 	BON_CTRL_UINT8       = 'Q',
@@ -116,12 +119,13 @@ typedef enum {
 	BON_CTRL_SINT64_LE   = 'V',    BON_CTRL_SINT64_BE   = 'v',
 	BON_CTRL_UINT64_LE   = 'W',    BON_CTRL_UINT64_BE   = 'w',
 	
-	BON_CTRL_FLOAT_LE  = 'X',    BON_CTRL_FLOAT_BE  = 'x',
-	BON_CTRL_DOUBLE_LE  = 'Y',    BON_CTRL_DOUBLE_BE  = 'y',
+	BON_CTRL_FLOAT_LE   = 'X',     BON_CTRL_FLOAT_BE   = 'x',
+	BON_CTRL_DOUBLE_LE  = 'Y',     BON_CTRL_DOUBLE_BE  = 'y',
 	
 	// Open-ended list and object
-	BON_CTRL_LIST_BEGIN  = '[',    BON_CTRL_LIST_END    = ']',  // 0x5B   0x5D
-	BON_CTRL_OBJ_BEGIN   = '{',    BON_CTRL_OBJ_END     = '}',  // 0x7B   0x7D
+	BON_CTRL_LIST_BEGIN  = '[',    BON_CTRL_LIST_END  = ']',  //  0x5B   0x5D
+	BON_CTRL_OBJ_BEGIN   = '{',    BON_CTRL_OBJ_END   = '}',  //  0x7B   0x7D
+	
 	
 #if __LITTLE_ENDIAN__
 	BON_CTRL_SINT16   = BON_CTRL_SINT16_LE,
@@ -130,8 +134,8 @@ typedef enum {
 	BON_CTRL_UINT32   = BON_CTRL_UINT32_LE,
 	BON_CTRL_SINT64   = BON_CTRL_SINT64_LE,
 	BON_CTRL_UINT64   = BON_CTRL_UINT64_LE,
-	BON_CTRL_FLOAT  = BON_CTRL_FLOAT_LE,
-	BON_CTRL_DOUBLE  = BON_CTRL_DOUBLE_LE,
+	BON_CTRL_FLOAT    = BON_CTRL_FLOAT_LE,
+	BON_CTRL_DOUBLE   = BON_CTRL_DOUBLE_LE,
 #else
 	BON_CTRL_SINT16   = BON_CTRL_SINT16_BE,
 	BON_CTRL_UINT16   = BON_CTRL_UINT16_BE,
@@ -139,8 +143,8 @@ typedef enum {
 	BON_CTRL_UINT32   = BON_CTRL_UINT32_BE,
 	BON_CTRL_SINT64   = BON_CTRL_SINT64_BE,
 	BON_CTRL_UINT64   = BON_CTRL_UINT64_BE,
-	BON_CTRL_FLOAT  = BON_CTRL_FLOAT_BE,
-	BON_CTRL_DOUBLE  = BON_CTRL_DOUBLE_BE
+	BON_CTRL_FLOAT    = BON_CTRL_FLOAT_BE,
+	BON_CTRL_DOUBLE   = BON_CTRL_DOUBLE_BE
 #endif
 } bon_ctrl;
 
@@ -156,7 +160,6 @@ typedef enum {
 	//BON_TYPE_LIST    = BON_CTRL_LIST_BEGIN,
 	
 	BON_TYPE_ARRAY   = BON_CTRL_ARRAY_VLQ,
-	//BON_TYPE_TUPLE   = BON_CTRL_TUPLE_VLQ,
 	BON_TYPE_STRUCT  = BON_CTRL_STRUCT_VLQ,
 	
 	BON_TYPE_SINT8  = BON_CTRL_SINT8,

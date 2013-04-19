@@ -615,7 +615,7 @@ void parse_aggr_type(bon_reader* br, bon_type* type)
 		// float, int - recursion done
 		type->id = ctrl;
 	} else {
-		// not array, not tuple, not atomic type? Error!
+		// not array, not struct, not atomic type? Error!
 		br_set_err(br, BON_ERR_BAD_PACKED_TYPE);
 	}
 }
@@ -743,21 +743,46 @@ void bon_r_value_from_ctrl(bon_reader* br, bon_value* val, uint8_t ctrl)
 			
 			
 		case BON_CTRL_LIST_BEGIN:
-			val->type          = BON_VALUE_LIST;
+			val->type = BON_VALUE_LIST;
 			bon_r_list_values(br, &val->u.list);
 			br_swallow(br, BON_CTRL_LIST_END);
 			break;
 			
 			
+		case BON_CTRL_LIST_VLQ: {
+			val->type = BON_VALUE_LIST;
+			bon_size n = br_read_vlq(br);
+			bon_list* list = &val->u.list;
+			list->size = n;
+			list->data = BON_ALLOC_TYPE(n, bon_value);
+			for (bon_size ix=0; ix<n; ++ix) {
+				bon_r_value(br, list->data + ix);
+			}
+		} break;
+			
+			
 		case BON_CTRL_OBJ_BEGIN:
-			val->type      = BON_VALUE_OBJ;
+			val->type = BON_VALUE_OBJ;
 			bon_r_kvs(br, &val->u.obj);
 			br_swallow(br, BON_CTRL_OBJ_END);
 			break;
 			
 			
+		case BON_CTRL_OBJ_VLQ: {
+			val->type = BON_VALUE_OBJ;
+			bon_size n = br_read_vlq(br);
+			bon_obj* obj = &val->u.obj;
+			obj->size = n;
+			obj->data = BON_ALLOC_TYPE(n, bon_kv);
+			for (bon_size ix=0; ix<n; ++ix) {
+				bon_kv* kv = obj->data + ix;
+				kv->key = bon_r_key(br);
+				bon_r_value(br, &kv->val);
+			}
+		} break;
+			
+			
 		case BON_CTRL_ARRAY_VLQ:
-		case BON_CTRL_TUPLE_VLQ:
 		case BON_CTRL_STRUCT_VLQ: {
 			br_putback(br);
 			bon_r_unpack_value(br, val);
