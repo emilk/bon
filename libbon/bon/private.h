@@ -72,9 +72,9 @@ typedef enum {
 } bon_compressed_ranges;
 
 #ifdef DEBUG
-#  define BON_COMPRESS_(start, count, n)  (assert(n < count), (uint8_t)((start) + n))
+#  define BON_COMPRESS_(start, count, n)  (assert((n) < (count)), (uint8_t)((start) + n))
 #else
-#  define BON_COMPRESS_(start, count, n)  (uint8_t)((start) + n)
+#  define BON_COMPRESS_(start, count, n)  (uint8_t)((start) + (n))
 #endif
 
 #define BON_COMPRESS(prefix, n)  BON_COMPRESS_(prefix ## START, prefix ## COUNT, n)
@@ -298,8 +298,8 @@ uint32_t uint32_to_le(uint32_t v);
 //------------------------------------------------------------------------------
 
 // TODO: handle failed allocs
-#define BON_ALLOC_TYPE(n, type)   (type*)malloc(n * sizeof(type))
-#define BON_CALLOC_TYPE(n, type)  (type*)calloc(n, sizeof(type))
+#define BON_ALLOC_TYPE(n, type)   (type*)malloc((n) * sizeof(type))
+#define BON_CALLOC_TYPE(n, type)  (type*)calloc((n), sizeof(type))
 
 #if 0
 // Doubling in size. Only makes about 4% (positive) dfference in speed.

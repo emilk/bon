@@ -1096,7 +1096,7 @@ bon_r_doc* bon_r_open(const uint8_t* data, bon_size nbytes, bon_r_flags flags)
 		strcpy(msg, str);
 		
 		if (br->err_offset) {
-			snprintf(msg + strlen(str), extra, " (around byte %ld)", br->err_offset - data);
+			snprintf(msg + strlen(str), extra, " (around byte %td)", br->err_offset - data);
 		}
 		
 		B->errstr = msg;
@@ -1392,7 +1392,9 @@ bon_bool bw_write_raw(bon_writer* bw, const void* in, size_t n) {
 // Write bytes in reversed order (i.e. reverse endian)
 bon_bool bw_write_raw_reversed(bon_writer* bw, const void* in, size_t n) {
 	if (bw->nbytes >= n) {
-		memcpy(bw->data, in, n);
+		for (size_t i = 0; i < n; ++i) {
+			bw->data[i] = ((uint8_t*)in)[n - i - 1];
+		}
 		bw->data   += n;
 		bw->nbytes -= n;
 		return BON_TRUE;

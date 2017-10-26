@@ -42,7 +42,9 @@ uint8_t* bon_read_file(bon_size* out_size, const char* path)
 	size_t blocks_read = fread(data, fileSize, 1, fp);
 	if (blocks_read != 1) {
 		fprintf(stderr, "Failed to read file %s\n", path);
-		return NULL ;
+		fclose(fp);
+		free(data);
+		return NULL;
 	}
 	
 	fclose(fp);
@@ -158,7 +160,7 @@ void bon_print_aggr(bon_r_doc* B, const bon_type* aggType, bon_reader* br, FILE*
 		case BON_CTRL_SINT64_BE: {
 			int64_t s64 = br_read_sint64(br, id);
 			fprintf(out, "%"PRIi64, s64);
-		}
+		} break;
 			
 			
 		case BON_CTRL_UINT8:
@@ -305,7 +307,7 @@ void bon_print(bon_r_doc* B, bon_value* v, FILE* out, size_t indent)
 			
 		case BON_VALUE_BLOCK_REF: {
 			fprintf(out, "@%"PRIu64, v->u.blockRefId);
-		}
+		} break;
 			
 		default:
 			fprintf(out, "ERROR");
